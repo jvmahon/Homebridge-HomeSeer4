@@ -1,6 +1,6 @@
 {
-  "name": "homebridge-Homeseer",
-  "version": "0.0.1",
+  "name": "homebridge-homeseer-plugin",
+  "version": "0.0.2",
   "description": "Homeseer Plugin for homebridge: https://github.com/nfarina/homebridge",
   "license": "ISC",
   "keywords": [
@@ -8,10 +8,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/example/homebridge.git"
+    "url": "git@github.com:jrhubott/homebridge-homeseer.git"
   },
   "bugs": {
-    "url": "http://github.com/example/homebridge/issues"
+    "url": "https://github.com/jrhubott/homebridge-homeseer/issues"
   },
   "engines": {
     "node": ">=0.12.0",
