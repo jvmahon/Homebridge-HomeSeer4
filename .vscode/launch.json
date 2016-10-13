@@ -5,7 +5,7 @@
             "name": "Launch",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceRoot}/../homebridge/bin/homebridge",
+            "program": "${workspaceRoot}/node_modules/homebridge/bin/homebridge",
             "stopOnEntry": false,
             "args": [
                 "-D",
@@ -14,7 +14,7 @@
                 "-U",
                 "${workspaceRoot}/config"
             ],
-            "cwd": "${workspaceRoot}/../homebridge/",
+            "cwd": "${workspaceRoot}",
             "preLaunchTask": null,
             "runtimeExecutable": null,
             "runtimeArgs": [

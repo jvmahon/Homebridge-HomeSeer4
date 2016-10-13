@@ -215,10 +215,12 @@
 
 //var Service = require("../api").homebridge.hap.Service;
 //var Characteristic = require("../api").homebridge.hap.Characteristic;
-//var request = require("request");
+var request = require("request");
 
 var http = require('http');
 var Accessory, Service, Characteristic, UUIDGen;
+
+var _services = [];
 
 module.exports = function(homebridge) {
   console.log("homebridge API version: " + homebridge.version);
@@ -233,7 +235,7 @@ module.exports = function(homebridge) {
   
   // For platform plugin to be considered as dynamic platform plugin,
   // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
-  homebridge.registerPlatform("homebridge-samplePlatform", "HomeSeerPlatform", HomeSeerPlatform, true);
+  homebridge.registerPlatform("homebridge-HomeSeerPlatform", "HomeSeer", HomeSeerPlatform, true);
 }
 
 
@@ -326,6 +328,11 @@ HomeSeerAccessory.prototype = {
 
     identify: function(callback) {
             callback();
+    },
+
+    updateStatus: function(callback)
+    {
+
     },
 
     setPowerState: function(powerOn, callback) {
@@ -1150,7 +1157,14 @@ HomeSeerAccessory.prototype = {
             services.push( lightbulbService );
             break;
             }
+
+            
         }
+
+        services[services.length-1].accessory = this;
+
+        //Update the global service list
+        _services.push(services[services.length-1]);
 
         return services;
     }
