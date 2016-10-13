@@ -1117,6 +1117,9 @@ HomeSeerAccessory.prototype = {
                 .getCharacteristic(Characteristic.TargetDoorState)
                 .on('set', this.setTargetDoorState.bind(this));
             garageDoorOpenerService
+                .getCharacteristic(Characteristic.TargetDoorState)
+                .on('get', this.getCurrentDoorState.bind(this));
+            garageDoorOpenerService
                 .getCharacteristic(Characteristic.ObstructionDetected)
                 .on('get', this.getObstructionDetected.bind(this));
             if( this.config.lockRef ) {
@@ -1135,6 +1138,9 @@ HomeSeerAccessory.prototype = {
             var lockService = new Service.LockMechanism();
             lockService
                 .getCharacteristic(Characteristic.LockCurrentState)
+                .on('get', this.getLockCurrentState.bind(this));
+            lockService
+                .getCharacteristic(Characteristic.LockTargetState)
                 .on('get', this.getLockCurrentState.bind(this));
             lockService
                 .getCharacteristic(Characteristic.LockTargetState)
