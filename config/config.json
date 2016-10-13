@@ -1,0 +1,83 @@
+{
+    "bridge": {
+        "name": "Salix-Homebridge",
+        "username": "CD:22:3D:E3:CE:30",
+        "port": 51826,
+        "pin": "032-45-154"
+    },
+    
+    "description": "This is an example configuration file with one fake accessory and one fake platform. You can use this as a template for creating your own configuration file containing devices you actually own.",
+
+    "platforms": [
+     {
+         "platform": "HomeSeer",              
+         "name": "HomeSeer",                 
+         "host": "http://salix",
+
+	"events":[                           
+	       	{
+			"name":"All lights off",
+               		"eventGroup":"Lighting",       
+               		"eventName":"All lights off",
+			"uuid_base":"All lights off"
+		}
+	],
+
+	"accessories":[
+		{
+			"name":"Lamp",
+			"uuid_base":"Office Lamp",
+	               	"ref":582,
+			"can_dim":false             
+            	},
+		{
+              		"ref":570,                      
+		        "type":"Lock",                  
+              		"name":"Front Door",        
+              		"lockUnsecuredValues":[0],      
+              		"lockSecuredValues":[255],        
+              		"lockJammedValues":[254],         
+              		"unlockValue":0,                
+              		"lockValue":255                   
+            	},
+		{
+                        "ref":573,
+                        "type":"Lock",
+                        "name":"Side Door",
+			"uuid_base":"Garage Side Door",
+                        "lockUnsecuredValues":[0],
+                        "lockSecuredValues":[255],
+                        "lockJammedValues":[254],
+                        "unlockValue":0,
+                        "lockValue":255
+                },
+		{
+			"ref":760,
+			"type":"GarageDoorOpener",
+	                "name":"Main Garage Door",
+			"uuid_base":"Garage Garage Door",     
+	                "stateRef":760,           
+	                "stateOpenValues":[0],    
+	                "stateClosedValues":[100],
+			"controlRef":761,
+	                "controlOpenValue":100,          
+	                "controlCloseValue":100
+		},
+		{
+                        "ref":751,
+                        "type":"GarageDoorOpener",
+                        "name":"Second Garage Door",
+                        "uuid_base":"Garage Second Garage Door",
+                        "stateRef":751,
+                        "stateOpenValues":[0],
+                        "stateClosedValues":[100],
+                        "controlRef":752,
+                        "controlOpenValue":100,
+                        "controlCloseValue":100
+                }
+
+	]
+     }
+	
+  ]
+}
