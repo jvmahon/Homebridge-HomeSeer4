@@ -1,12 +1,12 @@
 {
     "bridge": {
-        "name": "Salix-Homebridge",
-        "username": "CD:22:3D:E3:CE:30",
+        "name": "Test-Homebridge",
+        "username": "CD:22:3D:E3:CE:31",
         "port": 51826,
-        "pin": "032-45-154"
+        "pin": "032-45-155"
     },
     
-    "description": "This is an example configuration file with one fake accessory and one fake platform. You can use this as a template for creating your own configuration file containing devices you actually own.",
+    "description": "This is an test configuration file.",
 
     "platforms": [
      {
