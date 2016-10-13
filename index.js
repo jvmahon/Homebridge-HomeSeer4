@@ -295,6 +295,11 @@ HomeSeerPlatform.prototype = {
                 callback( foundAccessories );
             }
         }.bind(this));
+
+        //Update the status of all accessory's
+//        for (var i = 0, len = foundAccessories.length; i < len; i++) {
+//            foundAccessories[i].updateStatus(function(){}.bind(this));
+//        }
     }
 }
 
@@ -306,6 +311,8 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status ) {
     this.model = status.device_type_string;
     this.onValue = 100;
     this.offValue = 0;
+
+    this.statusCharacteristic = null;
 
     this.access_url = platformConfig["host"] + "/JSON?";
     this.control_url = this.access_url + "request=controldevicebyvalue&ref=" + this.ref + "&value=";
@@ -332,7 +339,12 @@ HomeSeerAccessory.prototype = {
 
     updateStatus: function(callback)
     {
+        if(statusCharacteristic!=null)
+        {
+            statusCharacteristic.getValue();
+        }
 
+        callback();
     },
 
     setPowerState: function(powerOn, callback) {
@@ -633,9 +645,9 @@ HomeSeerAccessory.prototype = {
 	
                 this.log('HomeSeer get target door state function succeeded: value=' + value );
                 if( this.config.stateOpenValues.indexOf(value) != -1 )
-                    callback( null, 0 );
+                    callback( null, Characteristic.CurrentDoorState.OPEN );
                 else if( this.config.stateClosedValues.indexOf(value) != -1 )
-                    callback( null, 1 );
+                    callback( null, Characteristic.CurrentDoorState.CLOSED );
                 else if( this.config.stateOpeningValues && this.config.stateOpeningValues.indexOf(value) != -1 )
                     callback( null, 2 );
                 else if( this.config.stateClosingValues && this.config.stateClosingValues.indexOf(value) != -1 )
@@ -1148,6 +1160,8 @@ HomeSeerAccessory.prototype = {
                 .getCharacteristic(Characteristic.On)
                 .on('set', this.setPowerState.bind(this))
                 .on('get', this.getPowerState.bind(this));
+
+            this.statusCharacteristic = lightbulbService.getCharacteristic(Characteristic.On);
     
             lightbulbService
                 .addCharacteristic(new Characteristic.Brightness())
