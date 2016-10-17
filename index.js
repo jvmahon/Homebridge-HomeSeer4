@@ -1155,6 +1155,9 @@ HomeSeerAccessory.prototype = {
                 .on('get', this.getSecuritySystemCurrentState.bind(this));
             securitySystemService
                 .getCharacteristic(Characteristic.SecuritySystemTargetState)
+                .on('get', this.getSecuritySystemCurrentState.bind(this));
+            securitySystemService
+                .getCharacteristic(Characteristic.SecuritySystemTargetState)
                 .on('set', this.setSecuritySystemTargetState.bind(this));
             services.push( securitySystemService );
             break;
