@@ -332,36 +332,20 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
         this.offValue = this.config.offValue;
 
     var that = this;
-    this.statusUpdateCount = 19;
+
+    if(platformConfig["poll"]==null)
+    {
+        this.log("Using default periodic polling rate");
+        platformConfig["poll"] = 60;
+    }
 
     if (this.config.poll==null)
     {
-        //Default to 5 minute polling cycle
-        this.config.poll = 300 * 1000;
+        //Default to 1 minute polling cycle
+        this.config.poll = platformConfig["poll"];
     }
 
-    if (this.config.poll) {
-
-        this.log(this.name + ": Polling rate set to: " + this.config.poll);
-
-        this.periodicUpdate = pollingtoevent(function (done) {
-            that.log(that.name + ": Periodic status update");
-            that.updateStatus(null);
-            done(null, null);
-        }, {
-                interval: this.config.poll
-            });
-    }
-
-    this.pollForStatusUpdate = pollingtoevent(function (done) {
-        that.updateStatusByPolling(null);
-        done(null, null);
-    }, {
-            interval: 1000
-        });
-
-    //Pause the status update event
-    //this.pollForStatusUpdate.pause();
+    
 
 
 }
@@ -384,7 +368,7 @@ HomeSeerAccessory.prototype = {
     updateStatusByPolling: function () {
         this.statusUpdateCount++;
 
-        if(this.statusUpdateCount <= 20)
+        if(this.statusUpdateCount <= this.config.statusUpdateCount)
         {
             this.updateStatus(null);
         }
@@ -397,7 +381,7 @@ HomeSeerAccessory.prototype = {
     },
 
     pollForUpdate: function () {
-        this.log(this.name + ": Polling for status update");
+        this.log(this.name + ": Polling for status update " + this.config.statusUpdateCount + " times");
         this.statusUpdateCount=0;
         this.pollForStatusUpdate.resume();
     },
@@ -516,6 +500,34 @@ HomeSeerAccessory.prototype = {
                 callback(null, value);
             }
         }.bind(this));
+    },
+
+    setBrightness: function (level, callback) {
+        var url = this.control_url + level;
+
+        this.log("Setting brightness to %s", level);
+
+        var that=this;
+
+        setTimeout(function() {
+
+            httpRequest(url, 'GET', function (error, response, body) {
+            if (error) {
+                this.log('HomeSeer set value function failed: %s', error.message);
+                callback(error);
+            }
+            else {
+                this.log('HomeSeer set value function succeeded!');
+                callback();
+            }
+            }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
+            
+        }.bind(this), 800);
+
+        
     },
 
     setTemperature: function (temperature, callback) {
@@ -915,6 +927,11 @@ HomeSeerAccessory.prototype = {
 
         switch (this.config.type) {
             case "Lightbulb": {
+
+                //Better default
+                if (this.config.statusUpdateCount == null)
+                    this.config.statusUpdateCount = 5;
+
                 var lightbulbService = new Service.Lightbulb();
                 lightbulbService
                     .getCharacteristic(Characteristic.On)
@@ -924,10 +941,11 @@ HomeSeerAccessory.prototype = {
                 if (this.config.can_dim == null || this.config.can_dim == true) {
                     lightbulbService
                         .addCharacteristic(new Characteristic.Brightness())
-                        .on('set', this.setValue.bind(this))
+                        .on('set', this.setBrightness.bind(this))
                         .on('get', this.getValue.bind(this));
                 }
 
+                this.statusCharacteristic = lightbulbService.getCharacteristic(Characteristic.On);
                 services.push(lightbulbService);
                 break;
             }
@@ -937,6 +955,8 @@ HomeSeerAccessory.prototype = {
                     .getCharacteristic(Characteristic.On)
                     .on('set', this.setPowerState.bind(this))
                     .on('get', this.getPowerState.bind(this));
+
+                this.statusCharacteristic = fanService.getCharacteristic(Characteristic.On);
                 services.push(fanService);
                 break;
             }
@@ -946,6 +966,8 @@ HomeSeerAccessory.prototype = {
                     .getCharacteristic(Characteristic.On)
                     .on('set', this.setPowerState.bind(this))
                     .on('get', this.getPowerState.bind(this));
+
+                this.statusCharacteristic = switchService.getCharacteristic(Characteristic.On);
                 services.push(switchService);
                 break;
             }
@@ -955,6 +977,8 @@ HomeSeerAccessory.prototype = {
                     .getCharacteristic(Characteristic.On)
                     .on('set', this.setPowerState.bind(this))
                     .on('get', this.getPowerState.bind(this));
+
+                this.statusCharacteristic = outletService.getCharacteristic(Characteristic.On);
                 services.push(outletService);
                 break;
             }
@@ -1106,6 +1130,8 @@ HomeSeerAccessory.prototype = {
                         .addCharacteristic(new Characteristic.ObstructionDetected())
                         .on('get', this.getObstructionDetected.bind(this));
                 }
+
+                this.statusCharacteristic = doorService.getCharacteristic(Characteristic.CurrentPosition);
                 services.push(doorService);
                 break;
             }
@@ -1125,6 +1151,8 @@ HomeSeerAccessory.prototype = {
                         .addCharacteristic(new Characteristic.ObstructionDetected())
                         .on('get', this.getObstructionDetected.bind(this));
                 }
+
+                this.statusCharacteristic = windowService.getCharacteristic(Characteristic.CurrentPosition);
                 services.push(windowService);
                 break;
             }
@@ -1139,12 +1167,17 @@ HomeSeerAccessory.prototype = {
                 windowCoveringService
                     .getCharacteristic(Characteristic.PositionState)
                     .on('get', this.getPositionState.bind(this));
-                services.push(windowCoveringService);
+
+                
                 if (this.config.obstructionRef) {
                     windowCoveringService
                         .addCharacteristic(new Characteristic.ObstructionDetected())
                         .on('get', this.getObstructionDetected.bind(this));
                 }
+
+                this.statusCharacteristic = windowCoveringService.getCharacteristic(Characteristic.CurrentPosition);
+                services.push(windowCoveringService);
+
                 break;
             }
             case "Battery": {
@@ -1188,6 +1221,10 @@ HomeSeerAccessory.prototype = {
                 break;
             }
             case "GarageDoorOpener": {
+                //Better default
+                if (this.config.statusUpdateCount == null)
+                    this.config.statusUpdateCount = 40;
+
                 var garageDoorOpenerService = new Service.GarageDoorOpener();
                 garageDoorOpenerService
                     .getCharacteristic(Characteristic.CurrentDoorState)
@@ -1234,6 +1271,11 @@ HomeSeerAccessory.prototype = {
                 break;
             }
             case "SecuritySystem": {
+
+                //Better default
+                if (this.config.statusUpdateCount == null)
+                    this.config.statusUpdateCount = 75;
+
                 var securitySystemService = new Service.SecuritySystem();
                 securitySystemService
                     .getCharacteristic(Characteristic.SecuritySystemCurrentState)
@@ -1252,6 +1294,11 @@ HomeSeerAccessory.prototype = {
             }
 
             default: {
+
+                //Better default
+                if (this.config.statusUpdateCount == null)
+                    this.config.statusUpdateCount = 5;
+
                 var lightbulbService = new Service.Lightbulb();
                 lightbulbService
                     .getCharacteristic(Characteristic.On)
@@ -1262,7 +1309,7 @@ HomeSeerAccessory.prototype = {
 
                 lightbulbService
                     .addCharacteristic(new Characteristic.Brightness())
-                    .on('set', this.setValue.bind(this))
+                    .on('set', this.setBrightness.bind(this))
                     .on('get', this.getValue.bind(this));
 
                 services.push(lightbulbService);
@@ -1271,6 +1318,39 @@ HomeSeerAccessory.prototype = {
 
 
         }
+
+        if (this.config.statusUpdateCount == null)
+           this.config.statusUpdateCount = 20;
+        
+        this.statusUpdateCount = this.config.statusUpdateCount-1;
+
+
+        this.log(this.name + ": statusUpdateCount=" + this.config.statusUpdateCount);
+
+        //Configure the periodic status update
+        if (this.config.poll) {
+
+            this.log(this.name + ": Polling rate=" + this.config.poll);
+
+            this.periodicUpdate = pollingtoevent(function (done) {
+                that.log(that.name + ": Periodic status update rate=" + that.config.poll);
+                that.updateStatus(null);
+                done(null, null);
+            }, {
+                    interval: (this.config.poll * 1000)
+                });
+        }
+
+        this.log(this.name + ": Configure status update polling");
+        //Configure the status update polling
+        var that = this;
+        this.pollForStatusUpdate = pollingtoevent(function (done) {
+            that.updateStatusByPolling(null);
+            done(null, null);
+        }, {
+                interval: 1000
+            });
+
 
         services[services.length - 1].accessory = this;
 
