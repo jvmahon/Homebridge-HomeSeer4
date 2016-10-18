@@ -216,94 +216,95 @@
 //var Service = require("../api").homebridge.hap.Service;
 //var Characteristic = require("../api").homebridge.hap.Characteristic;
 var request = require("request");
+var pollingtoevent = require("polling-to-event")
 
 var http = require('http');
 var Accessory, Service, Characteristic, UUIDGen;
 
 var _services = [];
 
-module.exports = function(homebridge) {
-  console.log("homebridge API version: " + homebridge.version);
+module.exports = function (homebridge) {
+    console.log("homebridge API version: " + homebridge.version);
 
-  // Accessory must be created from PlatformAccessory Constructor
-  Accessory = homebridge.platformAccessory;
+    // Accessory must be created from PlatformAccessory Constructor
+    Accessory = homebridge.platformAccessory;
 
-  // Service and Characteristic are from hap-nodejs
-  Service = homebridge.hap.Service;
-  Characteristic = homebridge.hap.Characteristic;
-  UUIDGen = homebridge.hap.uuid;
-  
-  // For platform plugin to be considered as dynamic platform plugin,
-  // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
-  homebridge.registerPlatform("homebridge-HomeSeerPlatform", "HomeSeer", HomeSeerPlatform, true);
+    // Service and Characteristic are from hap-nodejs
+    Service = homebridge.hap.Service;
+    Characteristic = homebridge.hap.Characteristic;
+    UUIDGen = homebridge.hap.uuid;
+
+    // For platform plugin to be considered as dynamic platform plugin,
+    // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
+    homebridge.registerPlatform("homebridge-HomeSeerPlatform", "HomeSeer", HomeSeerPlatform, true);
 }
 
 
 function httpRequest(url, method, callback) {
     request({
-      url: url,
-      method: method
+        url: url,
+        method: method
     },
-    function (error, response, body) {
-      callback(error, response, body)
-    })
+        function (error, response, body) {
+            callback(error, response, body)
+        })
 }
 
-function HomeSeerPlatform(log, config, api){
+function HomeSeerPlatform(log, config, api) {
     this.log = log;
     this.config = config;
 }
 
 HomeSeerPlatform.prototype = {
-    accessories: function(callback) {
+    accessories: function (callback) {
         var that = this;
         var foundAccessories = [];
 
-        if( this.config.events ) {
+        if (this.config.events) {
             this.log("Creating HomeSeer events.");
-            for( var i=0; i<this.config.events.length; i++ ) {
-                var event = new HomeSeerEvent( that.log, that.config, that.config.events[i] );
-                foundAccessories.push( event );
+            for (var i = 0; i < this.config.events.length; i++) {
+                var event = new HomeSeerEvent(that.log, that.config, that.config.events[i]);
+                foundAccessories.push(event);
             }
         }
 
         this.log("Fetching HomeSeer devices.");
         var refList = "";
-        for( var i=0; i<this.config.accessories.length; i++ ) {
+        for (var i = 0; i < this.config.accessories.length; i++) {
             refList = refList + this.config.accessories[i].ref;
-            if( i < this.config.accessories.length - 1 )
+            if (i < this.config.accessories.length - 1)
                 refList = refList + ",";
         }
         var url = this.config["host"] + "/JSON?request=getstatus&ref=" + refList;
-        httpRequest( url, "GET", function(error, response, body) {
+        httpRequest(url, "GET", function (error, response, body) {
             if (error) {
                 this.log('HomeSeer status function failed: %s', error.message);
-                callback( foundAccessories );
+                callback(foundAccessories);
             }
             else {
                 this.log('HomeSeer status function succeeded!');
-                var response = JSON.parse( body );
-                for( var i=0; i<this.config.accessories.length; i++ ) {
-                    for( var j=0; j<response.Devices.length; j++ ) {
-                        if( this.config.accessories[i].ref == response.Devices[j].ref ) {
-                            var accessory = new HomeSeerAccessory( that.log, that.config, this.config.accessories[i], response.Devices[j] );
-                            foundAccessories.push( accessory );
+                var response = JSON.parse(body);
+                for (var i = 0; i < this.config.accessories.length; i++) {
+                    for (var j = 0; j < response.Devices.length; j++) {
+                        if (this.config.accessories[i].ref == response.Devices[j].ref) {
+                            var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[j]);
+                            foundAccessories.push(accessory);
                             break;
                         }
                     }
                 }
-                callback( foundAccessories );
+                callback(foundAccessories);
             }
         }.bind(this));
 
         //Update the status of all accessory's
-//        for (var i = 0, len = foundAccessories.length; i < len; i++) {
-//            foundAccessories[i].updateStatus(function(){}.bind(this));
-//        }
+        //        for (var i = 0, len = foundAccessories.length; i < len; i++) {
+        //            foundAccessories[i].updateStatus(function(){}.bind(this));
+        //        }
     }
 }
 
-function HomeSeerAccessory(log, platformConfig, accessoryConfig, status ) {
+function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     this.log = log;
     this.config = accessoryConfig;
     this.ref = status.ref;
@@ -318,36 +319,90 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status ) {
     this.control_url = this.access_url + "request=controldevicebyvalue&ref=" + this.ref + "&value=";
     this.status_url = this.access_url + "request=getstatus&ref=" + this.ref;
 
-    if( this.config.name )
+    if (this.config.name)
         this.name = this.config.name;
 
-    if( this.config.uuid_base )
+    if (this.config.uuid_base)
         this.uuid_base = this.config.uuid_base;
 
-    if( this.config.onValue )
+    if (this.config.onValue)
         this.onValue = this.config.onValue;
 
-    if( this.config.offValue )
+    if (this.config.offValue)
         this.offValue = this.config.offValue;
+
+    var that = this;
+    this.statusUpdateCount = 19;
+
+    if (this.config.poll==null)
+    {
+        //Default to 5 minute polling cycle
+        this.config.poll = 300 * 1000;
+    }
+
+    if (this.config.poll) {
+
+        this.log(this.name + ": Polling rate set to: " + this.config.poll);
+
+        this.periodicUpdate = pollingtoevent(function (done) {
+            that.log(that.name + ": Periodic status update");
+            that.updateStatus(null);
+            done(null, null);
+        }, {
+                interval: this.config.poll
+            });
+    }
+
+    this.pollForStatusUpdate = pollingtoevent(function (done) {
+        that.updateStatusByPolling(null);
+        done(null, null);
+    }, {
+            interval: 1000
+        });
+
+    //Pause the status update event
+    //this.pollForStatusUpdate.pause();
+
+
 }
 
 HomeSeerAccessory.prototype = {
 
-    identify: function(callback) {
-            callback();
-    },
-
-    updateStatus: function(callback)
-    {
-        if(statusCharacteristic!=null)
-        {
-            statusCharacteristic.getValue();
-        }
-
+    identify: function (callback) {
         callback();
     },
 
-    setPowerState: function(powerOn, callback) {
+    updateStatus: function (callback) {
+        if (this.statusCharacteristic != null) {
+            this.statusCharacteristic.getValue();
+        }
+
+        if (callback != null)
+            callback();
+    },
+
+    updateStatusByPolling: function () {
+        this.statusUpdateCount++;
+
+        if(this.statusUpdateCount <= 20)
+        {
+            this.updateStatus(null);
+        }
+        else
+        {
+            this.log(this.name + ": Completed polling for status update");
+            this.pollForStatusUpdate.pause();
+        }
+
+    },
+
+    pollForUpdate: function () {
+        this.log(this.name + ": Polling for status update");
+        this.statusUpdateCount=0;
+        this.pollForStatusUpdate.resume();
+    },
+
+    setPowerState: function (powerOn, callback) {
         var url;
 
         if (powerOn) {
@@ -359,7 +414,7 @@ HomeSeerAccessory.prototype = {
             this.log("Setting power state to off");
         }
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer power function failed: %s', error.message);
                 callback(error);
@@ -369,65 +424,68 @@ HomeSeerAccessory.prototype = {
                 callback();
             }
         }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
     },
 
-    getPowerState: function(callback) {
+    getPowerState: function (callback) {
         var url = this.status_url;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get power function failed: %s', error.message);
-                callback( error, 0 );
+                callback(error, 0);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-	
-                this.log('HomeSeer get power function succeeded: value=' + value );
-                if( value == 0 )
-                    callback( null, 0 );
+
+                this.log('HomeSeer get power function succeeded: ref=' + this.ref + ' value=' + value);
+                if (value == 0)
+                    callback(null, 0);
                 else
-                    callback( null, 1 );
+                    callback(null, 1);
             }
         }.bind(this));
     },
 
-    getBinarySensorState: function(callback) {
+    getBinarySensorState: function (callback) {
         var url = this.status_url;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get binary sensor state function failed: %s', error.message);
-                callback( error, 0 );
+                callback(error, 0);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-	
-                this.log('HomeSeer get binary sensor state function succeeded: value=' + value );
-                if( this.config.onValues ) {
-                    if( this.config.onValues.indexOf(value) != -1 )
-                        callback( null, 1 );
+
+                this.log('HomeSeer get binary sensor state function succeeded: value=' + value);
+                if (this.config.onValues) {
+                    if (this.config.onValues.indexOf(value) != -1)
+                        callback(null, 1);
                     else
-                        callback( null, 0 );                    
+                        callback(null, 0);
                 }
                 else {
-                    if( value != 0 )
-                        callback( null, 1 );
+                    if (value != 0)
+                        callback(null, 1);
                     else
-                        callback( null, 0 );
-                }        
+                        callback(null, 0);
+                }
             }
         }.bind(this));
     },
 
 
-    setValue: function(level, callback) {
+    setValue: function (level, callback) {
         var url = this.control_url + level;
 
         this.log("Setting value to %s", level);
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer set value function failed: %s', error.message);
                 callback(error);
@@ -437,34 +495,37 @@ HomeSeerAccessory.prototype = {
                 callback();
             }
         }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
     },
 
-    getValue: function(callback) {
+    getValue: function (callback) {
         var url = this.status_url;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get value function failed: %s', error.message);
-                callback( error, 0 );
+                callback(error, 0);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-	
-                this.log('HomeSeer get value function succeeded: value=' + value );
-                callback( null, value );
+
+                this.log('HomeSeer get value function succeeded: value=' + value);
+                callback(null, value);
             }
         }.bind(this));
     },
 
-    setTemperature: function(temperature, callback) {
+    setTemperature: function (temperature, callback) {
         this.log("Setting temperature to %s", temperature);
-        if( this.config.temperatureUnit == "F" ) {
-            temperature = temperature*9/5+32;
+        if (this.config.temperatureUnit == "F") {
+            temperature = temperature * 9 / 5 + 32;
         }
 
         var url = this.control_url + temperature;
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer set temperature function failed: %s', error.message);
                 callback(error);
@@ -474,75 +535,78 @@ HomeSeerAccessory.prototype = {
                 callback();
             }
         }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
     },
 
-    getTemperature: function(callback) {
+    getTemperature: function (callback) {
         var url = this.status_url;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get temperature function failed: %s', error.message);
-                callback( error, 0 );
+                callback(error, 0);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-	
-                this.log('HomeSeer get temperature function succeeded: value=' + value );
-                if( this.config.temperatureUnit == "F" ) {
-                    value = (value-32)*5/9;
+
+                this.log('HomeSeer get temperature function succeeded: value=' + value);
+                if (this.config.temperatureUnit == "F") {
+                    value = (value - 32) * 5 / 9;
                 }
-                callback( null, value );
+                callback(null, value);
             }
         }.bind(this));
     },
 
-    getThermostatCurrentHeatingCoolingState: function(callback) {
+    getThermostatCurrentHeatingCoolingState: function (callback) {
         var ref = this.config.stateRef;
         var url = this.access_url + "request=getstatus&ref=" + ref;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get thermostat current heating cooling state function failed: %s', error.message);
-                callback( error, 0 );
+                callback(error, 0);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-	
-                this.log('HomeSeer get thermostat current heating cooling state function succeeded: value=' + value );
-                if( this.config.stateOffValues.indexOf(value) != -1 )
-                    callback( null, 0 );
-                else if( this.config.stateHeatValues.indexOf(value) != -1 )
-                    callback( null, 1 );
-                else if( this.config.stateCoolValues.indexOf(value) != -1 )
-                    callback( null, 2 );
-                else if( this.config.stateAutoValues.indexOf(value) != -1 )
-                    callback( null, 3 );
+
+                this.log('HomeSeer get thermostat current heating cooling state function succeeded: value=' + value);
+                if (this.config.stateOffValues.indexOf(value) != -1)
+                    callback(null, 0);
+                else if (this.config.stateHeatValues.indexOf(value) != -1)
+                    callback(null, 1);
+                else if (this.config.stateCoolValues.indexOf(value) != -1)
+                    callback(null, 2);
+                else if (this.config.stateAutoValues.indexOf(value) != -1)
+                    callback(null, 3);
                 else {
-                    this.log( "Error: value for thermostat current heating cooling state not in offValues, heatValues, coolValues or autoValues" );
-                    callback( null, 0 );                
+                    this.log("Error: value for thermostat current heating cooling state not in offValues, heatValues, coolValues or autoValues");
+                    callback(null, 0);
                 }
             }
         }.bind(this));
     },
 
-    setThermostatCurrentHeatingCoolingState: function(state, callback) {
+    setThermostatCurrentHeatingCoolingState: function (state, callback) {
         this.log("Setting thermostat current heating cooling state to %s", state);
 
         var ref = this.config.controlRef;
         var value = 0;
-        if( state == 0 )
+        if (state == 0)
             value = this.config.controlOffValue;
-        else if( state == 1 )
+        else if (state == 1)
             value = this.config.controlHeatValue;
-        else if( state == 2 )
+        else if (state == 2)
             value = this.config.controlCoolValue;
-        else if( state == 3 )
+        else if (state == 3)
             value = this.config.controlAutoValue;
 
         var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + value;
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer set thermostat current heating cooling state function failed: %s', error.message);
                 callback(error);
@@ -552,39 +616,42 @@ HomeSeerAccessory.prototype = {
                 callback();
             }
         }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
     },
 
-    getThermostatTargetTemperature: function(callback) {
+    getThermostatTargetTemperature: function (callback) {
         var ref = this.config.setPointRef;
         var url = this.access_url + "request=getstatus&ref=" + ref;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get thermostat target temperature function failed: %s', error.message);
-                callback( error, 0 );
+                callback(error, 0);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-	
-                this.log('HomeSeer get thermostat target temperature function succeeded: value=' + value );
-                if( this.config.temperatureUnit == "F" ) {
-                    value = (value-32)*5/9;
+
+                this.log('HomeSeer get thermostat target temperature function succeeded: value=' + value);
+                if (this.config.temperatureUnit == "F") {
+                    value = (value - 32) * 5 / 9;
                 }
-                callback( null, value );
+                callback(null, value);
             }
         }.bind(this));
     },
 
-    setThermostatTargetTemperature: function(temperature, callback) {
+    setThermostatTargetTemperature: function (temperature, callback) {
         this.log("Setting thermostat target temperature to %s", temperature);
-        if( this.config.temperatureUnit == "F" ) {
-            temperature = temperature*9/5+32;
+        if (this.config.temperatureUnit == "F") {
+            temperature = temperature * 9 / 5 + 32;
         }
 
         var ref = this.config.setPointRef;
         var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + temperature;
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer set thermostat target temperature function failed: %s', error.message);
                 callback(error);
@@ -594,86 +661,89 @@ HomeSeerAccessory.prototype = {
                 callback();
             }
         }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
     },
 
-    getThermostatTemperatureDisplayUnits: function(callback) {
-        if( this.config.temperatureUnit == "F" )
-            callback( null, 1 );
+    getThermostatTemperatureDisplayUnits: function (callback) {
+        if (this.config.temperatureUnit == "F")
+            callback(null, 1);
         else
-            callback( null, 0 );
+            callback(null, 0);
     },
 
-    getLowBatteryStatus: function(callback) {
+    getLowBatteryStatus: function (callback) {
         var ref = this.config.batteryRef;
         var url = this.access_url + "request=getstatus&ref=" + ref;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get battery status function failed: %s', error.message);
-                callback( error, 0 );
+                callback(error, 0);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-                var minValue = 10;	
+                var minValue = 10;
 
-                this.log('HomeSeer get battery status function succeeded: value=' + value );
-                if( this.config.batteryThreshold ) {
-                    	minValue = this.config.batteryThreshold;
+                this.log('HomeSeer get battery status function succeeded: value=' + value);
+                if (this.config.batteryThreshold) {
+                    minValue = this.config.batteryThreshold;
                 }
 
-                if( value > minValue )
-                    callback( null, 0 );
+                if (value > minValue)
+                    callback(null, 0);
                 else
-                    callback( null, 1 );
+                    callback(null, 1);
             }
         }.bind(this));
     },
 
-    getCurrentDoorState: function(callback) {
+    getCurrentDoorState: function (callback) {
         var ref = this.config.stateRef;
         var url = this.access_url + "request=getstatus&ref=" + ref;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get current door state function failed: %s', error.message);
-                callback( error, 0 );
+                callback(error, 0);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-	
-                this.log('HomeSeer get target door state function succeeded: value=' + value );
-                if( this.config.stateOpenValues.indexOf(value) != -1 )
-                    callback( null, Characteristic.CurrentDoorState.OPEN );
-                else if( this.config.stateClosedValues.indexOf(value) != -1 )
-                    callback( null, Characteristic.CurrentDoorState.CLOSED );
-                else if( this.config.stateOpeningValues && this.config.stateOpeningValues.indexOf(value) != -1 )
-                    callback( null, 2 );
-                else if( this.config.stateClosingValues && this.config.stateClosingValues.indexOf(value) != -1 )
-                    callback( null, 3 );
-                else if( this.config.stateStoppedValues && this.config.stateStoppedValues.indexOf(value) != -1 )
-                    callback( null, 4 );
+
+                this.log('HomeSeer get target door state function succeeded: value=' + value);
+                if (this.config.stateOpenValues.indexOf(value) != -1)
+                    callback(null, Characteristic.CurrentDoorState.OPEN);
+                else if (this.config.stateClosedValues.indexOf(value) != -1)
+                    callback(null, Characteristic.CurrentDoorState.CLOSED);
+                else if (this.config.stateOpeningValues && this.config.stateOpeningValues.indexOf(value) != -1)
+                    callback(null, 2);
+                else if (this.config.stateClosingValues && this.config.stateClosingValues.indexOf(value) != -1)
+                    callback(null, 3);
+                else if (this.config.stateStoppedValues && this.config.stateStoppedValues.indexOf(value) != -1)
+                    callback(null, 4);
                 else {
-                    this.log( "Error: value for current door state not in stateO0penValues, stateClosedValues, stateOpeningValues, stateClosingValues, stateStoppedValues" );
-                    callback( null, 0 );                
+                    this.log("Error: value for current door state not in stateO0penValues, stateClosedValues, stateOpeningValues, stateClosingValues, stateStoppedValues");
+                    callback(null, 0);
                 }
             }
         }.bind(this));
     },
 
-    setTargetDoorState: function(state, callback) {
+    setTargetDoorState: function (state, callback) {
         this.log("Setting target door state state to %s", state);
 
         var ref = this.config.controlRef;
         var value = 0;
-        if( state == 0 )
+        if (state == 0)
             value = this.config.controlOpenValue;
-        else if( state == 1 )
+        else if (state == 1)
             value = this.config.controlCloseValue;
 
         var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + value;
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer set target door state function failed: %s', error.message);
                 callback(error);
@@ -683,75 +753,78 @@ HomeSeerAccessory.prototype = {
                 callback();
             }
         }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
     },
 
-    getObstructionDetected: function(callback) {
-        if( this.config.obstructionRef ) {
+    getObstructionDetected: function (callback) {
+        if (this.config.obstructionRef) {
             var ref = this.config.obstructionRef;
             var url = this.access_url + "request=getstatus&ref=" + ref;
 
-            httpRequest(url, 'GET', function(error, response, body) {
+            httpRequest(url, 'GET', function (error, response, body) {
                 if (error) {
                     this.log('HomeSeer get obstruction detected function failed: %s', error.message);
-                    callback( error, 0 );
+                    callback(error, 0);
                 }
                 else {
-                    var status = JSON.parse( body );
+                    var status = JSON.parse(body);
                     var value = status.Devices[0].value;
-	
-                    this.log('HomeSeer get obstruction detected function succeeded: value=' + value );
-                    if( this.config.obstructionValues && this.config.obstructionValues.indexOf(value) != -1 )
-                        callback( null, 1 );
+
+                    this.log('HomeSeer get obstruction detected function succeeded: value=' + value);
+                    if (this.config.obstructionValues && this.config.obstructionValues.indexOf(value) != -1)
+                        callback(null, 1);
                     else {
-                        callback( null, 0 );                
+                        callback(null, 0);
                     }
                 }
             }.bind(this));
         }
-        else {       
-            callback( null, 0 );                
+        else {
+            callback(null, 0);
         }
     },
 
-    getLockCurrentState: function(callback) {
+    getLockCurrentState: function (callback) {
         var ref = this.config.lockRef;
         var url = this.access_url + "request=getstatus&ref=" + ref;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get lock current state function failed: %s', error.message);
-                callback( error, 3 );
+                callback(error, 3);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-	
-                this.log('HomeSeer get lock current state function succeeded: value=' + value );
-                if( this.config.lockUnsecuredValues && this.config.lockUnsecuredValues.indexOf(value) != -1 )
-                    callback( null, 0 );
-                else if( this.config.lockSecuredValues && this.config.lockSecuredValues.indexOf(value) != -1 )
-                    callback( null, 1 );
-                else if( this.config.lockJammedValues && this.config.lockJammedValues.indexOf(value) != -1 )
-                    callback( null, 2 );
+
+                this.log('HomeSeer get lock current state function succeeded: value=' + value);
+                if (this.config.lockUnsecuredValues && this.config.lockUnsecuredValues.indexOf(value) != -1)
+                    callback(null, 0);
+                else if (this.config.lockSecuredValues && this.config.lockSecuredValues.indexOf(value) != -1)
+                    callback(null, 1);
+                else if (this.config.lockJammedValues && this.config.lockJammedValues.indexOf(value) != -1)
+                    callback(null, 2);
                 else {
-                    callback( null, 3 );                
+                    callback(null, 3);
                 }
             }
         }.bind(this));
     },
 
-    setLockTargetState: function(state, callback) {
+    setLockTargetState: function (state, callback) {
         this.log("Setting target lock state to %s", state);
 
         var ref = this.config.lockRef;
         var value = 0;
-        if( state == 0 && this.config.unlockValue )
+        if (state == 0 && this.config.unlockValue)
             value = this.config.unlockValue;
-        else if( state == 1 && this.config.lockValue )
+        else if (state == 1 && this.config.lockValue)
             value = this.config.lockValue;
 
         var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + value;
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer set target lock state function failed: %s', error.message);
                 callback(error);
@@ -761,52 +834,55 @@ HomeSeerAccessory.prototype = {
                 callback();
             }
         }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
     },
 
-    getSecuritySystemCurrentState: function(callback) {
+    getSecuritySystemCurrentState: function (callback) {
         var url = this.access_url + "request=getstatus&ref=" + this.ref;
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer get security system current state function failed: %s', error.message);
-                callback( error, 3 );
+                callback(error, 3);
             }
             else {
-                var status = JSON.parse( body );
+                var status = JSON.parse(body);
                 var value = status.Devices[0].value;
-	
-                this.log('HomeSeer get security system current state function succeeded: value=' + value );
-                if( this.config.armedStayValues && this.config.armedStayValues.indexOf(value) != -1 )
-                    callback( null, 0 );
-                else if( this.config.armedAwayValues && this.config.armedAwayValues.indexOf(value) != -1 )
-                    callback( null, 1 );
-                else if( this.config.armedNightValues && this.config.armedNightValues.indexOf(value) != -1 )
-                    callback( null, 2 );
-                else if( this.config.disarmedValues && this.config.disarmedValues.indexOf(value) != -1 )
-                    callback( null, 3 );
-                else if( this.config.alarmValues && this.config.alarmValues.indexOf(value) != -1 )
-                    callback( null, 4 );
+
+                this.log('HomeSeer get security system current state function succeeded: value=' + value);
+                if (this.config.armedStayValues && this.config.armedStayValues.indexOf(value) != -1)
+                    callback(null, 0);
+                else if (this.config.armedAwayValues && this.config.armedAwayValues.indexOf(value) != -1)
+                    callback(null, 1);
+                else if (this.config.armedNightValues && this.config.armedNightValues.indexOf(value) != -1)
+                    callback(null, 2);
+                else if (this.config.disarmedValues && this.config.disarmedValues.indexOf(value) != -1)
+                    callback(null, 3);
+                else if (this.config.alarmValues && this.config.alarmValues.indexOf(value) != -1)
+                    callback(null, 4);
                 else
-                    callback( null, 0 );                
+                    callback(null, 0);
             }
         }.bind(this));
     },
 
-    setSecuritySystemTargetState: function(state, callback) {
+    setSecuritySystemTargetState: function (state, callback) {
         this.log("Setting security system state to %s", state);
 
         var value = 0;
-        if( state == 0 && this.config.armStayValue )
+        if (state == 0 && this.config.armStayValue)
             value = this.config.armStayValue;
-        else if( state == 1 && this.config.armAwayValue )
+        else if (state == 1 && this.config.armAwayValue)
             value = this.config.armAwayValue;
-        else if( state == 2 && this.config.armNightValue )
+        else if (state == 2 && this.config.armNightValue)
             value = this.config.armNightValue;
-        else if( state == 3 && this.config.disarmValue )
+        else if (state == 3 && this.config.disarmValue)
             value = this.config.disarmValue;
 
         var url = this.access_url + "request=controldevicebyvalue&ref=" + this.ref + "&value=" + value;
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer set target security system state function failed: %s', error.message);
                 callback(error);
@@ -816,384 +892,396 @@ HomeSeerAccessory.prototype = {
                 callback();
             }
         }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
     },
 
 
-    getPositionState: function(callback) {
-        callback( null, 2 );  // Temporarily return STOPPED. TODO: full door support
+    getPositionState: function (callback) {
+        callback(null, 2);  // Temporarily return STOPPED. TODO: full door support
     },
 
-    getServices: function() {
+    getServices: function () {
         var services = []
 
         var informationService = new Service.AccessoryInformation();
         informationService
             .setCharacteristic(Characteristic.Manufacturer, "HomeSeer")
-            .setCharacteristic(Characteristic.Model, this.model )
+            .setCharacteristic(Characteristic.Model, this.model)
             .setCharacteristic(Characteristic.SerialNumber, "HS " + this.config.type + " ref " + this.ref);
-        services.push( informationService );
+        services.push(informationService);
 
 
-        switch( this.config.type ) {
-        case "Lightbulb": {
-            var lightbulbService = new Service.Lightbulb();
-            lightbulbService
-                .getCharacteristic(Characteristic.On)
-                .on('set', this.setPowerState.bind(this))
-                .on('get', this.getPowerState.bind(this));
-    
-            if( this.config.can_dim == null || this.config.can_dim == true ) {
+        switch (this.config.type) {
+            case "Lightbulb": {
+                var lightbulbService = new Service.Lightbulb();
+                lightbulbService
+                    .getCharacteristic(Characteristic.On)
+                    .on('set', this.setPowerState.bind(this))
+                    .on('get', this.getPowerState.bind(this));
+
+                if (this.config.can_dim == null || this.config.can_dim == true) {
+                    lightbulbService
+                        .addCharacteristic(new Characteristic.Brightness())
+                        .on('set', this.setValue.bind(this))
+                        .on('get', this.getValue.bind(this));
+                }
+
+                services.push(lightbulbService);
+                break;
+            }
+            case "Fan": {
+                var fanService = new Service.Fan();
+                fanService
+                    .getCharacteristic(Characteristic.On)
+                    .on('set', this.setPowerState.bind(this))
+                    .on('get', this.getPowerState.bind(this));
+                services.push(fanService);
+                break;
+            }
+            case "Switch": {
+                var switchService = new Service.Switch();
+                switchService
+                    .getCharacteristic(Characteristic.On)
+                    .on('set', this.setPowerState.bind(this))
+                    .on('get', this.getPowerState.bind(this));
+                services.push(switchService);
+                break;
+            }
+            case "Outlet": {
+                var outletService = new Service.Outlet();
+                outletService
+                    .getCharacteristic(Characteristic.On)
+                    .on('set', this.setPowerState.bind(this))
+                    .on('get', this.getPowerState.bind(this));
+                services.push(outletService);
+                break;
+            }
+            case "TemperatureSensor": {
+                var temperatureSensorService = new Service.TemperatureSensor();
+                temperatureSensorService
+                    .getCharacteristic(Characteristic.CurrentTemperature)
+                    .on('get', this.getTemperature.bind(this));
+                temperatureSensorService
+                    .getCharacteristic(Characteristic.CurrentTemperature).setProps({ minValue: -100 });
+                if (this.config.batteryRef) {
+                    temperatureSensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(temperatureSensorService);
+                break;
+            }
+            case "CarbonMonoxideSensor": {
+                var carbonMonoxideSensorService = new Service.CarbonMonoxideSensor();
+                carbonMonoxideSensorService
+                    .getCharacteristic(Characteristic.CarbonMonoxideDetected)
+                    .on('get', this.getBinarySensorState.bind(this));
+                if (this.config.batteryRef) {
+                    carbonMonoxideSensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(carbonMonoxideSensorService);
+                break;
+            }
+            case "CarbonDioxideSensor": {
+                var carbonDioxideSensorService = new Service.CarbonDioxideSensor();
+                carbonDioxideSensorService
+                    .getCharacteristic(Characteristic.CarbonDioxideDetected)
+                    .on('get', this.getBinarySensorState.bind(this));
+                if (this.config.batteryRef) {
+                    carbonDioxideSensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(carbonDioxideSensorService);
+                break;
+            }
+            case "ContactSensor": {
+                var contactSensorService = new Service.ContactSensor();
+                contactSensorService
+                    .getCharacteristic(Characteristic.ContactSensorState)
+                    .on('get', this.getBinarySensorState.bind(this));
+                if (this.config.batteryRef) {
+                    contactSensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(contactSensorService);
+                break;
+            }
+            case "MotionSensor": {
+                var motionSensorService = new Service.MotionSensor();
+                motionSensorService
+                    .getCharacteristic(Characteristic.MotionDetected)
+                    .on('get', this.getBinarySensorState.bind(this));
+                if (this.config.batteryRef) {
+                    motionSensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(motionSensorService);
+                break;
+            }
+            case "LeakSensor": {
+                var leakSensorService = new Service.LeakSensor();
+                leakSensorService
+                    .getCharacteristic(Characteristic.LeakDetected)
+                    .on('get', this.getBinarySensorState.bind(this));
+                if (this.config.batteryRef) {
+                    leakSensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(leakSensorService);
+                break;
+            }
+            case "OccupancySensor": {
+                var occupancySensorService = new Service.OccupancySensor();
+                occupancySensorService
+                    .getCharacteristic(Characteristic.OccupancyDetected)
+                    .on('get', this.getBinarySensorState.bind(this));
+                if (this.config.batteryRef) {
+                    occupancySensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(occupancySensorService);
+                break;
+            }
+            case "SmokeSensor": {
+                var smokeSensorService = new Service.SmokeSensor();
+                smokeSensorService
+                    .getCharacteristic(Characteristic.SmokeDetected)
+                    .on('get', this.getBinarySensorState.bind(this));
+                if (this.config.batteryRef) {
+                    smokeSensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(smokeSensorService);
+                break;
+            }
+            case "LightSensor": {
+                var lightSensorService = new Service.LightSensor();
+                lightSensorService
+                    .getCharacteristic(Characteristic.CurrentAmbientLightLevel)
+                    .on('get', this.getValue.bind(this));
+                if (this.config.batteryRef) {
+                    lightSensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(lightSensorService);
+                break;
+            }
+            case "HumiditySensor": {
+                var humiditySensorService = new Service.HumiditySensor();
+                humiditySensorService
+                    .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+                    .on('get', this.getValue.bind(this));
+                if (this.config.batteryRef) {
+                    humiditySensorService
+                        .addCharacteristic(new Characteristic.StatusLowBattery())
+                        .on('get', this.getLowBatteryStatus.bind(this));
+                }
+                services.push(humiditySensorService);
+                break;
+            }
+            case "Door": {
+                var doorService = new Service.Door();
+                doorService
+                    .getCharacteristic(Characteristic.CurrentPosition)
+                    .on('get', this.getValue.bind(this));
+                doorService
+                    .getCharacteristic(Characteristic.TargetPosition)
+                    .on('set', this.setValue.bind(this));
+                doorService
+                    .getCharacteristic(Characteristic.PositionState)
+                    .on('get', this.getPositionState.bind(this));
+                if (this.config.obstructionRef) {
+                    doorService
+                        .addCharacteristic(new Characteristic.ObstructionDetected())
+                        .on('get', this.getObstructionDetected.bind(this));
+                }
+                services.push(doorService);
+                break;
+            }
+            case "Window": {
+                var windowService = new Service.Window();
+                windowService
+                    .getCharacteristic(Characteristic.CurrentPosition)
+                    .on('get', this.getValue.bind(this));
+                windowService
+                    .getCharacteristic(Characteristic.TargetPosition)
+                    .on('set', this.setValue.bind(this));
+                windowService
+                    .getCharacteristic(Characteristic.PositionState)
+                    .on('get', this.getPositionState.bind(this));
+                if (this.config.obstructionRef) {
+                    windowService
+                        .addCharacteristic(new Characteristic.ObstructionDetected())
+                        .on('get', this.getObstructionDetected.bind(this));
+                }
+                services.push(windowService);
+                break;
+            }
+            case "WindowCovering": {
+                var windowCoveringService = new Service.WindowCovering();
+                windowCoveringService
+                    .getCharacteristic(Characteristic.CurrentPosition)
+                    .on('get', this.getValue.bind(this));
+                windowCoveringService
+                    .getCharacteristic(Characteristic.TargetPosition)
+                    .on('set', this.setValue.bind(this));
+                windowCoveringService
+                    .getCharacteristic(Characteristic.PositionState)
+                    .on('get', this.getPositionState.bind(this));
+                services.push(windowCoveringService);
+                if (this.config.obstructionRef) {
+                    windowCoveringService
+                        .addCharacteristic(new Characteristic.ObstructionDetected())
+                        .on('get', this.getObstructionDetected.bind(this));
+                }
+                break;
+            }
+            case "Battery": {
+                this.config.batteryRef = this.ref;
+                var batteryService = new Service.BatteryService();
+                batteryService
+                    .getCharacteristic(Characteristic.BatteryLevel)
+                    .on('get', this.getValue.bind(this));
+                batteryService
+                    .getCharacteristic(Characteristic.StatusLowBattery)
+                    .on('get', this.getLowBatteryStatus.bind(this));
+                services.push(batteryService);
+                break;
+            }
+            case "Thermostat": {
+                var thermostatService = new Service.Thermostat();
+                thermostatService
+                    .getCharacteristic(Characteristic.CurrentTemperature)
+                    .on('get', this.getTemperature.bind(this));
+                thermostatService
+                    .getCharacteristic(Characteristic.TargetTemperature)
+                    .on('get', this.getThermostatTargetTemperature.bind(this));
+                if (this.config.setPointReadOnly === null || this.config.setPointReadOnly === false)
+                    thermostatService
+                        .getCharacteristic(Characteristic.TargetTemperature)
+                        .on('set', this.setThermostatTargetTemperature.bind(this));
+                thermostatService
+                    .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+                    .on('get', this.getThermostatCurrentHeatingCoolingState.bind(this));
+                thermostatService
+                    .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+                    .on('get', this.getThermostatCurrentHeatingCoolingState.bind(this));
+                thermostatService
+                    .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+                    .on('set', this.setThermostatCurrentHeatingCoolingState.bind(this));
+                thermostatService
+                    .getCharacteristic(Characteristic.TemperatureDisplayUnits)
+                    .on('get', this.getThermostatTemperatureDisplayUnits.bind(this));
+
+                services.push(thermostatService);
+                break;
+            }
+            case "GarageDoorOpener": {
+                var garageDoorOpenerService = new Service.GarageDoorOpener();
+                garageDoorOpenerService
+                    .getCharacteristic(Characteristic.CurrentDoorState)
+                    .on('get', this.getCurrentDoorState.bind(this));
+                garageDoorOpenerService
+                    .getCharacteristic(Characteristic.TargetDoorState)
+                    .on('set', this.setTargetDoorState.bind(this));
+                garageDoorOpenerService
+                    .getCharacteristic(Characteristic.TargetDoorState)
+                    .on('get', this.getCurrentDoorState.bind(this));
+                garageDoorOpenerService
+                    .getCharacteristic(Characteristic.ObstructionDetected)
+                    .on('get', this.getObstructionDetected.bind(this));
+                if (this.config.lockRef) {
+                    garageDoorOpenerService
+                        .addCharacteristic(new Characteristic.LockCurrentState())
+                        .on('get', this.getLockCurrentState.bind(this));
+                    garageDoorOpenerService
+                        .addCharacteristic(new Characteristic.LockTargetState())
+                        .on('set', this.setLockTargetState.bind(this));
+                }
+                services.push(garageDoorOpenerService);
+
+                this.statusCharacteristic = garageDoorOpenerService.getCharacteristic(Characteristic.CurrentDoorState);
+
+                break;
+            }
+            case "Lock": {
+                this.config.lockRef = this.ref;
+                var lockService = new Service.LockMechanism();
+                lockService
+                    .getCharacteristic(Characteristic.LockCurrentState)
+                    .on('get', this.getLockCurrentState.bind(this));
+                lockService
+                    .getCharacteristic(Characteristic.LockTargetState)
+                    .on('get', this.getLockCurrentState.bind(this));
+                lockService
+                    .getCharacteristic(Characteristic.LockTargetState)
+                    .on('set', this.setLockTargetState.bind(this));
+                services.push(lockService);
+
+                this.statusCharacteristic = lockService.getCharacteristic(Characteristic.LockCurrentState);
+
+                break;
+            }
+            case "SecuritySystem": {
+                var securitySystemService = new Service.SecuritySystem();
+                securitySystemService
+                    .getCharacteristic(Characteristic.SecuritySystemCurrentState)
+                    .on('get', this.getSecuritySystemCurrentState.bind(this));
+                securitySystemService
+                    .getCharacteristic(Characteristic.SecuritySystemTargetState)
+                    .on('get', this.getSecuritySystemCurrentState.bind(this));
+                securitySystemService
+                    .getCharacteristic(Characteristic.SecuritySystemTargetState)
+                    .on('set', this.setSecuritySystemTargetState.bind(this));
+                services.push(securitySystemService);
+
+                this.statusCharacteristic = securitySystemService.getCharacteristic(Characteristic.SecuritySystemCurrentState);
+
+                break;
+            }
+
+            default: {
+                var lightbulbService = new Service.Lightbulb();
+                lightbulbService
+                    .getCharacteristic(Characteristic.On)
+                    .on('set', this.setPowerState.bind(this))
+                    .on('get', this.getPowerState.bind(this));
+
+                this.statusCharacteristic = lightbulbService.getCharacteristic(Characteristic.On);
+
                 lightbulbService
                     .addCharacteristic(new Characteristic.Brightness())
                     .on('set', this.setValue.bind(this))
                     .on('get', this.getValue.bind(this));
+
+                services.push(lightbulbService);
+                break;
             }
 
-            services.push( lightbulbService );
-            break;
-            }
-        case "Fan": {
-            var fanService = new Service.Fan();
-            fanService
-                .getCharacteristic(Characteristic.On)
-                .on('set', this.setPowerState.bind(this))
-                .on('get', this.getPowerState.bind(this));
-            services.push( fanService );
-            break;
-            }
-        case "Switch": {
-            var switchService = new Service.Switch();
-            switchService
-                .getCharacteristic(Characteristic.On)
-                .on('set', this.setPowerState.bind(this))
-                .on('get', this.getPowerState.bind(this));
-            services.push( switchService );
-            break;
-            }
-        case "Outlet": {
-            var outletService = new Service.Outlet();
-            outletService
-                .getCharacteristic(Characteristic.On)
-                .on('set', this.setPowerState.bind(this))
-                .on('get', this.getPowerState.bind(this));
-            services.push( outletService );
-            break;
-            }
-        case "TemperatureSensor": {
-            var temperatureSensorService = new Service.TemperatureSensor();
-            temperatureSensorService
-                .getCharacteristic(Characteristic.CurrentTemperature)
-                .on('get', this.getTemperature.bind(this));
-            temperatureSensorService
-                .getCharacteristic(Characteristic.CurrentTemperature).setProps( {minValue: -100} );
-            if( this.config.batteryRef ) {
-                temperatureSensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( temperatureSensorService );
-            break;
-            }
-        case "CarbonMonoxideSensor": {
-            var carbonMonoxideSensorService = new Service.CarbonMonoxideSensor();
-            carbonMonoxideSensorService
-                .getCharacteristic(Characteristic.CarbonMonoxideDetected)
-                .on('get', this.getBinarySensorState.bind(this));
-            if( this.config.batteryRef ) {
-                carbonMonoxideSensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( carbonMonoxideSensorService );
-            break;
-            }
-        case "CarbonDioxideSensor": {
-            var carbonDioxideSensorService = new Service.CarbonDioxideSensor();
-            carbonDioxideSensorService
-                .getCharacteristic(Characteristic.CarbonDioxideDetected)
-                .on('get', this.getBinarySensorState.bind(this));
-            if( this.config.batteryRef ) {
-                carbonDioxideSensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( carbonDioxideSensorService );
-            break;
-            }
-        case "ContactSensor": {
-            var contactSensorService = new Service.ContactSensor();
-            contactSensorService
-                .getCharacteristic(Characteristic.ContactSensorState)
-                .on('get', this.getBinarySensorState.bind(this));
-            if( this.config.batteryRef ) {
-                contactSensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( contactSensorService );
-            break;
-            }
-        case "MotionSensor": {
-            var motionSensorService = new Service.MotionSensor();
-            motionSensorService
-                .getCharacteristic(Characteristic.MotionDetected)
-                .on('get', this.getBinarySensorState.bind(this));
-            if( this.config.batteryRef ) {
-                motionSensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( motionSensorService );
-            break;
-            }
-        case "LeakSensor": {
-            var leakSensorService = new Service.LeakSensor();
-            leakSensorService
-                .getCharacteristic(Characteristic.LeakDetected)
-                .on('get', this.getBinarySensorState.bind(this));
-            if( this.config.batteryRef ) {
-                leakSensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( leakSensorService );
-            break;
-            }
-        case "OccupancySensor": {
-            var occupancySensorService = new Service.OccupancySensor();
-            occupancySensorService
-                .getCharacteristic(Characteristic.OccupancyDetected)
-                .on('get', this.getBinarySensorState.bind(this));
-            if( this.config.batteryRef ) {
-                occupancySensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( occupancySensorService );
-            break;
-            }
-        case "SmokeSensor": {
-            var smokeSensorService = new Service.SmokeSensor();
-            smokeSensorService
-                .getCharacteristic(Characteristic.SmokeDetected)
-                .on('get', this.getBinarySensorState.bind(this));
-            if( this.config.batteryRef ) {
-                smokeSensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( smokeSensorService );
-            break;
-            }
-        case "LightSensor": {
-            var lightSensorService = new Service.LightSensor();
-            lightSensorService
-                .getCharacteristic(Characteristic.CurrentAmbientLightLevel)
-                .on('get', this.getValue.bind(this));
-            if( this.config.batteryRef ) {
-                lightSensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( lightSensorService );
-            break;
-            }
-        case "HumiditySensor": {
-            var humiditySensorService = new Service.HumiditySensor();
-            humiditySensorService
-                .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-                .on('get', this.getValue.bind(this));
-            if( this.config.batteryRef ) {
-                humiditySensorService
-                    .addCharacteristic(new Characteristic.StatusLowBattery())
-                    .on('get', this.getLowBatteryStatus.bind(this));
-            }
-            services.push( humiditySensorService );
-            break;
-            }
-        case "Door": {
-            var doorService = new Service.Door();
-            doorService
-                .getCharacteristic(Characteristic.CurrentPosition)
-                .on('get', this.getValue.bind(this));
-            doorService
-                .getCharacteristic(Characteristic.TargetPosition)
-                .on('set', this.setValue.bind(this));
-            doorService
-                .getCharacteristic(Characteristic.PositionState)
-                .on('get', this.getPositionState.bind(this));
-            if( this.config.obstructionRef ) {
-                doorService
-                    .addCharacteristic(new Characteristic.ObstructionDetected())
-                    .on('get', this.getObstructionDetected.bind(this));
-            }
-            services.push( doorService );
-            break;
-            }
-        case "Window": {
-            var windowService = new Service.Window();
-            windowService
-                .getCharacteristic(Characteristic.CurrentPosition)
-                .on('get', this.getValue.bind(this));
-            windowService
-                .getCharacteristic(Characteristic.TargetPosition)
-                .on('set', this.setValue.bind(this));
-            windowService
-                .getCharacteristic(Characteristic.PositionState)
-                .on('get', this.getPositionState.bind(this));
-            if( this.config.obstructionRef ) {
-                windowService
-                    .addCharacteristic(new Characteristic.ObstructionDetected())
-                    .on('get', this.getObstructionDetected.bind(this));
-            }
-            services.push( windowService );
-            break;
-            }
-        case "WindowCovering": {
-            var windowCoveringService = new Service.WindowCovering();
-            windowCoveringService
-                .getCharacteristic(Characteristic.CurrentPosition)
-                .on('get', this.getValue.bind(this));
-            windowCoveringService
-                .getCharacteristic(Characteristic.TargetPosition)
-                .on('set', this.setValue.bind(this));
-            windowCoveringService
-                .getCharacteristic(Characteristic.PositionState)
-                .on('get', this.getPositionState.bind(this));
-            services.push( windowCoveringService );
-            if( this.config.obstructionRef ) {
-                windowCoveringService
-                    .addCharacteristic(new Characteristic.ObstructionDetected())
-                    .on('get', this.getObstructionDetected.bind(this));
-            }
-            break;
-            }
-        case "Battery": {
-            this.config.batteryRef = this.ref;
-            var batteryService = new Service.BatteryService();
-            batteryService
-                .getCharacteristic(Characteristic.BatteryLevel)
-                .on('get', this.getValue.bind(this));
-            batteryService
-                .getCharacteristic(Characteristic.StatusLowBattery)
-                .on('get', this.getLowBatteryStatus.bind(this));
-            services.push( batteryService );
-            break;
-            }
-        case "Thermostat": {
-            var thermostatService = new Service.Thermostat();
-            thermostatService
-                .getCharacteristic(Characteristic.CurrentTemperature)
-                .on('get', this.getTemperature.bind(this));
-            thermostatService
-                .getCharacteristic(Characteristic.TargetTemperature)
-                .on('get', this.getThermostatTargetTemperature.bind(this));
-            if( this.config.setPointReadOnly === null || this.config.setPointReadOnly === false )
-                thermostatService
-                    .getCharacteristic(Characteristic.TargetTemperature)
-                    .on('set', this.setThermostatTargetTemperature.bind(this));
-            thermostatService
-                .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
-                .on('get', this.getThermostatCurrentHeatingCoolingState.bind(this));
-            thermostatService
-                .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-                .on('get', this.getThermostatCurrentHeatingCoolingState.bind(this));
-            thermostatService
-                .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-                .on('set', this.setThermostatCurrentHeatingCoolingState.bind(this));
-            thermostatService
-                .getCharacteristic(Characteristic.TemperatureDisplayUnits)
-                .on('get', this.getThermostatTemperatureDisplayUnits.bind(this));
 
-            services.push( thermostatService );
-            break;
-            }
-        case "GarageDoorOpener": {
-            var garageDoorOpenerService = new Service.GarageDoorOpener();
-            garageDoorOpenerService
-                .getCharacteristic(Characteristic.CurrentDoorState)
-                .on('get', this.getCurrentDoorState.bind(this));
-            garageDoorOpenerService
-                .getCharacteristic(Characteristic.TargetDoorState)
-                .on('set', this.setTargetDoorState.bind(this));
-            garageDoorOpenerService
-                .getCharacteristic(Characteristic.TargetDoorState)
-                .on('get', this.getCurrentDoorState.bind(this));
-            garageDoorOpenerService
-                .getCharacteristic(Characteristic.ObstructionDetected)
-                .on('get', this.getObstructionDetected.bind(this));
-            if( this.config.lockRef ) {
-                garageDoorOpenerService
-                    .addCharacteristic(new Characteristic.LockCurrentState())
-                    .on('get', this.getLockCurrentState.bind(this));
-                garageDoorOpenerService
-                    .addCharacteristic(new Characteristic.LockTargetState())
-                    .on('set', this.setLockTargetState.bind(this));
-            }
-            services.push( garageDoorOpenerService );
-            break;
-            }
-        case "Lock": {
-            this.config.lockRef = this.ref;
-            var lockService = new Service.LockMechanism();
-            lockService
-                .getCharacteristic(Characteristic.LockCurrentState)
-                .on('get', this.getLockCurrentState.bind(this));
-            lockService
-                .getCharacteristic(Characteristic.LockTargetState)
-                .on('get', this.getLockCurrentState.bind(this));
-            lockService
-                .getCharacteristic(Characteristic.LockTargetState)
-                .on('set', this.setLockTargetState.bind(this));
-            services.push( lockService );
-            break;
-            }
-        case "SecuritySystem": {
-            var securitySystemService = new Service.SecuritySystem();
-            securitySystemService
-                .getCharacteristic(Characteristic.SecuritySystemCurrentState)
-                .on('get', this.getSecuritySystemCurrentState.bind(this));
-            securitySystemService
-                .getCharacteristic(Characteristic.SecuritySystemTargetState)
-                .on('get', this.getSecuritySystemCurrentState.bind(this));
-            securitySystemService
-                .getCharacteristic(Characteristic.SecuritySystemTargetState)
-                .on('set', this.setSecuritySystemTargetState.bind(this));
-            services.push( securitySystemService );
-            break;
-            }
-
-        default:{
-            var lightbulbService = new Service.Lightbulb();
-            lightbulbService
-                .getCharacteristic(Characteristic.On)
-                .on('set', this.setPowerState.bind(this))
-                .on('get', this.getPowerState.bind(this));
-
-            this.statusCharacteristic = lightbulbService.getCharacteristic(Characteristic.On);
-    
-            lightbulbService
-                .addCharacteristic(new Characteristic.Brightness())
-                .on('set', this.setValue.bind(this))
-                .on('get', this.getValue.bind(this));
-
-            services.push( lightbulbService );
-            break;
-            }
-
-            
         }
 
-        services[services.length-1].accessory = this;
+        services[services.length - 1].accessory = this;
 
         //Update the global service list
-        _services.push(services[services.length-1]);
+        _services.push(services[services.length - 1]);
 
         return services;
     }
 }
 
-function HomeSeerEvent(log, platformConfig, eventConfig ) {
+function HomeSeerEvent(log, platformConfig, eventConfig) {
     this.log = log;
     this.config = eventConfig;
     this.name = eventConfig.eventName
@@ -1202,32 +1290,32 @@ function HomeSeerEvent(log, platformConfig, eventConfig ) {
     this.access_url = platformConfig["host"] + "/JSON?";
     this.on_url = this.access_url + "request=runevent&group=" + encodeURIComponent(this.config.eventGroup) + "&name=" + encodeURIComponent(this.config.eventName);
 
-    if( this.config.offEventGroup && this.config.offEventName ) {
+    if (this.config.offEventGroup && this.config.offEventName) {
         this.off_url = this.access_url + "request=runevent&group=" + encodeURIComponent(this.config.offEventGroup) + "&name=" + encodeURIComponent(this.config.offEventName);
     }
 
-    if( this.config.name )
+    if (this.config.name)
         this.name = this.config.name;
 
-    if( this.config.uuid_base )
+    if (this.config.uuid_base)
         this.uuid_base = this.config.uuid_base;
 }
 
 HomeSeerEvent.prototype = {
 
-    identify: function(callback) {
-            callback();
+    identify: function (callback) {
+        callback();
     },
 
-    launchEvent: function(value, callback) {
+    launchEvent: function (value, callback) {
         this.log("Setting event value to %s", value);
 
         var url = this.on_url;
-        if( value == 0 && this.off_url ) {
+        if (value == 0 && this.off_url) {
             url = this.off_url;
         }
 
-        httpRequest(url, 'GET', function(error, response, body) {
+        httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
                 this.log('HomeSeer run event function failed: %s', error.message);
                 callback(error);
@@ -1240,21 +1328,21 @@ HomeSeerEvent.prototype = {
     },
 
 
-    getServices: function() {
+    getServices: function () {
         var services = []
 
         var informationService = new Service.AccessoryInformation();
         informationService
             .setCharacteristic(Characteristic.Manufacturer, "HomeSeer")
-            .setCharacteristic(Characteristic.Model, this.model )
+            .setCharacteristic(Characteristic.Model, this.model)
             .setCharacteristic(Characteristic.SerialNumber, "HS Event " + this.config.eventGroup + " " + this.config.eventName);
-        services.push( informationService );
+        services.push(informationService);
 
         var switchService = new Service.Switch();
         switchService
-            .getCharacteristic(Characteristic.On) 
+            .getCharacteristic(Characteristic.On)
             .on('set', this.launchEvent.bind(this));
-        services.push( switchService );
+        services.push(switchService);
 
         return services;
     }
