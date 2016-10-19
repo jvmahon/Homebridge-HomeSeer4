@@ -253,6 +253,15 @@ function httpRequest(url, method, callback) {
 function HomeSeerPlatform(log, config, api) {
     this.log = log;
     this.config = config;
+
+    if(config && this.config["poll"]==null)
+    {
+        this.log("Using default periodic polling rate");
+        this.config["poll"] = 60;
+    }
+
+    if(config)
+        this.log("System default periodic polling rate set to " + this.config["poll"]);
 }
 
 HomeSeerPlatform.prototype = {
@@ -332,12 +341,6 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
         this.offValue = this.config.offValue;
 
     var that = this;
-
-    if(platformConfig["poll"]==null)
-    {
-        this.log("Using default periodic polling rate");
-        platformConfig["poll"] = 60;
-    }
 
     if (this.config.poll==null)
     {
