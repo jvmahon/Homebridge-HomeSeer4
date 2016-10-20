@@ -221,6 +221,8 @@ var pollingtoevent = require("polling-to-event")
 var http = require('http');
 var Accessory, Service, Characteristic, UUIDGen;
 
+var pollingOffsetCounter=0;
+
 var _services = [];
 
 module.exports = function (homebridge) {
@@ -1330,18 +1332,27 @@ HomeSeerAccessory.prototype = {
 
         this.log(this.name + ": statusUpdateCount=" + this.config.statusUpdateCount);
 
-        //Configure the periodic status update
+
         if (this.config.poll) {
 
+            var firstPoll = this.config.poll + (pollingOffsetCounter % 60);
+            pollingOffsetCounter+=7;
+        
+            //Configure the periodic status update
             this.log(this.name + ": Polling rate=" + this.config.poll);
+            this.log(this.name + ": First poll=" + firstPoll);
 
-            this.periodicUpdate = pollingtoevent(function (done) {
-                that.log(that.name + ": Periodic status update rate=" + that.config.poll);
-                that.updateStatus(null);
+            setTimeout(function() {
+                this.periodicUpdate = pollingtoevent(function (done) {
+                this.log(that.name + ": Periodic status update rate=" + that.config.poll);
+                this.updateStatus(null);
                 done(null, null);
-            }, {
+                }.bind(this), {
                     interval: (this.config.poll * 1000)
                 });
+            }.bind(this),firstPoll*1000);
+
+            
         }
 
         this.log(this.name + ": Configure status update polling");
@@ -1397,6 +1408,7 @@ HomeSeerEvent.prototype = {
         if (value == 0 && this.off_url) {
             url = this.off_url;
         }
+        
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
@@ -1407,6 +1419,13 @@ HomeSeerEvent.prototype = {
                 this.log('HomeSeer run event function succeeded!');
                 callback();
             }
+
+            if(this.off_url==null && value != 0)
+            {
+                this.log(this.name + ': Momentary switch reseting to 0');
+                this.switchService.getCharacteristic(Characteristic.On).setValue(0);
+            }
+
         }.bind(this));
     },
 
@@ -1421,11 +1440,11 @@ HomeSeerEvent.prototype = {
             .setCharacteristic(Characteristic.SerialNumber, "HS Event " + this.config.eventGroup + " " + this.config.eventName);
         services.push(informationService);
 
-        var switchService = new Service.Switch();
-        switchService
+        this.switchService = new Service.Switch();
+        this.switchService
             .getCharacteristic(Characteristic.On)
             .on('set', this.launchEvent.bind(this));
-        services.push(switchService);
+        services.push(this.switchService);
 
         return services;
     }
