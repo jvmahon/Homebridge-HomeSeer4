@@ -2,9 +2,18 @@
 
 # homebridge-homeseer-plugin
 
-Plugin for the [homebridge](https://github.com/nfarina/homebridge) Apple iOS Homekit support application
+Plugin for the [homebridge](https://github.com/nfarina/homebridge) Apple iOS Homekit support application to support integration with the [Homeseer V3](http://www.homeseer.com/home-control-software.html) software
 
 Based on and includes code from [hap-nodejs](https://github.com/KhaosT/HAP-NodeJS) and [homebridge-legacy-plugins](https://github.com/nfarina/homebridge-legacy-plugins)
+
+# Installation
+Linux (Ubuntu/Debian based)
+1. `sudo npm install homebridge -g`
+2. `sudo npm install homebridge-homeseer-plugin -g`
+
+Windows
+1. Follow [these](http://board.homeseer.com/showpost.php?p=1204012&postcount=250) instructions for homebridge Installation
+2. Run `npm install homebridge-homeseer-plugin` from the homebridge-homeseer directory
 
 # Usage
 ## Platform options
@@ -18,10 +27,10 @@ Based on and includes code from [hap-nodejs](https://github.com/KhaosT/HAP-NodeJ
 
 ## All Accessories options
 ```js
-"ref":8,                        // Required - HomeSeer Device Reference (To get it, select the HS Device - then Advanced Tab) 
-"type":"Lightbulb",             // Optional - Lightbulb is the default
-"name":"My Light",              // Optional - HomeSeer device name is the default
-"uuid_base":"SomeUniqueId2"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+"ref":8,                            // Required - HomeSeer Device Reference (To get it, select the HS Device - then Advanced Tab) 
+"type":"Lightbulb",                 // Optional - Lightbulb is the default
+"name":"My Light",                  // Optional - HomeSeer device name is the default
+"uuid_base":"SomeUniqueId2"         // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 "poll" : 60,                        // Optional - Override default polling rate in seconds to check for changed device status
 "statusUpdateCount" : 10            // Optional - Override the number of times that the device is checked for a status change after its value is updated. Checks occur every 1 second.
 ```
