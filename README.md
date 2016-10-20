@@ -8,10 +8,12 @@ Based on and includes code from [hap-nodejs](https://github.com/KhaosT/HAP-NodeJ
 
 # Installation
 Linux (Ubuntu/Debian based)
+
 1. `sudo npm install homebridge -g`
 2. `sudo npm install homebridge-homeseer-plugin -g`
 
 Windows
+
 1. Follow [these](http://board.homeseer.com/showpost.php?p=1204012&postcount=250) instructions for homebridge Installation
 2. Run `npm install homebridge-homeseer-plugin` from the homebridge-homeseer directory
 
