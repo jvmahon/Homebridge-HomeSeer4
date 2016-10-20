@@ -37,3 +37,7 @@ Windows
 "statusUpdateCount" : 10            // Optional - Override the number of times that the device is checked for a status change after its value is updated. Checks occur every 1 second.
 ```
 See [index.js](https://raw.githubusercontent.com/jrhubott/homebridge-homeseer/master/index.js) for full configuration information or [config.js](https://raw.githubusercontent.com/jrhubott/homebridge-homeseer/master/config/config.json) for sample configuration
+
+
+#Credit
+The original HomeBridge plugin that this was based on was done by Jean-Michel Joudrier and posted to the [Homeseer forums](http://board.homeseer.com/showthread.php?t=177016).
