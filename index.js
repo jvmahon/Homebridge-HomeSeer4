@@ -1422,8 +1422,10 @@ HomeSeerEvent.prototype = {
 
             if(this.off_url==null && value != 0)
             {
-                this.log(this.name + ': Momentary switch reseting to 0');
-                this.switchService.getCharacteristic(Characteristic.On).setValue(0);
+                setTimeout(function() {
+                    this.log(this.name + ': Momentary switch reseting to 0');
+                    this.switchService.getCharacteristic(Characteristic.On).setValue(0);
+                }.bind(this),2000);
             }
 
         }.bind(this));
