@@ -258,12 +258,11 @@ function HomeSeerPlatform(log, config, api) {
 
     if(config && this.config["poll"]==null)
     {
-        this.log("Using default periodic polling rate");
         this.config["poll"] = 60;
     }
 
     if(config)
-        this.log("System default periodic polling rate set to " + this.config["poll"]);
+        this.log("System default periodic polling rate set to " + this.config["poll"] + ' seconds');
 }
 
 HomeSeerPlatform.prototype = {
@@ -396,20 +395,20 @@ HomeSeerAccessory.prototype = {
 
         if (powerOn) {
             url = this.control_url + this.onValue;
-            this.log("Setting power state to on");
+            this.log(this.name + ": Setting power state to on");
         }
         else {
             url = this.control_url + this.offValue;
-            this.log("Setting power state to off");
+            this.log(this.name + ": Setting power state to off");
         }
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer power function failed: %s', error.message);
+                this.log(this.name + ': HomeSeer power function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer power function succeeded!');
+                this.log(this.name + ': HomeSeer power function succeeded!');
                 callback();
             }
         }.bind(this));
@@ -423,14 +422,14 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get power function failed: %s', error.message);
+                this.log(this.name + ': getPowerState function failed: %s', error.message);
                 callback(error, 0);
             }
             else {
                 var status = JSON.parse(body);
                 var value = status.Devices[0].value;
 
-                this.log('HomeSeer get power function succeeded: ref=' + this.ref + ' value=' + value);
+                this.log(this.name + ': getPowerState function succeeded: value=' + value);
                 if (value == 0)
                     callback(null, 0);
                 else
@@ -444,14 +443,14 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get binary sensor state function failed: %s', error.message);
+                this.log(this.name + ': getBinarySensorState function failed: %s', error.message);
                 callback(error, 0);
             }
             else {
                 var status = JSON.parse(body);
                 var value = status.Devices[0].value;
 
-                this.log('HomeSeer get binary sensor state function succeeded: value=' + value);
+                this.log(this.name + ': getBinarySensorState function succeeded: value=' + value);
                 if (this.config.onValues) {
                     if (this.config.onValues.indexOf(value) != -1)
                         callback(null, 1);
@@ -469,18 +468,18 @@ HomeSeerAccessory.prototype = {
     },
 
 
-    setValue: function (level, callback) {
+    setBrightness: function (level, callback) {
         var url = this.control_url + level;
 
-        this.log("Setting value to %s", level);
+        this.log(this.name + ": Setting value to %s", level);
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer set value function failed: %s', error.message);
+                this.log(this.name + ': setBrightness function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer set value function succeeded!');
+                this.log(this.name + ': setBrightness function succeeded!');
                 callback();
             }
         }.bind(this));
@@ -494,14 +493,14 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get value function failed: %s', error.message);
+                this.log(this.name + ': getValue function failed: %s', error.message);
                 callback(error, 0);
             }
             else {
                 var status = JSON.parse(body);
                 var value = status.Devices[0].value;
 
-                this.log('HomeSeer get value function succeeded: value=' + value);
+                this.log(this.name + ': getValue function succeeded: value=' + value);
                 callback(null, value);
             }
         }.bind(this));
@@ -510,7 +509,7 @@ HomeSeerAccessory.prototype = {
     setBrightness: function (level, callback) {
         var url = this.control_url + level;
 
-        this.log("Setting brightness to %s", level);
+        this.log(this.name + ": Setting brightness to %s", level);
 
         var that=this;
 
@@ -518,11 +517,11 @@ HomeSeerAccessory.prototype = {
 
             httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer set value function failed: %s', error.message);
+                this.log(this.name + ': setBrightness function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer set value function succeeded!');
+                this.log(this.name + ': setBrightness function succeeded!');
                 callback();
             }
             }.bind(this));
@@ -530,13 +529,13 @@ HomeSeerAccessory.prototype = {
         //Poll for updated status
         this.pollForUpdate();
             
-        }.bind(this), 800);
+        }.bind(this), 300);
 
         
     },
 
     setTemperature: function (temperature, callback) {
-        this.log("Setting temperature to %s", temperature);
+        this.log(this.name + ": Setting temperature to %s", temperature);
         if (this.config.temperatureUnit == "F") {
             temperature = temperature * 9 / 5 + 32;
         }
@@ -544,11 +543,11 @@ HomeSeerAccessory.prototype = {
         var url = this.control_url + temperature;
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer set temperature function failed: %s', error.message);
+                this.log(this.name + ': setTemperature function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer set temperature function succeeded!');
+                this.log(this.name + ': setTemperature function succeeded!');
                 callback();
             }
         }.bind(this));
@@ -562,14 +561,14 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get temperature function failed: %s', error.message);
+                this.log(this.name + ': getTemperature function failed: %s', error.message);
                 callback(error, 0);
             }
             else {
                 var status = JSON.parse(body);
                 var value = status.Devices[0].value;
 
-                this.log('HomeSeer get temperature function succeeded: value=' + value);
+                this.log(this.name + ': getTemperature function succeeded: value=' + value);
                 if (this.config.temperatureUnit == "F") {
                     value = (value - 32) * 5 / 9;
                 }
@@ -584,14 +583,14 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get thermostat current heating cooling state function failed: %s', error.message);
+                this.log(this.name + ': getThermostatCurrentHeatingCoolingState function failed: %s', error.message);
                 callback(error, 0);
             }
             else {
                 var status = JSON.parse(body);
                 var value = status.Devices[0].value;
 
-                this.log('HomeSeer get thermostat current heating cooling state function succeeded: value=' + value);
+                this.log(this.name + ': getThermostatCurrentHeatingCoolingState function succeeded: value=' + value);
                 if (this.config.stateOffValues.indexOf(value) != -1)
                     callback(null, 0);
                 else if (this.config.stateHeatValues.indexOf(value) != -1)
@@ -601,7 +600,7 @@ HomeSeerAccessory.prototype = {
                 else if (this.config.stateAutoValues.indexOf(value) != -1)
                     callback(null, 3);
                 else {
-                    this.log("Error: value for thermostat current heating cooling state not in offValues, heatValues, coolValues or autoValues");
+                    this.log(this.name + ': Error: value for thermostat current heating cooling state not in offValues, heatValues, coolValues or autoValues');
                     callback(null, 0);
                 }
             }
@@ -609,7 +608,7 @@ HomeSeerAccessory.prototype = {
     },
 
     setThermostatCurrentHeatingCoolingState: function (state, callback) {
-        this.log("Setting thermostat current heating cooling state to %s", state);
+        this.log(this.name + ': Setting thermostat current heating cooling state to %s', state);
 
         var ref = this.config.controlRef;
         var value = 0;
@@ -625,11 +624,11 @@ HomeSeerAccessory.prototype = {
         var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + value;
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer set thermostat current heating cooling state function failed: %s', error.message);
+                this.log(this.name + ': setThermostatCurrentHeatingCoolingState function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer set thermostat current heating cooling state function succeeded!');
+                this.log(this.name + ': setThermostatCurrentHeatingCoolingState function succeeded!');
                 callback();
             }
         }.bind(this));
@@ -644,14 +643,14 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get thermostat target temperature function failed: %s', error.message);
+                this.log(this.name + ': getThermostatTargetTemperature function failed: %s', error.message);
                 callback(error, 0);
             }
             else {
                 var status = JSON.parse(body);
                 var value = status.Devices[0].value;
 
-                this.log('HomeSeer get thermostat target temperature function succeeded: value=' + value);
+                this.log(this.name + ': getThermostatTargetTemperature function succeeded: value=' + value);
                 if (this.config.temperatureUnit == "F") {
                     value = (value - 32) * 5 / 9;
                 }
@@ -661,7 +660,7 @@ HomeSeerAccessory.prototype = {
     },
 
     setThermostatTargetTemperature: function (temperature, callback) {
-        this.log("Setting thermostat target temperature to %s", temperature);
+        this.log(this.name + ': Setting thermostat target temperature to %s', temperature);
         if (this.config.temperatureUnit == "F") {
             temperature = temperature * 9 / 5 + 32;
         }
@@ -670,11 +669,11 @@ HomeSeerAccessory.prototype = {
         var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + temperature;
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer set thermostat target temperature function failed: %s', error.message);
+                this.log(this.name + ': setThermostatTargetTemperature function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer set thermostat target temperature function succeeded!');
+                this.log(this.name + ': setThermostatTargetTemperature function succeeded!');
                 callback();
             }
         }.bind(this));
@@ -696,7 +695,7 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get battery status function failed: %s', error.message);
+                this.log(this.name + ': getLowBatteryStatus function failed: %s', error.message);
                 callback(error, 0);
             }
             else {
@@ -704,7 +703,7 @@ HomeSeerAccessory.prototype = {
                 var value = status.Devices[0].value;
                 var minValue = 10;
 
-                this.log('HomeSeer get battery status function succeeded: value=' + value);
+                this.log(this.name + ': getLowBatteryStatus function succeeded: value=' + value);
                 if (this.config.batteryThreshold) {
                     minValue = this.config.batteryThreshold;
                 }
@@ -723,14 +722,14 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get current door state function failed: %s', error.message);
+                this.log(this.name + ': getCurrentDoorState function failed: %s', error.message);
                 callback(error, 0);
             }
             else {
                 var status = JSON.parse(body);
                 var value = status.Devices[0].value;
 
-                this.log('HomeSeer get target door state function succeeded: value=' + value);
+                this.log(this.name + ': getCurrentDoorState function succeeded: value=' + value);
                 if (this.config.stateOpenValues.indexOf(value) != -1)
                     callback(null, Characteristic.CurrentDoorState.OPEN);
                 else if (this.config.stateClosedValues.indexOf(value) != -1)
@@ -742,7 +741,7 @@ HomeSeerAccessory.prototype = {
                 else if (this.config.stateStoppedValues && this.config.stateStoppedValues.indexOf(value) != -1)
                     callback(null, 4);
                 else {
-                    this.log("Error: value for current door state not in stateO0penValues, stateClosedValues, stateOpeningValues, stateClosingValues, stateStoppedValues");
+                    this.log(this.name + ': Error: value for current door state not in stateO0penValues, stateClosedValues, stateOpeningValues, stateClosingValues, stateStoppedValues');
                     callback(null, 0);
                 }
             }
@@ -750,7 +749,7 @@ HomeSeerAccessory.prototype = {
     },
 
     setTargetDoorState: function (state, callback) {
-        this.log("Setting target door state state to %s", state);
+        this.log(this.name + ': Setting target door state state to %s', state);
 
         var ref = this.config.controlRef;
         var value = 0;
@@ -762,11 +761,11 @@ HomeSeerAccessory.prototype = {
         var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + value;
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer set target door state function failed: %s', error.message);
+                this.log(this.name + ': setTargetDoorState function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer set target door state function succeeded!');
+                this.log(this.name + ': setTargetDoorState function succeeded!');
                 callback();
             }
         }.bind(this));
@@ -782,14 +781,14 @@ HomeSeerAccessory.prototype = {
 
             httpRequest(url, 'GET', function (error, response, body) {
                 if (error) {
-                    this.log('HomeSeer get obstruction detected function failed: %s', error.message);
+                    this.log(this.name + ': getObstructionDetected function failed: %s', error.message);
                     callback(error, 0);
                 }
                 else {
                     var status = JSON.parse(body);
                     var value = status.Devices[0].value;
 
-                    this.log('HomeSeer get obstruction detected function succeeded: value=' + value);
+                    this.log(this.name + ': getObstructionDetected function succeeded: value=' + value);
                     if (this.config.obstructionValues && this.config.obstructionValues.indexOf(value) != -1)
                         callback(null, 1);
                     else {
@@ -809,14 +808,14 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get lock current state function failed: %s', error.message);
+                this.log(this.name + ': getLockCurrentState function failed: %s', error.message);
                 callback(error, 3);
             }
             else {
                 var status = JSON.parse(body);
                 var value = status.Devices[0].value;
 
-                this.log('HomeSeer get lock current state function succeeded: value=' + value);
+                this.log(this.name + ': getLockCurrentState function succeeded: value=' + value);
                 if (this.config.lockUnsecuredValues && this.config.lockUnsecuredValues.indexOf(value) != -1)
                     callback(null, 0);
                 else if (this.config.lockSecuredValues && this.config.lockSecuredValues.indexOf(value) != -1)
@@ -831,7 +830,7 @@ HomeSeerAccessory.prototype = {
     },
 
     setLockTargetState: function (state, callback) {
-        this.log("Setting target lock state to %s", state);
+        this.log(this.name + ': Setting target lock state to %s', state);
 
         var ref = this.config.lockRef;
         var value = 0;
@@ -843,11 +842,11 @@ HomeSeerAccessory.prototype = {
         var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + value;
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer set target lock state function failed: %s', error.message);
+                this.log(this.name + ': setLockTargetState function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer set target lock state function succeeded!');
+                this.log(this.name + ': setLockTargetState function succeeded!');
                 callback();
             }
         }.bind(this));
@@ -861,14 +860,14 @@ HomeSeerAccessory.prototype = {
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer get security system current state function failed: %s', error.message);
+                this.log(this.name + ': getSecuritySystemCurrentState function failed: %s', error.message);
                 callback(error, 3);
             }
             else {
                 var status = JSON.parse(body);
                 var value = status.Devices[0].value;
 
-                this.log('HomeSeer get security system current state function succeeded: value=' + value);
+                this.log(this.name + ': getSecuritySystemCurrentState function succeeded: value=' + value);
                 if (this.config.armedStayValues && this.config.armedStayValues.indexOf(value) != -1)
                     callback(null, 0);
                 else if (this.config.armedAwayValues && this.config.armedAwayValues.indexOf(value) != -1)
@@ -901,11 +900,11 @@ HomeSeerAccessory.prototype = {
         var url = this.access_url + "request=controldevicebyvalue&ref=" + this.ref + "&value=" + value;
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer set target security system state function failed: %s', error.message);
+                this.log(this.name + ': setSecuritySystemTargetState function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer set target security system state function succeeded!');
+                this.log(this.name + ': setSecuritySystemTargetState function succeeded!');
                 callback();
             }
         }.bind(this));
@@ -1126,7 +1125,7 @@ HomeSeerAccessory.prototype = {
                     .on('get', this.getValue.bind(this));
                 doorService
                     .getCharacteristic(Characteristic.TargetPosition)
-                    .on('set', this.setValue.bind(this));
+                    .on('set', this.setBrightness.bind(this));
                 doorService
                     .getCharacteristic(Characteristic.PositionState)
                     .on('get', this.getPositionState.bind(this));
@@ -1147,7 +1146,7 @@ HomeSeerAccessory.prototype = {
                     .on('get', this.getValue.bind(this));
                 windowService
                     .getCharacteristic(Characteristic.TargetPosition)
-                    .on('set', this.setValue.bind(this));
+                    .on('set', this.setBrightness.bind(this));
                 windowService
                     .getCharacteristic(Characteristic.PositionState)
                     .on('get', this.getPositionState.bind(this));
@@ -1168,7 +1167,7 @@ HomeSeerAccessory.prototype = {
                     .on('get', this.getValue.bind(this));
                 windowCoveringService
                     .getCharacteristic(Characteristic.TargetPosition)
-                    .on('set', this.setValue.bind(this));
+                    .on('set', this.setBrightness.bind(this));
                 windowCoveringService
                     .getCharacteristic(Characteristic.PositionState)
                     .on('get', this.getPositionState.bind(this));
@@ -1332,19 +1331,19 @@ HomeSeerAccessory.prototype = {
 
         this.log(this.name + ": statusUpdateCount=" + this.config.statusUpdateCount);
 
-
+        //Configure the periodic status update
         if (this.config.poll) {
 
             var firstPoll = this.config.poll + (pollingOffsetCounter % 60);
             pollingOffsetCounter+=7;
         
             //Configure the periodic status update
-            this.log(this.name + ": Polling rate=" + this.config.poll);
-            this.log(this.name + ": First poll=" + firstPoll);
+            this.log(this.name + ": Polling rate=" + this.config.poll + ' seconds');
+            this.log(this.name + ": First poll=" + firstPoll + ' seconds');
 
             setTimeout(function() {
                 this.periodicUpdate = pollingtoevent(function (done) {
-                this.log(that.name + ": Periodic status update rate=" + that.config.poll);
+                this.log(this.name + ": Periodic status update rate=" + this.config.poll + ' seconds');
                 this.updateStatus(null);
                 done(null, null);
                 }.bind(this), {
@@ -1355,13 +1354,11 @@ HomeSeerAccessory.prototype = {
             
         }
 
-        this.log(this.name + ": Configure status update polling");
         //Configure the status update polling
-        var that = this;
         this.pollForStatusUpdate = pollingtoevent(function (done) {
-            that.updateStatusByPolling(null);
+            this.updateStatusByPolling(null);
             done(null, null);
-        }, {
+        }.bind(this), {
                 interval: 1000
             });
 
@@ -1408,26 +1405,16 @@ HomeSeerEvent.prototype = {
         if (value == 0 && this.off_url) {
             url = this.off_url;
         }
-        
 
         httpRequest(url, 'GET', function (error, response, body) {
             if (error) {
-                this.log('HomeSeer run event function failed: %s', error.message);
+                this.log(this.name + ': launchEvent function failed: %s', error.message);
                 callback(error);
             }
             else {
-                this.log('HomeSeer run event function succeeded!');
+                this.log(this.name + ': launchEvent function succeeded!');
                 callback();
             }
-
-            if(this.off_url==null && value != 0)
-            {
-                setTimeout(function() {
-                    this.log(this.name + ': Momentary switch reseting to 0');
-                    this.switchService.getCharacteristic(Characteristic.On).setValue(0);
-                }.bind(this),2000);
-            }
-
         }.bind(this));
     },
 
@@ -1442,6 +1429,7 @@ HomeSeerEvent.prototype = {
             .setCharacteristic(Characteristic.SerialNumber, "HS Event " + this.config.eventGroup + " " + this.config.eventName);
         services.push(informationService);
 
+        
         this.switchService = new Service.Switch();
         this.switchService
             .getCharacteristic(Characteristic.On)
