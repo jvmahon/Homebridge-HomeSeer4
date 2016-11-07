@@ -1311,10 +1311,13 @@ HomeSeerAccessory.prototype = {
 
                 this.statusCharacteristic = lightbulbService.getCharacteristic(Characteristic.On);
 
-                lightbulbService
-                    .addCharacteristic(new Characteristic.Brightness())
-                    .on('set', this.setBrightness.bind(this))
-                    .on('get', this.getValue.bind(this));
+                //Allow for dimmable lights
+                if (this.config.can_dim == null || this.config.can_dim == true) {
+                    lightbulbService
+                        .addCharacteristic(new Characteristic.Brightness())
+                        .on('set', this.setBrightness.bind(this))
+                        .on('get', this.getValue.bind(this));
+                }
 
                 services.push(lightbulbService);
                 break;
