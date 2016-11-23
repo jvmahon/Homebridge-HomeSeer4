@@ -41,3 +41,7 @@ See [index.js](https://raw.githubusercontent.com/jrhubott/homebridge-homeseer/ma
 
 #Credit
 The original HomeBridge plugin that this was based on was done by Jean-Michel Joudrier and posted to the [Homeseer forums](http://board.homeseer.com/showthread.php?t=177016).
+
+If you want to support me (does not equal development): <br>
+
+<a href="https://www.paypal.me/rhusoft/3" target=blank><img src=http://imgur.com/gnvlm6n.jpg alt="Buy Me a Beer" height=75 width=150 align='center'></a>
