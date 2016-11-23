@@ -467,7 +467,7 @@ HomeSeerAccessory.prototype = {
         }.bind(this));
     },
 
-
+/* Duplicate brightness set, this one without a delay
     setBrightness: function (level, callback) {
         var url = this.control_url + level;
 
@@ -487,7 +487,7 @@ HomeSeerAccessory.prototype = {
         //Poll for updated status
         this.pollForUpdate();
     },
-
+*/
     getValue: function (callback) {
         var url = this.status_url;
 
@@ -512,7 +512,7 @@ HomeSeerAccessory.prototype = {
         this.log(this.name + ": Setting brightness to %s", level);
 
         var that=this;
-
+        // Assume this delay is used to counter the HomeKit sending a full ON before the brightness level?
         setTimeout(function() {
 
             httpRequest(url, 'GET', function (error, response, body) {
@@ -522,6 +522,34 @@ HomeSeerAccessory.prototype = {
             }
             else {
                 this.log(this.name + ': setBrightness function succeeded!');
+                callback();
+            }
+            }.bind(this));
+
+        //Poll for updated status
+        this.pollForUpdate();
+            
+        }.bind(this), 300);
+
+        
+    },
+
+    setRotationSpeed: function (rotationSpeed, callback) {
+        var url = this.control_url + rotationSpeed;
+        
+        this.log(this.name + ": Setting rotation speed to %s", rotationSpeed);
+
+        var that=this;
+        // Assume this delay is used to counter the HomeKit sending a full ON before the speed?
+        setTimeout(function() {
+
+            httpRequest(url, 'GET', function (error, response, body) {
+            if (error) {
+                this.log(this.name + ': setRotationSpeed function failed: %s', error.message);
+                callback(error);
+            }
+            else {
+                this.log(this.name + ': setRotationSpeed function succeeded!');
                 callback();
             }
             }.bind(this));
@@ -959,6 +987,13 @@ HomeSeerAccessory.prototype = {
                     .getCharacteristic(Characteristic.On)
                     .on('set', this.setPowerState.bind(this))
                     .on('get', this.getPowerState.bind(this));
+
+                if (this.config.can_dim) {
+                    fanService
+                        .addCharacteristic(new Characteristic.RotationSpeed())
+                        .on('set', this.setRotationSpeed.bind(this))
+                        .on('get', this.getValue.bind(this));
+                }
 
                 this.statusCharacteristic = fanService.getCharacteristic(Characteristic.On);
                 services.push(fanService);
