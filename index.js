@@ -1,41 +1,5 @@
 'use strict';
 
-//
-// HomeSeer Platform Shim for HomeBridge by Jean-Michel Joudrier - (stipus at stipus dot com)
-// V0.1 - 2015/10/07
-// - Initial version
-// V0.2 - 2015/10/10
-// - Occupancy sensor fix
-// V0.3 - 2015/10/11
-// - Added TemperatureUnit=F|C option to temperature sensors
-// - Added negative temperature support to temperature sensors
-// V0.4 - 2015/10/12
-// - Added thermostat support
-// V0.5 - 2015/10/12
-// - Added Humidity sensor support
-// V0.6 - 2015/10/12
-// - Added Battery support
-// - Added low battery support for all sensors
-// - Added HomeSeer event support (using HomeKit switches...)
-// V0.7 - 2015/10/13
-// - You can add multiple HomeKit devices for the same HomeSeer device reference
-// - Added CarbonMonoxide sensor
-// - Added CarbonDioxide sensor
-// - Added onValues option to all binary sensors
-// V0.8 - 2015/10/14
-// - Added uuid_base parameter to all accessories
-// V0.9 - 2015/10/16
-// - Smoke sensor battery fix
-// - Added offEventGroup && offEventName to events (turn <event> on launches one HS event. turn <event> off can launch another HS event)
-// - Added GarageDoorOpener support
-// - Added Lock support
-// V0.10 - 2015/10/29
-// - Added Security System support
-// - Added Window support
-// - Added Window Covering support
-// - Added obstruction support to doors, windows, and windowCoverings
-//
-//
 // Remember to add platform to config.json. 
 //
 // You can get HomeSeer Device References by clicking a HomeSeer device name, then 
@@ -67,19 +31,23 @@
 //         "accessories":[                      // Required - List of Accessories
 //            {
 //              "ref":8,                        // Required - HomeSeer Device Reference (To get it, select the HS Device - then Advanced Tab) 
-//              "type":"Lightbulb",             // Optional - Lightbulb is the default
+//              "type":"Lightbulb",             // Required - Lightbulb (currently not enforced, but may be in future)
 //              "name":"My Light",              // Optional - HomeSeer device name is the default
-//              "offValue":"0",                 // Optional - 0 is the default
-//              "onValue":"100",                // Optional - 100 is the default
 //              "can_dim":true,                 // Optional - true is the default - false for a non dimmable lightbulb
-//              "uuid_base":"SomeUniqueId2"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 //            },
 //            {
-//              "ref":9                         // This is a dimmable Lightbulb by default
+//              "ref":8,                        // Required - HomeSeer Device Reference (To get it, select the HS Device - then Advanced Tab) 
+//              "type":"Fan",             		// Required for a Fan
+//              "name":"My Fan",              	// Optional - HomeSeer device name is the default
+//              "can_dim":true,                 // Optional - true is the default - false for fixed speed fan.
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 //            },
 //            {
 //              "ref":58,                       // This is a controllable outlet
 //              "type":"Outlet"
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+
 //            },
 //            {
 //              "ref":111,                      // Required - HomeSeer Device Reference for your sensor
@@ -88,14 +56,15 @@
 //              "name":"Bedroom temp",          // Optional - HomeSeer device name is the default
 //              "batteryRef":112,               // Optional - HomeSeer device reference for the sensor battery level
 //              "batteryThreshold":15           // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 //            },
 //            {
 //              "ref":34,                       // Required - HomeSeer Device Reference for your sensor
 //              "type":"SmokeSensor",           // Required for a smoke sensor
 //              "name":"Kichen smoke detector", // Optional - HomeSeer device name is the default
 //              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 //              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
-//              "onValues":[1,1.255]            // Optional - List of all HomeSeer values triggering a "ON" sensor state - Default is any value different than 0
 //            },
 //            {
 //              "ref":34,                       // Required - HomeSeer Device Reference for your sensor (Here it's the same device as the SmokeSensor above)
@@ -103,127 +72,62 @@
 //              "name":"Kichen CO detector",    // Optional - HomeSeer device name is the default
 //              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
 //              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
-//              "onValues":[2,2.255]            // Optional - List of all HomeSeer values triggering a "ON" sensor state - Default is any value different than 0
-//            },
-//            {
-//              "ref":113,                      // Required - HomeSeer Device Reference of the Current Temperature Device
-//              "type":"Thermostat",            // Required for a Thermostat
-//              "name":"Température Salon",     // Optional - HomeSeer device name is the default
-//              "temperatureUnit":"C",          // Optional - F for Fahrenheit, C for Celsius, C is the default
-//              "setPointRef":167,              // Required - HomeSeer device reference for your thermostat Set Point.
-//              "setPointReadOnly":true,        // Optional - Set to false if your SetPoint is read/write. true is the default
-//              "stateRef":166,                 // Required - HomeSeer device reference for your thermostat current state
-//              "stateOffValues":[0,4,5],       // Required - List of the HomeSeer device values for a HomeKit state=OFF
-//              "stateHeatValues":[1],          // Required - List of the HomeSeer device values for a HomeKit state=HEAT
-//              "stateCoolValues":[2],          // Required - List of the HomeSeer device values for a HomeKit state=COOL
-//              "stateAutoValues":[3],          // Required - List of the HomeSeer device values for a HomeKit state=AUTO
-//              "controlRef":168,               // Required - HomeSeer device reference for your thermostat mode control (It can be the same as stateRef for some thermostats)
-//              "controlOffValue":0,            // Required - HomeSeer device control value for OFF
-//              "controlHeatValue":1,           // Required - HomeSeer device control value for HEAT
-//              "controlCoolValue":2,           // Required - HomeSeer device control value for COOL
-//              "controlAutoValue":3,           // Required - HomeSeer device control value for AUTO
-//              "coolingThresholdRef":169,      // Optional - Not-implemented-yet - HomeSeer device reference for your thermostat cooling threshold
-//              "heatingThresholdRef":170       // Optional - Not-implemented-yet - HomeSeer device reference for your thermostat heating threshold               
-//            },
-//            {
-//              "ref":200,                      // Required - HomeSeer Device Reference of a garage door opener
-//              "type":"GarageDoorOpener",      // Required for a Garage Door Opener
-//              "name":"Garage Door",           // Optional - HomeSeer device name is the default
-//              "stateRef":201,                 // Required - HomeSeer device reference for your garage door opener current state (can be the same as ref)
-//              "stateOpenValues":[0],          // Required - List of the HomeSeer device values for a HomeKit state=OPEN
-//              "stateClosedValues":[1],        // Required - List of the HomeSeer device values for a HomeKit state=CLOSED
-//              "stateOpeningValues":[2],       // Optional - List of the HomeSeer device values for a HomeKit state=OPENING
-//              "stateClosingValues":[3],       // Optional - List of the HomeSeer device values for a HomeKit state=CLOSING
-//              "stateStoppedValues":[4],       // Optional - List of the HomeSeer device values for a HomeKit state=STOPPED
-//              "controlRef":201,               // Required - HomeSeer device reference for your garage door opener control (can be the same as ref and stateRef)
-//              "controlOpenValue":0,           // Required - HomeSeer device control value for OPEN
-//              "controlCloseValue":1,          // Required - HomeSeer device control value for CLOSE
-//              "obstructionRef":201,           // Optional - HomeSeer device reference for your garage door opener obstruction state (can be the same as ref)
-//              "obstructionValues":[5],        // Optional - List of the HomeSeer device values for a HomeKit obstruction state=OBSTRUCTION
-//              "lockRef":202,                  // Optional - HomeSeer device reference for your garage door lock (can be the same as ref)
-//              "lockUnsecuredValues":[0],      // Optional - List of the HomeSeer device values for a HomeKit lock state=UNSECURED
-//              "lockSecuredValues":[1],        // Optional - List of the HomeSeer device values for a HomeKit lock state=SECURED
-//              "lockJammedValues":[2],         // Optional - List of the HomeSeer device values for a HomeKit lock state=JAMMED
-//              "unlockValue":0,                // Optional - HomeSeer device control value to unlock the garage door opener
-//              "lockValue":1                   // Optional - HomeSeer device control value to lock the garage door opener
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 //            },
 //            {
 //              "ref":210,                      // Required - HomeSeer Device Reference of a Lock
 //              "type":"Lock",                  // Required for a Lock
-//              "name":"Main Door Lock",        // Optional - HomeSeer device name is the default
-//              "lockUnsecuredValues":[0],      // Required - List of the HomeSeer device values for a HomeKit lock state=UNSECURED
-//              "lockSecuredValues":[1],        // Required - List of the HomeSeer device values for a HomeKit lock state=SECURED
-//              "lockJammedValues":[2],         // Optional - List of the HomeSeer device values for a HomeKit lock state=JAMMED
-//              "unlockValue":0,                // Required - HomeSeer device control value to unlock
-//              "lockValue":1                   // Required - HomeSeer device control value to lock
-//            },
-//            {
-//              "ref":230,                      // Required - HomeSeer Device Reference of a Security System
-//              "type":"SecuritySystem",        // Required for a security system
-//              "name":"Home alarm",            // Optional - HomeSeer device name is the default
-//              "armedStayValues":[0],          // Optional - List of the HomeSeer device values for a HomeKit security state=ARMED-STAY
-//              "armedAwayValues":[1],          // Optional - List of the HomeSeer device values for a HomeKit security state=ARMED-AWAY
-//              "armedNightValues":[2],         // Optional - List of the HomeSeer device values for a HomeKit security state=ARMED-NIGHT
-//              "disarmedValues":[3],           // Optional - List of the HomeSeer device values for a HomeKit security state=DISARMED
-//              "alarmValues":[4],              // Optional - List of the HomeSeer device values for a HomeKit security state=ALARM
-//              "armStayValue":0,               // Required - HomeSeer device control value to arm in stay mode. If you don't have this mode, select any value that arms your system
-//              "armAwayValue":1,               // Required - HomeSeer device control value to arm in away mode. If you don't have this mode, select any value that arms your system
-//              "armNightValue":2,              // Required - HomeSeer device control value to arm in night mode. If you don't have this mode, select any value that arms your system
-//              "disarmValue":3                 // Required - HomeSeer device control value to disarm security system
+//              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
 //            },
 //            {
 //              "ref":115,                      // Required - HomeSeer Device Reference for a device holding battery level (0-100)
 //              "type":"Battery",               // Required for a Battery
 //              "name":"Roomba battery",        // Optional - HomeSeer device name is the default
 //              "batteryThreshold":15           // Optional - If the level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 //            },
-//            {
-//              "ref":240,                      // Required - HomeSeer Device Reference for a door - HomeSeer values must go from 0 (closed) to 100 (open)
-//              "type":"Door",                  // Required for a Door
-//              "name":"Main door",             // Optional - HomeSeer device name is the default
-//              "obstructionRef":241,           // Optional - HomeSeer device reference for your door obstruction state (can be the same as ref)
-//              "obstructionValues":[1]         // Optional - List of the HomeSeer device values for a HomeKit obstruction state=OBSTRUCTION
-//            }
 //         ]
 //     }
 // ],
 //
 //
 // SUPORTED TYPES:
-// - Lightbulb              (can_dim, onValue, offValue options)
-// - Fan                    (onValue, offValue options)
-// - Switch                 (onValue, offValue options)
-// - Outlet                 (onValue, offValue options)
-// - Thermostat             (temperatureUnit, setPoint, state, control options)
+// - Lightbulb              (can_dim  options)
+// - Fan              		(can_dim  options, here "can_dim" =' true is for a fan with rotation speed control)
+// - Switch                 
+// - Outlet                 
 // - TemperatureSensor      (temperatureUnit=C|F)
-// - HumiditySensor         (HomeSeer device value in %  - batteryRef, batteryThreshold options)
-// - LightSensor            (HomeSeer device value in Lux  - batteryRef, batteryThreshold options)
-// - ContactSensor          (onValues, batteryRef, batteryThreshold options)
-// - MotionSensor           (onValues, batteryRef, batteryThreshold options)
-// - LeakSensor             (onValues, batteryRef, batteryThreshold options)
-// - OccupancySensor        (onValues, batteryRef, batteryThreshold options)
-// - SmokeSensor            (onValues, batteryRef, batteryThreshold options)
-// - CarbonMonoxideSensor   (onValues, batteryRef, batteryThreshold options)
-// - CarbonDioxideSensor    (onValues, batteryRef, batteryThreshold options)
-// - Battery                (batteryThreshold option)
-// - GarageDoorOpener       (state, control, obstruction, lock options)
-// - Lock                   (unsecured, secured, jammed options)
-// - SecuritySystem         (arm, disarm options)
-// - Door                   (obstruction option)
-// - Window                 (obstruction option)
-// - WindowCovering         (obstruction option)
+// - ContactSensor          (batteryRef, batteryThreshold options)
+// - MotionSensor           (batteryRef, batteryThreshold options)
+// - LeakSensor             (batteryRef, batteryThreshold options)
+// - OccupancySensor        (batteryRef, batteryThreshold options)
+// - SmokeSensor            (batteryRef, batteryThreshold options)
+// - CarbonMonoxideSensor   (batteryRef, batteryThreshold options)
+// - CarbonDioxideSensor    (batteryRef, batteryThreshold options)
+// - Lock                   
 
-//var Service = require("../api").homebridge.hap.Service;
-//var Characteristic = require("../api").homebridge.hap.Characteristic;
-var request = require("request");
-var pollingtoevent = require("polling-to-event")
 
-var http = require('http');
+
+var promiseHTTP = require("request-promise-native");
+
 var Accessory, Service, Characteristic, UUIDGen;
 
-var pollingOffsetCounter=0;
+var _allAccessories = [];
+var _globalHSRefs = [];
+	_globalHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
+var _pollingStartup = true; // This is used the first time the update procedure is called to ensure all devices get updated on startup
+	
+var _currentHSDeviceStatus = [];
+var _allStatusUrl = [];
+var _HSValues = [];
 
-var _services = [];
+var _accessURL;
+
+var _statusObjects = []; // Holds things that can be changed when HomeSeer values change!
+
+var updateEmitter;
 
 module.exports = function (homebridge) {
     console.log("homebridge API version: " + homebridge.version);
@@ -241,77 +145,175 @@ module.exports = function (homebridge) {
     homebridge.registerPlatform("homebridge-HomeSeerPlatform", "HomeSeer", HomeSeerPlatform, true);
 }
 
-
-function httpRequest(url, method, callback) {
-    request({
-        url: url,
-        method: method
-    },
-        function (error, response, body) {
-            callback(error, response, body)
-        })
+function getHSValue(ref) {
+	return _HSValues[ref];
 }
+function setHSValue(ref, level)
+{
+		// This function is used to temporarily 'fake' a HomeSeer poll update.
+		// Used when, e.g., you set a new value of an accessory in HomeKit - this provides a fast update to the
+		// Retrieved HomeSeer device values which will then be "corrected / confirmed" on the next poll.
+		_HSValues[ref] = level;
+}
+
 
 function HomeSeerPlatform(log, config, api) {
     this.log = log;
     this.config = config;
 
-    if(config && this.config["poll"]==null)
-    {
-        this.config["poll"] = 60;
-    }
-
     if(config)
-        this.log("System default periodic polling rate set to " + this.config["poll"] + ' seconds');
+	{
+		if (this.config["platformPoll"]==null)  this.config["platformPoll"] = 10;
+
+        this.log("System default periodic polling rate set to " + this.config.platformPoll + ' seconds');
+	}
 }
 
 HomeSeerPlatform.prototype = {
-    accessories: function (callback) {
-        var that = this;
+	
+    accessories: function (callback) 
+	{
         var foundAccessories = [];
+		var that = this;
+        var refList = [];
+		
+		/////////////////////////////////////////////////////////////////////////////////		
+		// Make devices for each HomeSeer event in the config.json file
+		try
+		{
+			if (this.config.events) {
+				this.log("Creating HomeSeer events. Caution currently untested.");
+				for (var i = 0; i < this.config.events.length; i++) {
+					var event = new HomeSeerEvent(that.log, that.config, that.config.events[i]);
+					foundAccessories.push(event);
+				}
+			}
+		}
+		catch(err)
+		{
+			this.log("--------------------------------------------------------------------------------");
+			this.log("** ERROR ** ERROR ** ERROR ** Etc. **");
+			this.log("** ERROR attempting to add HomeSeer event specified in config.json to HomeKit **")
+			this.log("Processing will continue with adding of Accessories");
+			this.log("--------------------------------------------------------------------------------");
+		}
+		
+		/////////////////////////////////////////////////////////////////////////////////
 
-        if (this.config.events) {
-            this.log("Creating HomeSeer events.");
-            for (var i = 0; i < this.config.events.length; i++) {
-                var event = new HomeSeerEvent(that.log, that.config, that.config.events[i]);
-                foundAccessories.push(event);
-            }
-        }
-
+		// Then make a HomeKit device for each "regular" HomeSeer device.
         this.log("Fetching HomeSeer devices.");
-        var refList = "";
-        for (var i = 0; i < this.config.accessories.length; i++) {
-            refList = refList + this.config.accessories[i].ref;
-            if (i < this.config.accessories.length - 1)
-                refList = refList + ",";
-        }
-        var url = this.config["host"] + "/JSON?request=getstatus&ref=" + refList;
-        httpRequest(url, "GET", function (error, response, body) {
-            if (error) {
-                this.log('HomeSeer status function failed: %s', error.message);
-                callback(foundAccessories);
-            }
-            else {
-                this.log('HomeSeer status function succeeded!');
-                var response = JSON.parse(body);
-                for (var i = 0; i < this.config.accessories.length; i++) {
-                    for (var j = 0; j < response.Devices.length; j++) {
-                        if (this.config.accessories[i].ref == response.Devices[j].ref) {
-                            var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[j]);
-                            foundAccessories.push(accessory);
-                            break;
-                        }
-                    }
-                }
-                callback(foundAccessories);
-            }
-        }.bind(this));
+		
+		try
+		{
+			// better yet would be to have this repeat and wait until it is fulfilled 
+			promiseHTTP(this.config["host"] + "/JSON?request=getstatus")
+			.then( function(body) 
+				{
+					this.log("Successfully accessed HomeSeer and obtained data: ");
 
-        //Update the status of all accessory's
-        //        for (var i = 0, len = foundAccessories.length; i < len; i++) {
-        //            foundAccessories[i].updateStatus(function(){}.bind(this));
-        //        }
-    }
+				}.bind(this) // need to bind to "this" for logging to work.
+			)				
+			.catch(function(err) 
+				{ 
+					this.log("-----------------------    ERROR    ----------------------------");				
+					this.log("Unable to Access HomeSeer at address %s", this.config["host"]);
+					this.log("HTTP Error Message: %s", err);
+					this.log("            *** Check if HomeSeer is running. ***");
+					this.log("----------------------------------------------------------------");
+				}.bind(this) // need to bind to "this" for logging to work.
+			)
+
+	
+			///////////////////////
+
+			for (var i = 0; i < this.config.accessories.length; i++) {
+
+				refList.push(this.config.accessories[i].ref);
+				
+				//Gather all HS References For polling. References in _globalHSRefs can include references that do not
+				// create a new HomeKit device such as batteries
+				_globalHSRefs.pushUnique(this.config.accessories[i].ref);
+				
+				if(this.config.accessories[i].batteryRef) _globalHSRefs.pushUnique(this.config.accessories[i].batteryRef);
+			} // end for
+			
+			//For New Polling Method to poll all devices at once
+			_globalHSRefs.sort();
+			_allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + _globalHSRefs.concat();
+			
+			this.log("Retrieve All HomeSeer Device Status URL is " + _allStatusUrl);
+			
+			var url = this.config["host"] + "/JSON?request=getstatus&ref=" + refList.concat();
+		
+			// ********************************	
+			// Add a check that the HomeSeer web server is available. Maybe via a promise which contains a SetInterval loop
+			// To ping the server until you get a response and then continue to do remaining processing.
+			///
+			/*
+					waitForHomeseer = new Promise(function(resolve, reject) { add a loop to check that HomeSeer is available }); 
+			
+			*/
+		
+			promiseHTTP({ uri: url, json:true}).then( function(response) 
+				{
+					this.log('HomeSeer status function succeeded!');
+					for (var i = 0; i < this.config.accessories.length; i++) {
+						for (var j = 0; j < response.Devices.length; j++) {
+							// Set up initial array of HS Response Values during startup
+							_HSValues[response.Devices[j].ref] = response.Devices[j].value;
+							if (this.config.accessories[i].ref == response.Devices[j].ref) {
+								var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[j]);
+								foundAccessories.push(accessory);
+								break;
+							} //endfor
+						}
+					} //end else.
+				
+				// This is the new Polling Mechanism to poll all at once.	
+
+				updateEmitter = setInterval( function () 
+				{
+					// Now do the poll
+					promiseHTTP({ uri: _allStatusUrl, json:true})
+						.then( function(json) 
+							{
+								_currentHSDeviceStatus = json.Devices;
+								that.log("Polled HomeSeer: Retrieved values for %s HomeSeer devices.",  _currentHSDeviceStatus.length);
+								for (var index in _currentHSDeviceStatus)
+								{
+									_HSValues[_currentHSDeviceStatus[index].ref] = _currentHSDeviceStatus[index].value;
+								} //endfor
+
+									updateAllFromHSData();
+									
+							} // end then's function
+							) // end then
+						.catch(function(err)
+							{
+								that.log("HomeSeer poll attempt failed with error %s", err);
+							} // end catch's fuction
+							);//end catch
+
+				}, this.config.platformPoll * 1000 // end SetInterval's function
+				);	//end setInterval function for polling loop
+			
+				callback(foundAccessories);
+            
+			}.bind(this)) // bind the promise's function body to "this", else ??
+			.catch (function(err) 
+				{ 
+					this.log('HomeSeer status function failed: %s', error.message); 
+					callback(foundAccessories)
+				});
+				
+		} //end the try!
+		catch(err)
+		{
+			this.log("Error in trying to add a HomeSeer device");
+			callback(foundAccessories);
+			// throw(err);
+		}
+	}
 }
 
 function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
@@ -320,12 +322,9 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     this.ref = status.ref;
     this.name = status.name
     this.model = status.device_type_string;
-    this.onValue = 100;
-    this.offValue = 0;
-
-    this.statusCharacteristic = null;
 
     this.access_url = platformConfig["host"] + "/JSON?";
+	_accessURL = this.access_url;
     this.control_url = this.access_url + "request=controldevicebyvalue&ref=" + this.ref + "&value=";
     this.status_url = this.access_url + "request=getstatus&ref=" + this.ref;
 
@@ -334,23 +333,11 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
 
     if (this.config.uuid_base)
         this.uuid_base = this.config.uuid_base;
+	
+	if(this.config.can_dim)
+			this.can_dim = this.config.can_dim;
 
-    if (this.config.onValue)
-        this.onValue = this.config.onValue;
-
-    if (this.config.offValue)
-        this.offValue = this.config.offValue;
-
-    var that = this;
-
-    if (this.config.poll==null)
-    {
-        //Default to 1 minute polling cycle
-        this.config.poll = platformConfig["poll"];
-    }
-
-    
-
+    var that = this; // May be unused?
 
 }
 
@@ -360,1056 +347,502 @@ HomeSeerAccessory.prototype = {
         callback();
     },
 
-    updateStatus: function (callback) {
-        if (this.statusCharacteristic != null) {
-            this.statusCharacteristic.getValue();
-        }
+	// setHSValue function expects to be bound by .bind() to a HomeKit Service Object Characteristic!
+	setHSValue: function (level, callback) {
+		var url;
+		var callbackValue = 1;
+		var transmitValue = level;
+		
+		// Uncomment for Debugging
+		// console.log ("** Debug ** - Called setHSValue with level %s for UUID %s", level, this.UUID);
+		// console.log ("** Debug ** access_url is %s", _accessURL);
+		
+		if (!this.UUID) {
+			var error = "*** PROGRAMMING ERROR **** - setHSValue called by something without a UUID";
+			console.log ("*** PROGRAMMING ERROR **** - setHSValue called by something without a UUID");
+			console.log (this);                
+			callback(error);
+		}
 
-        if (callback != null)
-            callback();
+			// Add Any Special Handling Based on the UUID
+			// Uncomment any UUID's actually used!
+				switch( this.UUID)
+				{
+					case(Characteristic.RotationSpeed.UUID):
+					case(Characteristic.Brightness.UUID ): 
+					{
+						// Maximum ZWave value is 99 so covert 100% to 99!
+						transmitValue = (transmitValue == 100) ? 99 : level;
+						
+						setHSValue(this.HSRef, transmitValue); 
+						callbackValue = level; // but call back with the value instructed by HomeKit rather than the modified 99 sent to HomeSeer
+						
+						// this.updateValue(transmitValue); // Assume success. This gets corrected on next poll if assumption is wrong.
+						// console.log ("          ** Debug ** called for Brightness update with level %s then set to transmitValue %s", level, transmitValue); 
+
+						break;
+					}
+					
+					case(Characteristic.LockTargetState.UUID ):
+					{
+						switch(level)
+						{
+							case 0: {transmitValue =  0;   callbackValue = 0;  break;}
+							case 1: {transmitValue =  255; callbackValue = 1;  break; }
+						}
+						// setHSValue(this.HSRef, transmitValue); ** Don't assume success for the lock. Wait for a poll!
+						console.log("Set TransmitValue for lock characteristic %s to %s ", this.displayName, transmitValue);
+						break;
+					}
+	
+					case(Characteristic.On.UUID ):  
+					{
+						// For devices such as dimmers, HomeKit sends both "on" and "brightness" when you adjust brightness.
+						// But Z-Wave only expects a brighness value if light is already on. So, if the device is already on (non-Zero ZWave value)
+						// then don't send again.
+						// HomeKit level == false means turn off, level == true means turn on.
+						
+						if (level == false) 
+							{
+								transmitValue = 0 ; 
+								callbackValue = 0;
+								setHSValue(this.HSRef, 0); // assume success and set to 0 to avoid jumping of any associated dimmer / range slider.
+						}
+						else // turn on!
+						{
+							if(getHSValue(this.HSRef) == 0)	// if it is currently off, then turn fully on.
+							{
+								// if it is off, turn on to full level.
+								transmitValue = 255;
+								setHSValue(this.HSRef, 99);
+								callbackValue = 1; // and callback with a 1 meaning it was turned on
+							}
+							else // If it appears to be on, then send same value!
+							{
+								// if it is on then use current value.
+								// don't use the "255" value because Z-Wave dimmer's can be ramping up/down 
+								// and use of set-last-value (255)  will cause jumping of the HomeKit Dimmer slider interface
+								// if a poll occurs during ramping.
+								transmitValue = getHSValue(this.HSRef); // if it is already on, then just transmit its current value
+								callbackValue = 1;
+								// noUpdate = true; // or maybe don't transmit at all (testing this feature)
+							}
+						}
+						break; // 
+					}
+
+					default:
+					{
+						console.log ("*** PROGRAMMING ERROR **** - Service or Characteristic UUID not handled by setHSValue routine");
+						
+						var err = "*** PROGRAMMING ERROR **** - Service or Characteristic UUID not handled by setHSValue routine" 
+										+ characteristicObject.UUID + "  named  " + characteristicObject.displayName;
+						callback(err, 0);
+						return;
+						break;
+					}
+				}
+		
+		if (isNaN(transmitValue)) 
+			{console.log ("*** PROGRAMMING ERROR **** - Attempting to transmit non-numeric value to HomeSeer for %s with UUID %s", this.displayName, this.UUID);
+			callback("Programming Error in function setHSValue. Attempt to send value to HomeSeer that is not a number");
+			};
+	
+		 url = _accessURL + "request=controldevicebyvalue&ref=" + this.HSRef + "&value=" + transmitValue;
+ 
+		 // For debugging
+		 //console.log ("Debug - Called setHSValue has URL = %s", url);
+ 
+		 // console.log("Sending URL %s", url);
+
+		 promiseHTTP(url)
+			.then( function(htmlString) {
+					console.log(this.displayName + ': HomeSeer setHSValue function succeeded!');
+					callback(null, callbackValue);
+					// updateCharacteristic(this);// poll for this one changed Characteristic after setting its value.
+			}.bind(this))
+			.catch(function(err)
+				{ 	console.log("Error attempting to update %s, with error %s", this.displayName, this.UUID, err);
+				}.bind(this)
+			);
     },
 
-    updateStatusByPolling: function () {
-        this.statusUpdateCount++;
-
-        if(this.statusUpdateCount <= this.config.statusUpdateCount)
-        {
-            this.updateStatus(null);
-        }
-        else
-        {
-            this.log(this.name + ": Completed polling for status update");
-            this.pollForStatusUpdate.pause();
-        }
-
-    },
-
-    pollForUpdate: function () {
-        this.log(this.name + ": Polling for status update " + this.config.statusUpdateCount + " times");
-        this.statusUpdateCount=0;
-        this.pollForStatusUpdate.resume();
-    },
-
-    setPowerState: function (powerOn, callback) {
-        var url;
-
-        if (powerOn) {
-            url = this.control_url + this.onValue;
-            this.log(this.name + ": Setting power state to on");
-        }
-        else {
-            url = this.control_url + this.offValue;
-            this.log(this.name + ": Setting power state to off");
-        }
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': HomeSeer power function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': HomeSeer power function succeeded!');
-                callback();
-            }
-        }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-    },
-
-    getPowerState: function (callback) {
-        var url = this.status_url;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getPowerState function failed: %s', error.message);
-                callback(error, 0);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-
-                this.log(this.name + ': getPowerState function succeeded: value=' + value);
-                if (value == 0)
-                    callback(null, 0);
-                else
-                    callback(null, 1);
-            }
-        }.bind(this));
-    },
-
-    getBinarySensorState: function (callback) {
-        var url = this.status_url;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getBinarySensorState function failed: %s', error.message);
-                callback(error, 0);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-
-                this.log(this.name + ': getBinarySensorState function succeeded: value=' + value);
-                if (this.config.onValues) {
-                    if (this.config.onValues.indexOf(value) != -1)
-                        callback(null, 1);
-                    else
-                        callback(null, 0);
-                }
-                else {
-                    if (value != 0)
-                        callback(null, 1);
-                    else
-                        callback(null, 0);
-                }
-            }
-        }.bind(this));
-    },
-
-/* Duplicate brightness set, this one without a delay
-    setBrightness: function (level, callback) {
-        var url = this.control_url + level;
-
-        this.log(this.name + ": Setting value to %s", level);
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': setBrightness function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': setBrightness function succeeded!');
-                callback();
-            }
-        }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-    },
-*/
-    getValue: function (callback) {
-        var url = this.status_url;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getValue function failed: %s', error.message);
-                callback(error, 0);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-
-                this.log(this.name + ': getValue function succeeded: value=' + value);
-                callback(null, value);
-            }
-        }.bind(this));
-    },
-
-    setBrightness: function (level, callback) {
-        var url = this.control_url + level;
-
-        this.log(this.name + ": Setting brightness to %s", level);
-
-        var that=this;
-        // Assume this delay is used to counter the HomeKit sending a full ON before the brightness level?
-        setTimeout(function() {
-
-            httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': setBrightness function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': setBrightness function succeeded!');
-                callback();
-            }
-            }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-            
-        }.bind(this), 300);
-
-        
-    },
-
-    setRotationSpeed: function (rotationSpeed, callback) {
-        var url = this.control_url + rotationSpeed;
-        
-        this.log(this.name + ": Setting rotation speed to %s", rotationSpeed);
-
-        var that=this;
-        // Assume this delay is used to counter the HomeKit sending a full ON before the speed?
-        setTimeout(function() {
-
-            httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': setRotationSpeed function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': setRotationSpeed function succeeded!');
-                callback();
-            }
-            }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-            
-        }.bind(this), 300);
-
-        
-    },
-
-    setTemperature: function (temperature, callback) {
-        this.log(this.name + ": Setting temperature to %s", temperature);
-        if (this.config.temperatureUnit == "F") {
-            temperature = temperature * 9 / 5 + 32;
-        }
-
-        var url = this.control_url + temperature;
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': setTemperature function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': setTemperature function succeeded!');
-                callback();
-            }
-        }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-    },
-
-    getTemperature: function (callback) {
-        var url = this.status_url;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getTemperature function failed: %s', error.message);
-                callback(error, 0);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-
-                this.log(this.name + ': getTemperature function succeeded: value=' + value);
-                if (this.config.temperatureUnit == "F") {
-                    value = (value - 32) * 5 / 9;
-                }
-                callback(null, value);
-            }
-        }.bind(this));
-    },
-
-    getThermostatCurrentHeatingCoolingState: function (callback) {
-        var ref = this.config.stateRef;
-        var url = this.access_url + "request=getstatus&ref=" + ref;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getThermostatCurrentHeatingCoolingState function failed: %s', error.message);
-                callback(error, 0);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-
-                this.log(this.name + ': getThermostatCurrentHeatingCoolingState function succeeded: value=' + value);
-                if (this.config.stateOffValues.indexOf(value) != -1)
-                    callback(null, 0);
-                else if (this.config.stateHeatValues.indexOf(value) != -1)
-                    callback(null, 1);
-                else if (this.config.stateCoolValues.indexOf(value) != -1)
-                    callback(null, 2);
-                else if (this.config.stateAutoValues.indexOf(value) != -1)
-                    callback(null, 3);
-                else {
-                    this.log(this.name + ': Error: value for thermostat current heating cooling state not in offValues, heatValues, coolValues or autoValues');
-                    callback(null, 0);
-                }
-            }
-        }.bind(this));
-    },
-
-    setThermostatCurrentHeatingCoolingState: function (state, callback) {
-        this.log(this.name + ': Setting thermostat current heating cooling state to %s', state);
-
-        var ref = this.config.controlRef;
-        var value = 0;
-        if (state == 0)
-            value = this.config.controlOffValue;
-        else if (state == 1)
-            value = this.config.controlHeatValue;
-        else if (state == 2)
-            value = this.config.controlCoolValue;
-        else if (state == 3)
-            value = this.config.controlAutoValue;
-
-        var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + value;
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': setThermostatCurrentHeatingCoolingState function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': setThermostatCurrentHeatingCoolingState function succeeded!');
-                callback();
-            }
-        }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-    },
-
-    getThermostatTargetTemperature: function (callback) {
-        var ref = this.config.setPointRef;
-        var url = this.access_url + "request=getstatus&ref=" + ref;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getThermostatTargetTemperature function failed: %s', error.message);
-                callback(error, 0);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-
-                this.log(this.name + ': getThermostatTargetTemperature function succeeded: value=' + value);
-                if (this.config.temperatureUnit == "F") {
-                    value = (value - 32) * 5 / 9;
-                }
-                callback(null, value);
-            }
-        }.bind(this));
-    },
-
-    setThermostatTargetTemperature: function (temperature, callback) {
-        this.log(this.name + ': Setting thermostat target temperature to %s', temperature);
-        if (this.config.temperatureUnit == "F") {
-            temperature = temperature * 9 / 5 + 32;
-        }
-
-        var ref = this.config.setPointRef;
-        var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + temperature;
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': setThermostatTargetTemperature function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': setThermostatTargetTemperature function succeeded!');
-                callback();
-            }
-        }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-    },
-
-    getThermostatTemperatureDisplayUnits: function (callback) {
-        if (this.config.temperatureUnit == "F")
-            callback(null, 1);
-        else
-            callback(null, 0);
-    },
-
-    getLowBatteryStatus: function (callback) {
-        var ref = this.config.batteryRef;
-        var url = this.access_url + "request=getstatus&ref=" + ref;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getLowBatteryStatus function failed: %s', error.message);
-                callback(error, 0);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-                var minValue = 10;
-
-                this.log(this.name + ': getLowBatteryStatus function succeeded: value=' + value);
-                if (this.config.batteryThreshold) {
-                    minValue = this.config.batteryThreshold;
-                }
-
-                if (value > minValue)
-                    callback(null, 0);
-                else
-                    callback(null, 1);
-            }
-        }.bind(this));
-    },
-
-    getCurrentDoorState: function (callback) {
-        var ref = this.config.stateRef;
-        var url = this.access_url + "request=getstatus&ref=" + ref;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getCurrentDoorState function failed: %s', error.message);
-                callback(error, 0);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-
-                this.log(this.name + ': getCurrentDoorState function succeeded: value=' + value);
-                if (this.config.stateOpenValues.indexOf(value) != -1)
-                    callback(null, Characteristic.CurrentDoorState.OPEN);
-                else if (this.config.stateClosedValues.indexOf(value) != -1)
-                    callback(null, Characteristic.CurrentDoorState.CLOSED);
-                else if (this.config.stateOpeningValues && this.config.stateOpeningValues.indexOf(value) != -1)
-                    callback(null, 2);
-                else if (this.config.stateClosingValues && this.config.stateClosingValues.indexOf(value) != -1)
-                    callback(null, 3);
-                else if (this.config.stateStoppedValues && this.config.stateStoppedValues.indexOf(value) != -1)
-                    callback(null, 4);
-                else {
-                    this.log(this.name + ': Error: value for current door state not in stateO0penValues, stateClosedValues, stateOpeningValues, stateClosingValues, stateStoppedValues');
-                    callback(null, 0);
-                }
-            }
-        }.bind(this));
-    },
-
-    setTargetDoorState: function (state, callback) {
-        this.log(this.name + ': Setting target door state state to %s', state);
-
-        var ref = this.config.controlRef;
-        var value = 0;
-        if (state == 0)
-            value = this.config.controlOpenValue;
-        else if (state == 1)
-            value = this.config.controlCloseValue;
-
-        var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + value;
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': setTargetDoorState function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': setTargetDoorState function succeeded!');
-                callback();
-            }
-        }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-    },
-
-    getObstructionDetected: function (callback) {
-        if (this.config.obstructionRef) {
-            var ref = this.config.obstructionRef;
-            var url = this.access_url + "request=getstatus&ref=" + ref;
-
-            httpRequest(url, 'GET', function (error, response, body) {
-                if (error) {
-                    this.log(this.name + ': getObstructionDetected function failed: %s', error.message);
-                    callback(error, 0);
-                }
-                else {
-                    var status = JSON.parse(body);
-                    var value = status.Devices[0].value;
-
-                    this.log(this.name + ': getObstructionDetected function succeeded: value=' + value);
-                    if (this.config.obstructionValues && this.config.obstructionValues.indexOf(value) != -1)
-                        callback(null, 1);
-                    else {
-                        callback(null, 0);
-                    }
-                }
-            }.bind(this));
-        }
-        else {
-            callback(null, 0);
-        }
-    },
-
-    getLockCurrentState: function (callback) {
-        var ref = this.config.lockRef;
-        var url = this.access_url + "request=getstatus&ref=" + ref;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getLockCurrentState function failed: %s', error.message);
-                callback(error, 3);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-
-                this.log(this.name + ': getLockCurrentState function succeeded: value=' + value);
-                if (this.config.lockUnsecuredValues && this.config.lockUnsecuredValues.indexOf(value) != -1)
-                    callback(null, 0);
-                else if (this.config.lockSecuredValues && this.config.lockSecuredValues.indexOf(value) != -1)
-                    callback(null, 1);
-                else if (this.config.lockJammedValues && this.config.lockJammedValues.indexOf(value) != -1)
-                    callback(null, 2);
-                else {
-                    callback(null, 3);
-                }
-            }
-        }.bind(this));
-    },
-
-    setLockTargetState: function (state, callback) {
-        this.log(this.name + ': Setting target lock state to %s', state);
-
-        var ref = this.config.lockRef;
-        var value = 0;
-        if (state == 0 && this.config.unlockValue)
-            value = this.config.unlockValue;
-        else if (state == 1 && this.config.lockValue)
-            value = this.config.lockValue;
-
-        var url = this.access_url + "request=controldevicebyvalue&ref=" + ref + "&value=" + value;
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': setLockTargetState function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': setLockTargetState function succeeded!');
-                callback();
-            }
-        }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-    },
-
-    getSecuritySystemCurrentState: function (callback) {
-        var url = this.access_url + "request=getstatus&ref=" + this.ref;
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': getSecuritySystemCurrentState function failed: %s', error.message);
-                callback(error, 3);
-            }
-            else {
-                var status = JSON.parse(body);
-                var value = status.Devices[0].value;
-
-                this.log(this.name + ': getSecuritySystemCurrentState function succeeded: value=' + value);
-                if (this.config.armedStayValues && this.config.armedStayValues.indexOf(value) != -1)
-                    callback(null, 0);
-                else if (this.config.armedAwayValues && this.config.armedAwayValues.indexOf(value) != -1)
-                    callback(null, 1);
-                else if (this.config.armedNightValues && this.config.armedNightValues.indexOf(value) != -1)
-                    callback(null, 2);
-                else if (this.config.disarmedValues && this.config.disarmedValues.indexOf(value) != -1)
-                    callback(null, 3);
-                else if (this.config.alarmValues && this.config.alarmValues.indexOf(value) != -1)
-                    callback(null, 4);
-                else
-                    callback(null, 0);
-            }
-        }.bind(this));
-    },
-
-    setSecuritySystemTargetState: function (state, callback) {
-        this.log("Setting security system state to %s", state);
-
-        var value = 0;
-        if (state == 0 && this.config.armStayValue)
-            value = this.config.armStayValue;
-        else if (state == 1 && this.config.armAwayValue)
-            value = this.config.armAwayValue;
-        else if (state == 2 && this.config.armNightValue)
-            value = this.config.armNightValue;
-        else if (state == 3 && this.config.disarmValue)
-            value = this.config.disarmValue;
-
-        var url = this.access_url + "request=controldevicebyvalue&ref=" + this.ref + "&value=" + value;
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': setSecuritySystemTargetState function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': setSecuritySystemTargetState function succeeded!');
-                callback();
-            }
-        }.bind(this));
-
-        //Poll for updated status
-        this.pollForUpdate();
-    },
-
-
-    getPositionState: function (callback) {
-        callback(null, 2);  // Temporarily return STOPPED. TODO: full door support
-    },
 
     getServices: function () {
+		// this.log("---------------getServices function called --------- Debug ----------------------------");
+		// this.log("Configuration ", this.config);
+		// this.log("---------------getServices function called --------- Debug ----------------------------");
+				
         var services = []
-
-        var informationService = new Service.AccessoryInformation();
-        informationService
-            .setCharacteristic(Characteristic.Manufacturer, "HomeSeer")
-            .setCharacteristic(Characteristic.Model, this.model)
-            .setCharacteristic(Characteristic.SerialNumber, "HS " + this.config.type + " ref " + this.ref);
-        services.push(informationService);
+		
 
 
         switch (this.config.type) {
-            case "Lightbulb": {
-
-                //Better default
-                if (this.config.statusUpdateCount == null)
-                    this.config.statusUpdateCount = 5;
-
-                var lightbulbService = new Service.Lightbulb();
-                lightbulbService
-                    .getCharacteristic(Characteristic.On)
-                    .on('set', this.setPowerState.bind(this))
-                    .on('get', this.getPowerState.bind(this));
-
-                if (this.config.can_dim == null || this.config.can_dim == true) {
-                    lightbulbService
-                        .addCharacteristic(new Characteristic.Brightness())
-                        .on('set', this.setBrightness.bind(this))
-                        .on('get', this.getValue.bind(this));
-                }
-
-                this.statusCharacteristic = lightbulbService.getCharacteristic(Characteristic.On);
-                services.push(lightbulbService);
-                break;
-            }
-            case "Fan": {
-                var fanService = new Service.Fan();
-                fanService
-                    .getCharacteristic(Characteristic.On)
-                    .on('set', this.setPowerState.bind(this))
-                    .on('get', this.getPowerState.bind(this));
-
-                if (this.config.can_dim) {
-                    fanService
-                        .addCharacteristic(new Characteristic.RotationSpeed())
-                        .on('set', this.setRotationSpeed.bind(this))
-                        .on('get', this.getValue.bind(this));
-                }
-
-                this.statusCharacteristic = fanService.getCharacteristic(Characteristic.On);
-                services.push(fanService);
-                break;
-            }
+			
             case "Switch": {
                 var switchService = new Service.Switch();
+				switchService.isPrimaryService = true;
+				
+				switchService
+					.getCharacteristic(Characteristic.On)
+					.HSRef = this.config.ref;
+					
                 switchService
                     .getCharacteristic(Characteristic.On)
-                    .on('set', this.setPowerState.bind(this))
-                    .on('get', this.getPowerState.bind(this));
+                    .on('set', this.setHSValue.bind(switchService.getCharacteristic(Characteristic.On)));
+				_statusObjects.push(switchService.getCharacteristic(Characteristic.On));
 
-                this.statusCharacteristic = switchService.getCharacteristic(Characteristic.On);
                 services.push(switchService);
                 break;
             }
+
+			
             case "Outlet": {
                 var outletService = new Service.Outlet();
+				outletService.isPrimaryService = true;
+				
+				outletService
+					.getCharacteristic(Characteristic.On)
+					.HSRef = this.config.ref;
+				
                 outletService
                     .getCharacteristic(Characteristic.On)
-                    .on('set', this.setPowerState.bind(this))
-                    .on('get', this.getPowerState.bind(this));
+                    .on('set', this.setHSValue.bind(outletService.getCharacteristic(Characteristic.On)));
 
-                this.statusCharacteristic = outletService.getCharacteristic(Characteristic.On);
+				_statusObjects.push(outletService.getCharacteristic(Characteristic.On));
                 services.push(outletService);
                 break;
             }
+			
             case "TemperatureSensor": {
                 var temperatureSensorService = new Service.TemperatureSensor();
+				temperatureSensorService.isPrimaryService = true;
+				temperatureSensorService.displayName = "Service.TemperatureSensor";
+
                 temperatureSensorService
                     .getCharacteristic(Characteristic.CurrentTemperature)
-                    .on('get', this.getTemperature.bind(this));
-                temperatureSensorService
-                    .getCharacteristic(Characteristic.CurrentTemperature).setProps({ minValue: -100 });
-                if (this.config.batteryRef) {
-                    temperatureSensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+					.HSRef = this.config.ref;
+					
+				temperatureSensorService
+                    .getCharacteristic(Characteristic.CurrentTemperature)
+					.HStemperatureUnit = ((this.config.temperatureUnit) ? this.config.temperatureUnit : "F" );
+
                 services.push(temperatureSensorService);
+				
+				_statusObjects.push(temperatureSensorService.getCharacteristic(Characteristic.CurrentTemperature));	
+
                 break;
             }
+			
             case "CarbonMonoxideSensor": {
                 var carbonMonoxideSensorService = new Service.CarbonMonoxideSensor();
+                carbonMonoxideSensorService.isPrimaryService = true;
+				
                 carbonMonoxideSensorService
                     .getCharacteristic(Characteristic.CarbonMonoxideDetected)
-                    .on('get', this.getBinarySensorState.bind(this));
-                if (this.config.batteryRef) {
-                    carbonMonoxideSensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+					.HSRef = this.config.ref;
+
                 services.push(carbonMonoxideSensorService);
+				
+				_statusObjects.push(carbonMonoxideSensorService.getCharacteristic(Characteristic.CarbonMonoxideDetected));	
+				
                 break;
             }
             case "CarbonDioxideSensor": {
                 var carbonDioxideSensorService = new Service.CarbonDioxideSensor();
+				carbonDioxideSensorService.isPrimaryService = true;
+				
                 carbonDioxideSensorService
                     .getCharacteristic(Characteristic.CarbonDioxideDetected)
-                    .on('get', this.getBinarySensorState.bind(this));
-                if (this.config.batteryRef) {
-                    carbonDioxideSensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+                    .HSRef = this.config.ref;
+
                 services.push(carbonDioxideSensorService);
+				
+				_statusObjects.push(carbonDioxideSensorService.getCharacteristic(Characteristic.CarbonDioxideDetected));	
+
                 break;
             }
             case "ContactSensor": {
                 var contactSensorService = new Service.ContactSensor();
-                contactSensorService
+                contactSensorService.isPrimaryService = true;
+				
+				contactSensorService
                     .getCharacteristic(Characteristic.ContactSensorState)
-                    .on('get', this.getBinarySensorState.bind(this));
-                if (this.config.batteryRef) {
-                    contactSensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+                    .HSRef = this.config.ref;
+
                 services.push(contactSensorService);
+
+				_statusObjects.push(contactSensorService.getCharacteristic(Characteristic.ContactSensorState));	
+
                 break;
             }
             case "MotionSensor": {
                 var motionSensorService = new Service.MotionSensor();
+                motionSensorService.isPrimaryService = true;
+                motionSensorService.HSRef = this.config.ref;
+				
                 motionSensorService
                     .getCharacteristic(Characteristic.MotionDetected)
-                    .on('get', this.getBinarySensorState.bind(this));
-                if (this.config.batteryRef) {
-                    motionSensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+                   .HSRef = this.config.ref;
+
                 services.push(motionSensorService);
+				
+				_statusObjects.push(motionSensorService.getCharacteristic(Characteristic.MotionDetected));	
+				
                 break;
             }
             case "LeakSensor": {
                 var leakSensorService = new Service.LeakSensor();
                 leakSensorService
                     .getCharacteristic(Characteristic.LeakDetected)
-                    .on('get', this.getBinarySensorState.bind(this));
-                if (this.config.batteryRef) {
-                    leakSensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+                    .HSRef = this.config.ref;
+
                 services.push(leakSensorService);
+
+				_statusObjects.push(leakSensorService.getCharacteristic(Characteristic.LeakDetected));	
+				
                 break;
             }
             case "OccupancySensor": {
                 var occupancySensorService = new Service.OccupancySensor();
                 occupancySensorService
                     .getCharacteristic(Characteristic.OccupancyDetected)
-                    .on('get', this.getBinarySensorState.bind(this));
-                if (this.config.batteryRef) {
-                    occupancySensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+                    .HSRef = this.config.ref;
+
                 services.push(occupancySensorService);
+				
+				_statusObjects.push(occupancySensorService.getCharacteristic(Characteristic.OccupancyDetected));	
+				
                 break;
             }
             case "SmokeSensor": {
                 var smokeSensorService = new Service.SmokeSensor();
                 smokeSensorService
                     .getCharacteristic(Characteristic.SmokeDetected)
-                    .on('get', this.getBinarySensorState.bind(this));
-                if (this.config.batteryRef) {
-                    smokeSensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+					.HSRef = this.config.ref;
+
                 services.push(smokeSensorService);
+				
+				_statusObjects.push(smokeSensorService.getCharacteristic(Characteristic.SmokeDetected));	
+
                 break;
             }
-            case "LightSensor": {
+			
+			
+            case "LightSensor": 
+			{
                 var lightSensorService = new Service.LightSensor();
                 lightSensorService
                     .getCharacteristic(Characteristic.CurrentAmbientLightLevel)
-                    .on('get', this.getValue.bind(this));
-                if (this.config.batteryRef) {
-                    lightSensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+                    .HSRef = this.config.ref;
+
                 services.push(lightSensorService);
+				
+				_statusObjects.push(lightSensorService.getCharacteristic(Characteristic.CurrentAmbientLightLevel));	
+
                 break;
             }
-            case "HumiditySensor": {
+			
+
+            case "HumiditySensor": 
+			{
                 var humiditySensorService = new Service.HumiditySensor();
                 humiditySensorService
                     .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-                    .on('get', this.getValue.bind(this));
-                if (this.config.batteryRef) {
-                    humiditySensorService
-                        .addCharacteristic(new Characteristic.StatusLowBattery())
-                        .on('get', this.getLowBatteryStatus.bind(this));
-                }
+					.HSRef = this.config.ref;
+					
                 services.push(humiditySensorService);
-                break;
-            }
-            case "Door": {
-                var doorService = new Service.Door();
-                doorService
-                    .getCharacteristic(Characteristic.CurrentPosition)
-                    .on('get', this.getValue.bind(this));
-                doorService
-                    .getCharacteristic(Characteristic.TargetPosition)
-                    .on('set', this.setBrightness.bind(this));
-                doorService
-                    .getCharacteristic(Characteristic.PositionState)
-                    .on('get', this.getPositionState.bind(this));
-                if (this.config.obstructionRef) {
-                    doorService
-                        .addCharacteristic(new Characteristic.ObstructionDetected())
-                        .on('get', this.getObstructionDetected.bind(this));
-                }
-
-                this.statusCharacteristic = doorService.getCharacteristic(Characteristic.CurrentPosition);
-                services.push(doorService);
-                break;
-            }
-            case "Window": {
-                var windowService = new Service.Window();
-                windowService
-                    .getCharacteristic(Characteristic.CurrentPosition)
-                    .on('get', this.getValue.bind(this));
-                windowService
-                    .getCharacteristic(Characteristic.TargetPosition)
-                    .on('set', this.setBrightness.bind(this));
-                windowService
-                    .getCharacteristic(Characteristic.PositionState)
-                    .on('get', this.getPositionState.bind(this));
-                if (this.config.obstructionRef) {
-                    windowService
-                        .addCharacteristic(new Characteristic.ObstructionDetected())
-                        .on('get', this.getObstructionDetected.bind(this));
-                }
-
-                this.statusCharacteristic = windowService.getCharacteristic(Characteristic.CurrentPosition);
-                services.push(windowService);
-                break;
-            }
-            case "WindowCovering": {
-                var windowCoveringService = new Service.WindowCovering();
-                windowCoveringService
-                    .getCharacteristic(Characteristic.CurrentPosition)
-                    .on('get', this.getValue.bind(this));
-                windowCoveringService
-                    .getCharacteristic(Characteristic.TargetPosition)
-                    .on('set', this.setBrightness.bind(this));
-                windowCoveringService
-                    .getCharacteristic(Characteristic.PositionState)
-                    .on('get', this.getPositionState.bind(this));
-
-                
-                if (this.config.obstructionRef) {
-                    windowCoveringService
-                        .addCharacteristic(new Characteristic.ObstructionDetected())
-                        .on('get', this.getObstructionDetected.bind(this));
-                }
-
-                this.statusCharacteristic = windowCoveringService.getCharacteristic(Characteristic.CurrentPosition);
-                services.push(windowCoveringService);
+				
+				_statusObjects.push(humiditySensorService.getCharacteristic(Characteristic.CurrentRelativeHumidity));	
 
                 break;
             }
-            case "Battery": {
-                this.config.batteryRef = this.ref;
-                var batteryService = new Service.BatteryService();
-                batteryService
-                    .getCharacteristic(Characteristic.BatteryLevel)
-                    .on('get', this.getValue.bind(this));
-                batteryService
-                    .getCharacteristic(Characteristic.StatusLowBattery)
-                    .on('get', this.getLowBatteryStatus.bind(this));
-                services.push(batteryService);
-                break;
-            }
-            case "Thermostat": {
-                var thermostatService = new Service.Thermostat();
-                thermostatService
-                    .getCharacteristic(Characteristic.CurrentTemperature)
-                    .on('get', this.getTemperature.bind(this));
-                thermostatService
-                    .getCharacteristic(Characteristic.TargetTemperature)
-                    .on('get', this.getThermostatTargetTemperature.bind(this));
-                if (this.config.setPointReadOnly === null || this.config.setPointReadOnly === false)
-                    thermostatService
-                        .getCharacteristic(Characteristic.TargetTemperature)
-                        .on('set', this.setThermostatTargetTemperature.bind(this));
-                thermostatService
-                    .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
-                    .on('get', this.getThermostatCurrentHeatingCoolingState.bind(this));
-                thermostatService
-                    .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-                    .on('get', this.getThermostatCurrentHeatingCoolingState.bind(this));
-                thermostatService
-                    .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-                    .on('set', this.setThermostatCurrentHeatingCoolingState.bind(this));
-                thermostatService
-                    .getCharacteristic(Characteristic.TemperatureDisplayUnits)
-                    .on('get', this.getThermostatTemperatureDisplayUnits.bind(this));
 
-                services.push(thermostatService);
-                break;
-            }
-            case "GarageDoorOpener": {
-                //Better default
-                if (this.config.statusUpdateCount == null)
-                    this.config.statusUpdateCount = 40;
-
-                var garageDoorOpenerService = new Service.GarageDoorOpener();
-                garageDoorOpenerService
-                    .getCharacteristic(Characteristic.CurrentDoorState)
-                    .on('get', this.getCurrentDoorState.bind(this));
-                garageDoorOpenerService
-                    .getCharacteristic(Characteristic.TargetDoorState)
-                    .on('set', this.setTargetDoorState.bind(this));
-                garageDoorOpenerService
-                    .getCharacteristic(Characteristic.TargetDoorState)
-                    .on('get', this.getCurrentDoorState.bind(this));
-                garageDoorOpenerService
-                    .getCharacteristic(Characteristic.ObstructionDetected)
-                    .on('get', this.getObstructionDetected.bind(this));
-                if (this.config.lockRef) {
-                    garageDoorOpenerService
-                        .addCharacteristic(new Characteristic.LockCurrentState())
-                        .on('get', this.getLockCurrentState.bind(this));
-                    garageDoorOpenerService
-                        .addCharacteristic(new Characteristic.LockTargetState())
-                        .on('set', this.setLockTargetState.bind(this));
-                }
-                services.push(garageDoorOpenerService);
-
-                this.statusCharacteristic = garageDoorOpenerService.getCharacteristic(Characteristic.CurrentDoorState);
-
-                break;
-            }
             case "Lock": {
                 this.config.lockRef = this.ref;
                 var lockService = new Service.LockMechanism();
-                lockService
+				lockService.isPrimaryService = true;
+				lockService.displayName = "Service.LockMechanism";
+				
+				lockService
                     .getCharacteristic(Characteristic.LockCurrentState)
-                    .on('get', this.getLockCurrentState.bind(this));
+					.HSRef = this.config.ref;
+					
                 lockService
                     .getCharacteristic(Characteristic.LockTargetState)
-                    .on('get', this.getLockCurrentState.bind(this));
+						.HSRef = this.config.ref;
+						
                 lockService
                     .getCharacteristic(Characteristic.LockTargetState)
-                    .on('set', this.setLockTargetState.bind(this));
-                services.push(lockService);
-
-                this.statusCharacteristic = lockService.getCharacteristic(Characteristic.LockCurrentState);
-
+					.on('set', this.setHSValue.bind(lockService.getCharacteristic(Characteristic.LockTargetState)));
+                    // .on('set', this.setLockTargetState.bind(this));
+				
+				// Next two values are not currently used.
+				if (this.config.unlockValue)
+					 lockService.getCharacteristic(Characteristic.LockTargetState).HSunlockValue = this.config.unlockValue;
+				if (this.config.lockValue)
+					lockService.getCharacteristic(Characteristic.LockTargetState).HSlockValue = this.config.lockValue;
+		    
+				lockService.isPrimaryService = true;
+		    
+				services.push(lockService);
+				
+		    	_statusObjects.push(lockService.getCharacteristic(Characteristic.LockCurrentState));
+				_statusObjects.push(lockService.getCharacteristic(Characteristic.LockTargetState));
+								
                 break;
             }
-            case "SecuritySystem": {
+            case "Fan": {
+                var fanService = new Service.Fan
+				fanService.isPrimaryService = true;
+				fanService.displayName = "Service.Fan";
+				
+				fanService
+					.getCharacteristic(Characteristic.On)
+					.HSRef = this.config.ref;				
+                fanService
+                    .getCharacteristic(Characteristic.On)
+                    .on('set', this.setHSValue.bind(fanService.getCharacteristic(Characteristic.On)));
+					
+				_statusObjects.push(fanService.getCharacteristic(Characteristic.On));					
 
-                //Better default
-                if (this.config.statusUpdateCount == null)
-                    this.config.statusUpdateCount = 75;
+                if (this.config.can_dim == true) {
+					this.log("          Adding RotationSpeed to Fan");
+                    fanService
+                        .addCharacteristic(new Characteristic.RotationSpeed())
+						.HSRef = this.config.ref;
+						
+					fanService
+						.getCharacteristic(Characteristic.RotationSpeed)
+						.on('set', this.setHSValue.bind(fanService.getCharacteristic(Characteristic.RotationSpeed)));
+				_statusObjects.push(fanService.getCharacteristic(Characteristic.RotationSpeed));						
+                }
 
-                var securitySystemService = new Service.SecuritySystem();
-                securitySystemService
-                    .getCharacteristic(Characteristic.SecuritySystemCurrentState)
-                    .on('get', this.getSecuritySystemCurrentState.bind(this));
-                securitySystemService
-                    .getCharacteristic(Characteristic.SecuritySystemTargetState)
-                    .on('get', this.getSecuritySystemCurrentState.bind(this));
-                securitySystemService
-                    .getCharacteristic(Characteristic.SecuritySystemTargetState)
-                    .on('set', this.setSecuritySystemTargetState.bind(this));
-                services.push(securitySystemService);
-
-                this.statusCharacteristic = securitySystemService.getCharacteristic(Characteristic.SecuritySystemCurrentState);
-
+				
+                services.push(fanService);
                 break;
-            }
-
-            default: {
-
-                //Better default
-                if (this.config.statusUpdateCount == null)
-                    this.config.statusUpdateCount = 5;
-
+            }	
+/*			case ("RGBLight"):
+			{
+				// this.log("** Debug ** - Setting up bulb %s with can_dim %s", this.config.name, this.config.can_dim);
                 var lightbulbService = new Service.Lightbulb();
+				lightbulbService.isPrimaryService = true;
+				lightbulbService.displayName = "Service.Lightbulb"
+				
+				lightbulbService
+					.getCharacteristic(Characteristic.On)
+					.RGB = this.config.RGB;
+				
                 lightbulbService
                     .getCharacteristic(Characteristic.On)
-                    .on('set', this.setPowerState.bind(this))
-                    .on('get', this.getPowerState.bind(this));
+                    .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.On)));
 
-                this.statusCharacteristic = lightbulbService.getCharacteristic(Characteristic.On);
+					
+				lightbulbService
+                        .addCharacteristic(new Characteristic.Brightness())
+						.HSRef = this.config.ref;
+					
+				lightbulbService
+						.addCharacteristic(new Characteristic.Hue);
+						
+					
+				lightbulbService
+						.addCharacteristic(new Characteristic.Saturation);
 
-                //Allow for dimmable lights
+						
+					lightbulbService
+						.getCharacteristic(Characteristic.Brightness)
+                        .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.Brightness)));
+                        // .on('get', this.getValue.bind(this));
+					
+				_statusObjects.push(lightbulbService.getCharacteristic(Characteristic.On));
+				
+				break;
+			}
+	*/		
+			
+            case "Lightbulb": 
+			default: {
+				// this.log("** Debug ** - Setting up bulb %s with can_dim %s", this.config.name, this.config.can_dim);
+                var lightbulbService = new Service.Lightbulb();
+				lightbulbService.isPrimaryService = true;
+				lightbulbService.displayName = "Service.Lightbulb"
+				
+				lightbulbService
+					.getCharacteristic(Characteristic.On)
+					.HSRef = this.config.ref;
+				
+                lightbulbService
+                    .getCharacteristic(Characteristic.On)
+                    .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.On)));
+                    // .on('get', this.getPowerState.bind(this));
+					
+				_statusObjects.push(lightbulbService.getCharacteristic(Characteristic.On));
+		    
                 if (this.config.can_dim == null || this.config.can_dim == true) {
+					this.log("          Making lightbulb dimmable");
+					
                     lightbulbService
                         .addCharacteristic(new Characteristic.Brightness())
-                        .on('set', this.setBrightness.bind(this))
-                        .on('get', this.getValue.bind(this));
+						.HSRef = this.config.ref;
+					
+					lightbulbService
+						.getCharacteristic(Characteristic.Brightness)
+                        .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.Brightness)));
+						
+					_statusObjects.push(lightbulbService.getCharacteristic(Characteristic.Brightness));
                 }
 
                 services.push(lightbulbService);
+
                 break;
             }
-
-
         }
+		
+		 // If batteryRef has been defined, then add a battery service.
+                if (this.config.batteryRef) {
+                    this.log("          Adding a Battery Service");
 
-        if (this.config.statusUpdateCount == null)
-           this.config.statusUpdateCount = 20;
-        
-        this.statusUpdateCount = this.config.statusUpdateCount-1;
+                    var batteryService = new Service.BatteryService();
+					batteryService.displayName = "Service.BatteryService";
+					
+					batteryService
+                        .getCharacteristic(Characteristic.BatteryLevel)
+						.HSRef = this.config.batteryRef;
+						
+					batteryService
+                        .getCharacteristic(Characteristic.StatusLowBattery)
+						.HSRef = this.config.batteryRef;
+						
+					batteryService
+                        .getCharacteristic(Characteristic.StatusLowBattery)
+						.batteryThreshold = this.config.batteryThreshold;						
+						
+                    services.push(batteryService);
+					
+					_statusObjects.push(batteryService.getCharacteristic(Characteristic.BatteryLevel));
+					_statusObjects.push(batteryService.getCharacteristic(Characteristic.StatusLowBattery));					
+                }
+				
+		// And add a basic Accessory Information service		
+        var informationService = new Service.AccessoryInformation();
+        informationService
+            .setCharacteristic(Characteristic.Manufacturer, "HomeSeer")
+            .setCharacteristic(Characteristic.Model, this.model)
+            .setCharacteristic(Characteristic.SerialNumber, "HS " + this.config.type + " ref " + this.ref);
+        services.push(informationService);
+		// 
+		
 
-
-        this.log(this.name + ": statusUpdateCount=" + this.config.statusUpdateCount);
-
-        //Configure the periodic status update
-        if (this.config.poll) {
-
-            var firstPoll = this.config.poll + (pollingOffsetCounter % 60);
-            pollingOffsetCounter+=7;
-        
-            //Configure the periodic status update
-            this.log(this.name + ": Polling rate=" + this.config.poll + ' seconds');
-            this.log(this.name + ": First poll=" + firstPoll + ' seconds');
-
-            setTimeout(function() {
-                this.periodicUpdate = pollingtoevent(function (done) {
-                this.log(this.name + ": Periodic status update rate=" + this.config.poll + ' seconds');
-                this.updateStatus(null);
-                done(null, null);
-                }.bind(this), {
-                    interval: (this.config.poll * 1000)
-                });
-            }.bind(this),firstPoll*1000);
-
-            
-        }
-
-        //Configure the status update polling
-        this.pollForStatusUpdate = pollingtoevent(function (done) {
-            this.updateStatusByPolling(null);
-            done(null, null);
-        }.bind(this), {
-                interval: 1000
-            });
-
-
-        services[services.length - 1].accessory = this;
-
-        //Update the global service list
-        _services.push(services[services.length - 1]);
+		_allAccessories.push(services);
 
         return services;
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//    The following code creates devices which can trigger HomeSeer Events   ///
+////////////////////////////////////////////////////////////////////////////////
 function HomeSeerEvent(log, platformConfig, eventConfig) {
     this.log = log;
     this.config = eventConfig;
@@ -1443,28 +876,27 @@ HomeSeerEvent.prototype = {
         if (value == 0 && this.off_url) {
             url = this.off_url;
         }
-
-        httpRequest(url, 'GET', function (error, response, body) {
-            if (error) {
-                this.log(this.name + ': launchEvent function failed: %s', error.message);
-                callback(error);
-            }
-            else {
-                this.log(this.name + ': launchEvent function succeeded!');
-                callback();
-            }
-
-            if(this.off_url==null && value != 0)
+			
+		promiseHTTP(url)
+			.then( function(htmlString) {
+					console.log(this.name + ': launchEvent function succeeded!');
+					callback(null);
+					
+			if(this.off_url==null && value != 0)
             {
                 setTimeout(function() {
                     this.log(this.name + ': Momentary switch reseting to 0');
                     this.switchService.getCharacteristic(Characteristic.On).setValue(0);
                 }.bind(this),2000);
             }
-
-        }.bind(this));
+					
+			}.bind(this))
+			.catch(function(err)
+				{ 	console.log(this.name + ': launchEvent function failed: %s', err);
+					callback(err);
+				}.bind(this)
+			);
     },
-
 
     getServices: function () {
         var services = []
@@ -1486,5 +918,190 @@ HomeSeerEvent.prototype = {
         return services;
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//    The following code is associated with polling HomeSeer and updating HomeKit Devices from Returned data   //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function updateCharacteristicFromHSData(characteristicObject)
+{
+	
+	// This performs the update to the HomeKit value from data received from HomeSeer
+	//Debug
+	// console.log("** Debug ** - Updating Characteristic %s with name %s and current value %s", characteristicObject.UUID, characteristicObject.displayName, characteristicObject.value)
+
+	if (characteristicObject.HSRef)
+	{
+		var newValue = getHSValue(characteristicObject.HSRef);
+		
+		// The following "if" is a quick check to see if any change is needed.
+		// if the HomeKit object value already matches what was received in the poll, then return and skip
+		// processing the rest of this function code!
+		if (!_pollingStartup && (characteristicObject.value == newValue)) return; 
+
+
+		switch(true)
+		{
+			case(characteristicObject.UUID == Characteristic.StatusLowBattery.UUID):
+			{
+				// that.log("Battery Threshold status of battery level %s with threshold %s", newValue, characteristicObject.batteryThreshold);
+				characteristicObject.updateValue((newValue < characteristicObject.batteryThreshold) ? true : false);
+				break;
+			}
+			case(characteristicObject.UUID == Characteristic.LockCurrentState.UUID):
+			{
+				// Set to 0 = UnSecured, 1 - Secured, 2 = Jammed.
+				// console.log("** Debug ** - Attempting LockCurrentState update with received HS value %s", newValue);
+				
+				switch(newValue)
+				{
+					case(0):	{	characteristicObject.updateValue(0);	break;	} // Locked
+					case(255):	{	characteristicObject.updateValue(1);	break;	} // unlocked
+					default:	{	characteristicObject.updateValue(2);	break;	} // unknown
+				}
+				break;
+			}
+			case (characteristicObject.UUID == Characteristic.LockTargetState.UUID):
+			{
+				switch(newValue)
+				{
+					case(0):	{	characteristicObject.updateValue(0);	break;	} // Locked
+					case(255):	{	characteristicObject.updateValue(1);	break;	} // unlocked
+					default:	{ 	console.log("ERROR - Unexpected Lock Target State Value %s", newValue); break;}
+				}
+				break;
+			}
+			
+			case( characteristicObject.UUID == Characteristic.CarbonDioxideDetected.UUID ):
+			case( characteristicObject.UUID == Characteristic.CarbonMonoxideDetected.UUID):
+			case( characteristicObject.UUID == Characteristic.ContactSensorState.UUID 	):
+			case( characteristicObject.UUID == Characteristic.MotionDetected.UUID 	):
+			case( characteristicObject.UUID == Characteristic.LeakDetected.UUID 		):
+			case( characteristicObject.UUID == Characteristic.OccupancyDetected.UUID 	):
+			case( characteristicObject.UUID == Characteristic.SmokeDetected.UUID 	):
+			case( characteristicObject.UUID == Characteristic.On.UUID):
+			{
+				characteristicObject.updateValue( ((newValue) ? true: false) );
+				break;
+			}
+			
+			
+			// For the following characteristics, no special handling is needed.
+			// Simply provide HomeKit with whatever you got from HomeSeer
+			case(characteristicObject.UUID == Characteristic.CurrentAmbientLightLevel.UUID):
+			case(characteristicObject.UUID == Characteristic.CurrentRelativeHumidity.UUID):
+			case(characteristicObject.UUID == Characteristic.BatteryLevel.UUID):
+			{
+				characteristicObject.updateValue(newValue);
+				break;
+			}
+			
+			// Handling Percentage values
+			// The following characteristics are all exprssed in percentages.
+			// Homekit uses 0 - 100 values. However, Z-Wave generally uses 0 - 99.
+			// Simply passing the Z-wave value to HomeKit would result in HomeKit never showing 100%
+			// even when device is fully on. So force a Z-Wave "99" to appear as 100%.
+			case (characteristicObject.UUID == Characteristic.RotationSpeed.UUID):
+			case (characteristicObject.UUID == Characteristic.Brightness.UUID):
+			{
+					// Zwave uses 99 as its maximum. Make it appear as 100% in Homekit
+				characteristicObject.updateValue( (newValue == 99) ? 100 : newValue);
+				break;
+			}
+			case (characteristicObject.UUID == Characteristic.CurrentTemperature.UUID):
+			{
+				// HomeKit uses celsius, so if HS is using Fahrenheit, convert to Celsius.
+				if (characteristicObject.HStemperatureUnit && (characteristicObject.HStemperatureUnit == "F")) 
+					{ newValue = (newValue -32 )* (5/9);}
+								
+				characteristicObject.updateValue(newValue);
+				break;
+			}
+
+			default:
+			{
+					console.log("** WARNING ** -- Possible Incorrect Value Assignment for characteristic %s set to value %s", characteristicObject.displayName, newValue);
+					characteristicObject.updateValue( newValue);
+			}
+		}; //end switch
+		
+		// Uncomment for debugging
+		// console.log("** Debug ** -   %s value after update is: %s", characteristicObject.displayName, characteristicObject.value);
+	} // end if
+}
+
+/* Following function is currently unused but may be needed for future development
+// For a given Service object, update all its Characteristics
+function updateServicesFromHSData(service)
+{
+	 // Received an array of service objects and then Loop over each characteristic object in a service object 
+	 // and then send the characteristic object for updating
+		for(var cIndex = 0; cIndex < service.characteristics.length; cIndex++)
+		{
+			updateCharacteristicFromHSData(service.characteristics[cIndex]);
+		}		
+}
+*/
+
+/* Following function is currently unused but may be needed for future development
+// Function will update all services for a specific accessory.
+function updateAccessoryFromHSData(accessory)
+{
+		for(var sIndex = 0; sIndex < accessory.length; sIndex++)
+		{
+			// console.log ("Debug #%s", sIndex);
+		updateServicesFromHSData( accessory[sIndex] );
+		} // end for sIndex
+}
+*/
+
+function updateAllFromHSData()
+{
+	for (var aIndex in _statusObjects)
+	{
+		updateCharacteristicFromHSData(_statusObjects[aIndex]);
+	} // end for aindex
+	
+	_pollingStartup = false; // after at least 1 round of updates, no longer in startup mode!
+	
+} // end function
+
+
+// The following code was to update a single characteristicObject after it is changed
+// But it doesn't seem to work right, so unused for now!
+/*
+function updateCharacteristic(characteristicObject)
+{
+	if (characteristicObject.HSRef == null) 
+	{
+		console.log("** Programming Error ** - updateCharacteristic passed characteristic object %s with displayName %s but without a HomeSeer reference HSREf ", characteristicObject.UUID, characteristicObject.displayName);
+		return;
+	}
+	
+	var updateURL = _accessURL +  "request=getstatus&ref=" + characteristicObject.HSRef;
+	// console.log("** DEBUG ** -- update URL is %s", url);
+	
+		promiseHTTP({uri: updateURL, json:true})
+			.then( function(jsonData) {
+				
+				var thisDevice = jsonData.Devices[0]; 
+				
+				// Debugging - Uncomment following code for debugging
+				console.log("Error attempting to update Characteristic %s, with current value %s, and HS Ref", characteristicObject.displayName, characteristicObject.value, characteristicObject.HSRef);
+				console.log("** Debug ** - Polling obtained the single device %s with reference %s and value %s", thisDevice, thisDevice.ref, thisDevice.value);
+				// End Debugging
+
+				_HSValues[thisDevice.ref] = thisDevice.value;
+				updateCharacteristicFromHSData(characteristicObject);
+				
+			}).catch(function(err)
+				{
+					console.log("Error attempting to update Characteristic %s, with error %s", characteristicObject.displayName, characteristicObject.UUID, err);
+				}
+			);
+}
+*/
+
+////////////////////    End of Polling HomeSeer Code    /////////////////////////////				
 
 module.exports.platform = HomeSeerPlatform;

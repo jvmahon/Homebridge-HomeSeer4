@@ -1,24 +1,27 @@
 {
-  "name": "homebridge-homeseer-plugin",
-  "version": "1.0.17",
-  "description": "Homeseer Plugin for homebridge: https://github.com/nfarina/homebridge",
+  "name": "homebridge-homeseer-plugin-2018",
+  "version": "2.0.1",
+  "description": "Homeseer Plugin for homebridge: https://github.com/jvmahon/homebridge-homeseer",
   "license": "ISC",
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "homebridge-homeseer",
+    "homebridge-homeseer-plugin-2018",
+    "homebridge-homeseer-2018"
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:jrhubott/homebridge-homeseer.git"
+    "url": "git@github.com:jvmahon/homebridge-homeseer.git"
   },
   "bugs": {
-    "url": "https://github.com/jrhubott/homebridge-homeseer/issues"
+    "url": "https://github.com/jvmahon/homebridge-homeseer/issues"
   },
   "engines": {
-    "node": ">=0.12.0",
-    "homebridge": ">=0.2.0"
+    "node": ">=4.0.0",
+    "homebridge": ">=0.4.0"
   },
   "dependencies": {
-    "request" : ">=2.75.0",
-    "polling-to-event": ">=2.0.2"
+    "request" : ">=2.83.0",
+    "request-promise-native" : ">=1.0.0"
   }
 }
