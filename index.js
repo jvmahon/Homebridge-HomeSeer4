@@ -111,6 +111,8 @@
 
 
 var promiseHTTP = require("request-promise-native");
+var chalk = require("chalk");
+var HSutilities = require("./lib/HomeSeerUtilities");
 
 var Accessory, Service, Characteristic, UUIDGen;
 
@@ -148,12 +150,15 @@ module.exports = function (homebridge) {
 function getHSValue(ref) {
 	return _HSValues[ref];
 }
-function setHSValue(ref, level)
+function forceHSValue(ref, level)
 {
 		// This function is used to temporarily 'fake' a HomeSeer poll update.
 		// Used when, e.g., you set a new value of an accessory in HomeKit - this provides a fast update to the
 		// Retrieved HomeSeer device values which will then be "corrected / confirmed" on the next poll.
 		_HSValues[ref] = level;
+		
+		// Debugging
+		console.log("** DEBUG ** - called forceHSValue with reference: %s,  level: %s, resulting in new value: %s", ref, level, _HSValues[ref]);
 }
 
 
@@ -176,13 +181,28 @@ HomeSeerPlatform.prototype = {
         var foundAccessories = [];
 		var that = this;
         var refList = [];
+
+		try
+		{
+			HSutilities.checkConfig.call(this, this.config);
+		}
+		catch(err)
+		{
+			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
+			this.log(chalk.bold.red("** ERROR ** ERROR ** ERROR ** Etc. **"));
+			this.log(chalk.bold.red("** Format error in your config.json file **"));
+			this.log(chalk.bold.red("Fix your config.json file!!"));
+			this.log(chalk.bold.red(err));
+			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
+
+			throw err;
+		}
 		
 		/////////////////////////////////////////////////////////////////////////////////		
 		// Make devices for each HomeSeer event in the config.json file
 		try
 		{
 			if (this.config.events) {
-				this.log("Creating HomeSeer events. Caution currently untested.");
 				for (var i = 0; i < this.config.events.length; i++) {
 					var event = new HomeSeerEvent(that.log, that.config, that.config.events[i]);
 					foundAccessories.push(event);
@@ -191,11 +211,11 @@ HomeSeerPlatform.prototype = {
 		}
 		catch(err)
 		{
-			this.log("--------------------------------------------------------------------------------");
+			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
 			this.log("** ERROR ** ERROR ** ERROR ** Etc. **");
 			this.log("** ERROR attempting to add HomeSeer event specified in config.json to HomeKit **")
 			this.log("Processing will continue with adding of Accessories");
-			this.log("--------------------------------------------------------------------------------");
+			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
 		}
 		
 		/////////////////////////////////////////////////////////////////////////////////
@@ -215,11 +235,15 @@ HomeSeerPlatform.prototype = {
 			)				
 			.catch(function(err) 
 				{ 
-					this.log("-----------------------    ERROR    ----------------------------");				
+					this.log(""); this.log("");
+					this.log(chalk.bold.red("**************************************************************************"));
+					this.log(chalk.bold.red("----------------------------    ERROR    ---------------------------------"));				
 					this.log("Unable to Access HomeSeer at address %s", this.config["host"]);
 					this.log("HTTP Error Message: %s", err);
 					this.log("            *** Check if HomeSeer is running. ***");
-					this.log("----------------------------------------------------------------");
+					this.log(chalk.bold.red("--------------------------------------------------------------------------"));
+					this.log(chalk.bold.red("**************************************************************************\n\n"));
+					throw(err);
 				}.bind(this) // need to bind to "this" for logging to work.
 			)
 
@@ -359,7 +383,7 @@ HomeSeerAccessory.prototype = {
 		
 		if (!this.UUID) {
 			var error = "*** PROGRAMMING ERROR **** - setHSValue called by something without a UUID";
-			console.log ("*** PROGRAMMING ERROR **** - setHSValue called by something without a UUID");
+			console.log (chalk.bold.red("*** PROGRAMMING ERROR **** - setHSValue called by something without a UUID"));
 			console.log (this);                
 			callback(error);
 		}
@@ -374,7 +398,7 @@ HomeSeerAccessory.prototype = {
 						// Maximum ZWave value is 99 so covert 100% to 99!
 						transmitValue = (transmitValue == 100) ? 99 : level;
 						
-						setHSValue(this.HSRef, transmitValue); 
+						forceHSValue(this.HSRef, transmitValue); 
 						callbackValue = level; // but call back with the value instructed by HomeKit rather than the modified 99 sent to HomeSeer
 						
 						// this.updateValue(transmitValue); // Assume success. This gets corrected on next poll if assumption is wrong.
@@ -406,7 +430,7 @@ HomeSeerAccessory.prototype = {
 							{
 								transmitValue = 0 ; 
 								callbackValue = 0;
-								setHSValue(this.HSRef, 0); // assume success and set to 0 to avoid jumping of any associated dimmer / range slider.
+								forceHSValue(this.HSRef, 0); // assume success and set to 0 to avoid jumping of any associated dimmer / range slider.
 						}
 						else // turn on!
 						{
@@ -414,7 +438,7 @@ HomeSeerAccessory.prototype = {
 							{
 								// if it is off, turn on to full level.
 								transmitValue = 255;
-								setHSValue(this.HSRef, 99);
+								forceHSValue(this.HSRef, 99);
 								callbackValue = 1; // and callback with a 1 meaning it was turned on
 							}
 							else // If it appears to be on, then send same value!
@@ -433,7 +457,7 @@ HomeSeerAccessory.prototype = {
 
 					default:
 					{
-						console.log ("*** PROGRAMMING ERROR **** - Service or Characteristic UUID not handled by setHSValue routine");
+						console.log (chalk.bold.red("*** PROGRAMMING ERROR **** - Service or Characteristic UUID not handled by setHSValue routine"));
 						
 						var err = "*** PROGRAMMING ERROR **** - Service or Characteristic UUID not handled by setHSValue routine" 
 										+ characteristicObject.UUID + "  named  " + characteristicObject.displayName;
@@ -444,8 +468,12 @@ HomeSeerAccessory.prototype = {
 				}
 		
 		if (isNaN(transmitValue)) 
-			{console.log ("*** PROGRAMMING ERROR **** - Attempting to transmit non-numeric value to HomeSeer for %s with UUID %s", this.displayName, this.UUID);
+			{
+			console.log(chalk.bold.red("*************************** PROGRAM ERROR ***************************"));
+			console.log ("Attempting to transmit non-numeric value to HomeSeer for %s with UUID %s", this.displayName, this.UUID);
 			callback("Programming Error in function setHSValue. Attempt to send value to HomeSeer that is not a number");
+			console.log(chalk.bold.red("*********************************************************************"));
+
 			};
 	
 		 url = _accessURL + "request=controldevicebyvalue&ref=" + this.HSRef + "&value=" + transmitValue;
@@ -462,7 +490,7 @@ HomeSeerAccessory.prototype = {
 					// updateCharacteristic(this);// poll for this one changed Characteristic after setting its value.
 			}.bind(this))
 			.catch(function(err)
-				{ 	console.log("Error attempting to update %s, with error %s", this.displayName, this.UUID, err);
+				{ 	console.log(chalk.bold.red("Error attempting to update %s, with error %s", this.displayName, this.UUID, err));
 				}.bind(this)
 			);
     },
@@ -762,7 +790,15 @@ HomeSeerAccessory.prototype = {
 	*/		
 			
             case "Lightbulb": 
-			default: {
+			default: 
+			{
+				if(!this.config || !this.config.type || (this.config.type == null))
+				{
+					this.log(chalk.bold.yellow("WARNING: adding unspecified device type with HomeSeer reference " + this.config.ref + ". Defaulting to type Lightbulb. "));
+					this.log(chalk.bold.yellow("Future versions of this plugin may require specification of the type of each device."));
+					this.log(chalk.bold.yellow("Please update your config.json file to specify the device type."));
+				}
+				
 				// this.log("** Debug ** - Setting up bulb %s with can_dim %s", this.config.name, this.config.can_dim);
                 var lightbulbService = new Service.Lightbulb();
 				lightbulbService.isPrimaryService = true;
@@ -780,7 +816,7 @@ HomeSeerAccessory.prototype = {
 				_statusObjects.push(lightbulbService.getCharacteristic(Characteristic.On));
 		    
                 if (this.config.can_dim == null || this.config.can_dim == true) {
-					this.log("          Making lightbulb dimmable");
+					// this.log("          Making lightbulb dimmable");
 					
                     lightbulbService
                         .addCharacteristic(new Characteristic.Brightness())
