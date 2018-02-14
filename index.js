@@ -113,23 +113,31 @@
 var promiseHTTP = require("request-promise-native");
 var chalk = require("chalk");
 var HSutilities = require("./lib/HomeSeerUtilities");
-
 var Accessory, Service, Characteristic, UUIDGen;
-
-var _allAccessories = [];
-var _globalHSRefs = [];
-	_globalHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
-var _pollingStartup = true; // This is used the first time the update procedure is called to ensure all devices get updated on startup
 	
-var _currentHSDeviceStatus = [];
-var _allStatusUrl = [];
-var _HSValues = [];
+// The following variable is set to "true" the first time HomeSeer is polled.
+// This ensures that all associated HomeKit devices get an .updateValue call during processing of updateAllFromHSData()
+// On subsequent polls, this is set to false and the HomeKit .updateValue function only executes 
+// if there has been a (potential) change in the HomeKit value due to a HomeSeer change.
+var _pollingStartup = true; 
+	
+// Following variable stores the full HomeSeer JSON-ified status data structure.
+// This includes Device data for all of the HomeSeer devices of interest.
+var _currentHSDeviceStatus = []; 
 
-var _accessURL;
+// The next array variable (_HSValues) stores just the value of the associated HomeSeer reference. 
+// This is a sparse array with most index values null.
+// The array index corresponds to the HomeSeer reference so _HSValues[211] would be the HomeSeer value for device 211.
+var _HSValues = []; 
 
-var _statusObjects = []; // Holds things that can be changed when HomeSeer values change!
+// The next array variable holds a list of all of the HomeKit HAP Characteristic objects
+// that can be affected by changes occurring at HomeSeer. 
+// The array is populated during by the getServices function when a HomeKit device is created.
+// After HomeSeer is polled, each item in this array is analyzed by the updateAllFromHSData() function to determine 
+// if it needs to be updated.
+var _statusObjects = []; 
 
-var updateEmitter;
+var HomeSeerHost = "";
 
 module.exports = function (homebridge) {
     console.log("homebridge API version: " + homebridge.version);
@@ -158,7 +166,7 @@ function forceHSValue(ref, level)
 		_HSValues[ref] = level;
 		
 		// Debugging
-		console.log("** DEBUG ** - called forceHSValue with reference: %s,  level: %s, resulting in new value: %s", ref, level, _HSValues[ref]);
+		// console.log("** DEBUG ** - called forceHSValue with reference: %s,  level: %s, resulting in new value: %s", ref, level, _HSValues[ref]);
 }
 
 
@@ -249,23 +257,24 @@ HomeSeerPlatform.prototype = {
 
 	
 			///////////////////////
+			var allHSRefs = [];
+				allHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
 
 			for (var i = 0; i < this.config.accessories.length; i++) {
 
 				refList.push(this.config.accessories[i].ref);
 				
-				//Gather all HS References For polling. References in _globalHSRefs can include references that do not
+				//Gather all HS References For polling. References in allHSRefs can include references that do not
 				// create a new HomeKit device such as batteries
-				_globalHSRefs.pushUnique(this.config.accessories[i].ref);
+				allHSRefs.pushUnique(this.config.accessories[i].ref);
 				
-				if(this.config.accessories[i].batteryRef) _globalHSRefs.pushUnique(this.config.accessories[i].batteryRef);
+				if(this.config.accessories[i].batteryRef) allHSRefs.pushUnique(this.config.accessories[i].batteryRef);
 			} // end for
 			
 			//For New Polling Method to poll all devices at once
-			_globalHSRefs.sort();
-			_allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + _globalHSRefs.concat();
+			allHSRefs.sort();
+
 			
-			this.log("Retrieve All HomeSeer Device Status URL is " + _allStatusUrl);
 			
 			var url = this.config["host"] + "/JSON?request=getstatus&ref=" + refList.concat();
 		
@@ -294,11 +303,14 @@ HomeSeerPlatform.prototype = {
 					} //end else.
 				
 				// This is the new Polling Mechanism to poll all at once.	
-
-				updateEmitter = setInterval( function () 
+				
+				var allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + allHSRefs.concat();
+				this.log("Retrieve All HomeSeer Device Status URL is " + allStatusUrl);
+				
+				setInterval( function () 
 				{
 					// Now do the poll
-					promiseHTTP({ uri: _allStatusUrl, json:true})
+					promiseHTTP({ uri: allStatusUrl, json:true})
 						.then( function(json) 
 							{
 								_currentHSDeviceStatus = json.Devices;
@@ -348,9 +360,11 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     this.model = status.device_type_string;
 
     this.access_url = platformConfig["host"] + "/JSON?";
-	_accessURL = this.access_url;
-    this.control_url = this.access_url + "request=controldevicebyvalue&ref=" + this.ref + "&value=";
-    this.status_url = this.access_url + "request=getstatus&ref=" + this.ref;
+	
+	this.HomeSeerHost = platformConfig["host"];
+	// _accessURL = this.access_url;
+	HomeSeerHost = this.HomeSeerHost;
+
 
     if (this.config.name)
         this.name = this.config.name;
@@ -379,7 +393,6 @@ HomeSeerAccessory.prototype = {
 		
 		// Uncomment for Debugging
 		// console.log ("** Debug ** - Called setHSValue with level %s for UUID %s", level, this.UUID);
-		// console.log ("** Debug ** access_url is %s", _accessURL);
 		
 		if (!this.UUID) {
 			var error = "*** PROGRAMMING ERROR **** - setHSValue called by something without a UUID";
@@ -476,7 +489,7 @@ HomeSeerAccessory.prototype = {
 
 			};
 	
-		 url = _accessURL + "request=controldevicebyvalue&ref=" + this.HSRef + "&value=" + transmitValue;
+		 url = HomeSeerHost + "/JSON?request=controldevicebyvalue&ref=" + this.HSRef + "&value=" + transmitValue;
  
 		 // For debugging
 		 //console.log ("Debug - Called setHSValue has URL = %s", url);
@@ -868,9 +881,6 @@ HomeSeerAccessory.prototype = {
             .setCharacteristic(Characteristic.SerialNumber, "HS " + this.config.type + " ref " + this.ref);
         services.push(informationService);
 		// 
-		
-
-		_allAccessories.push(services);
 
         return services;
     }
@@ -1102,41 +1112,6 @@ function updateAllFromHSData()
 	
 } // end function
 
-
-// The following code was to update a single characteristicObject after it is changed
-// But it doesn't seem to work right, so unused for now!
-/*
-function updateCharacteristic(characteristicObject)
-{
-	if (characteristicObject.HSRef == null) 
-	{
-		console.log("** Programming Error ** - updateCharacteristic passed characteristic object %s with displayName %s but without a HomeSeer reference HSREf ", characteristicObject.UUID, characteristicObject.displayName);
-		return;
-	}
-	
-	var updateURL = _accessURL +  "request=getstatus&ref=" + characteristicObject.HSRef;
-	// console.log("** DEBUG ** -- update URL is %s", url);
-	
-		promiseHTTP({uri: updateURL, json:true})
-			.then( function(jsonData) {
-				
-				var thisDevice = jsonData.Devices[0]; 
-				
-				// Debugging - Uncomment following code for debugging
-				console.log("Error attempting to update Characteristic %s, with current value %s, and HS Ref", characteristicObject.displayName, characteristicObject.value, characteristicObject.HSRef);
-				console.log("** Debug ** - Polling obtained the single device %s with reference %s and value %s", thisDevice, thisDevice.ref, thisDevice.value);
-				// End Debugging
-
-				_HSValues[thisDevice.ref] = thisDevice.value;
-				updateCharacteristicFromHSData(characteristicObject);
-				
-			}).catch(function(err)
-				{
-					console.log("Error attempting to update Characteristic %s, with error %s", characteristicObject.displayName, characteristicObject.UUID, err);
-				}
-			);
-}
-*/
 
 ////////////////////    End of Polling HomeSeer Code    /////////////////////////////				
 
