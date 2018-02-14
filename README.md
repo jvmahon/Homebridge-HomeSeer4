@@ -11,7 +11,7 @@ This version uses a new polling mechanism in which all HomeSeer devices are poll
 
 This plugin also changes the way in which device characteristics are updated. In particular, the brightness characteristic of dimmable lights is now updated on the Apple Home application in "real time" (well, on each poll), so you no longer need to refresh the screen in the Home application to see brighness changes that occur due to manual interactions with the Z-Wave switch or via HomeSeer.
 
-Code architecture has been changed to use JavaScript native Promises for HTTP access. Required node version has been updated to Version 4.0 to ensure that Promises are implemetned.
+Code architecture has been changed to use JavaScript native Promises for HTTP access. Required node version has been updated to Version 4.0 to ensure that Promises are implemented.
 
 ## Unsupported Devices
 This Plugin removes support for the following device types (Sorry, but I don't have these device types so I can't test them. Therefore, they have been removed):
@@ -27,8 +27,6 @@ This Plugin removes support for the following device types (Sorry, but I don't h
 Note that "onValues", "offValues", "LockSecuredValues", "LockUnsecuredValues", and "LockJammedValues" config.json settings are not implemented. Instead this plugin uses the standared Z-Wave values for these settings.  If a specific use case exist for implementing these settings (or if the plugin doesn't work without them for your Z-Wave device), please indicate that as an issue and support may be implemented in a future revision.
 
 ## Future Work
-* Check if HomeSeer is running and can be accessed. Currently, ther is little clear warning to the user. Warn user and stop if HomeSeer is not running (or loop until HomeSeer becomes available)
-* Add in additional data checking to ensure config.json settings match device type information retrieved from HomeSeer.
 * Get device name from HomeSeer rather than manual input via config.json.
 * Get device type from HomeSeer rather than manual input via config.json.
 * Automatically identify devices by polling HomeSeer.
