@@ -115,15 +115,49 @@ var chalk = require("chalk");
 var HSutilities = require("./lib/HomeSeerUtilities");
 var Accessory, Service, Characteristic, UUIDGen;
 	
-// The following variable is set to "true" the first time HomeSeer is polled.
+// The following variable is set to 0 ("true" the first time HomeSeer is polled.
 // This ensures that all associated HomeKit devices get an .updateValue call during processing of updateAllFromHSData()
 // On subsequent polls, this is set to false and the HomeKit .updateValue function only executes 
 // if there has been a (potential) change in the HomeKit value due to a HomeSeer change.
-var _pollingStartup = true; 
+var pollingCount = 0;
 	
-// Following variable stores the full HomeSeer JSON-ified status data structure.
+// Following variable stores the full HomeSeer JSON-ified Device status data structure.
 // This includes Device data for all of the HomeSeer devices of interest.
 var _currentHSDeviceStatus = []; 
+// Note that the HomeSeer json date in _currentHSDeviceStatus is of the following form where _currentHSDeviceStatus is an array so
+// an index must be specified to access the properties, such as 
+//  _currentHSDeviceStatus[indexvalue] for a dimmer would be of the form...
+// note indexvalue does not correspond to the HomeSeer reference, but is arbitrary. You need to loop
+// through the entire array and do comparisons to find the "ref" value you are interested in
+/*
+		 { ref: 299,
+			name: 'Floods',
+			location: 'Guest Bedroom',
+			location2: '1 - First Floor',
+			value: 0,
+			status: 'Off',
+			device_type_string: 'Z-Wave Switch Multilevel',
+			last_change: '/Date(1517009446329)/',
+			relationship: 4,
+			hide_from_view: false,
+			associated_devices: [ 297 ],
+			device_type:
+			 { Device_API: 4,
+			   Device_API_Description: 'Plug-In API',
+			   Device_Type: 0,
+			   Device_Type_Description: 'Plug-In Type 0',
+			   Device_SubType: 38,
+			   Device_SubType_Description: '' },
+			device_image: '',
+			UserNote: '',
+			UserAccess: 'Any',
+			status_image: '/images/HomeSeer/status/off.gif',
+			voice_command: '',
+			misc: 4864 },
+*/	
+
+
+
 
 // The next array variable (_HSValues) stores just the value of the associated HomeSeer reference. 
 // This is a sparse array with most index values null.
@@ -197,12 +231,9 @@ HomeSeerPlatform.prototype = {
 		catch(err)
 		{
 			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
-			this.log(chalk.bold.red("** ERROR ** ERROR ** ERROR ** Etc. **"));
-			this.log(chalk.bold.red("** Format error in your config.json file **"));
-			this.log(chalk.bold.red("Fix your config.json file!!"));
+			this.log(chalk.bold.red("** Format error in your config.json file. Fix it to continue."));
 			this.log(chalk.bold.red(err));
 			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
-
 			throw err;
 		}
 		
@@ -314,7 +345,7 @@ HomeSeerPlatform.prototype = {
 						.then( function(json) 
 							{
 								_currentHSDeviceStatus = json.Devices;
-								that.log("Polled HomeSeer: Retrieved values for %s HomeSeer devices.",  _currentHSDeviceStatus.length);
+								that.log("HomeSeer Poll # %s: Retrieved values for %s HomeSeer devices.",  pollingCount, _currentHSDeviceStatus.length);
 								for (var index in _currentHSDeviceStatus)
 								{
 									_HSValues[_currentHSDeviceStatus[index].ref] = _currentHSDeviceStatus[index].value;
@@ -369,8 +400,12 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     if (this.config.name)
         this.name = this.config.name;
 
-    if (this.config.uuid_base)
-        this.uuid_base = this.config.uuid_base;
+	
+	// Force uuid_base to be "Ref" + HomeSeer Reference # if the uuid_base is otherwise undefined.
+    if (!this.config.uuid_base)
+		{this.config.uuid_base = "Ref" + this.config.ref};
+    
+	this.uuid_base = this.config.uuid_base;
 	
 	if(this.config.can_dim)
 			this.can_dim = this.config.can_dim;
@@ -514,13 +549,21 @@ HomeSeerAccessory.prototype = {
 		// this.log("Configuration ", this.config);
 		// this.log("---------------getServices function called --------- Debug ----------------------------");
 				
-        var services = []
+        var services = [];
 		
+		// Use the Z-Wave Model Info. from HomeSeer if the type is undefined!
+		if(this.config.type == undefined) this.config.type = this.model;
+		
+		this.log(chalk.bold.yellow("Configuring Device with user selected type " + this.config.type + " and HomeSeer Device Type: " + this.model));
 
 
         switch (this.config.type) {
 			
-            case "Switch": {
+		case "Appliance Module":
+		case "Lamp Module":
+		case "Z-Wave Switch Binary":
+	    	case "Switch": 
+			{
                 var switchService = new Service.Switch();
 				switchService.isPrimaryService = true;
 				
@@ -555,7 +598,9 @@ HomeSeerAccessory.prototype = {
                 break;
             }
 			
-            case "TemperatureSensor": {
+            case "Z-Wave Temperature":
+			case "TemperatureSensor": 
+			{
                 var temperatureSensorService = new Service.TemperatureSensor();
 				temperatureSensorService.isPrimaryService = true;
 				temperatureSensorService.displayName = "Service.TemperatureSensor";
@@ -632,7 +677,9 @@ HomeSeerAccessory.prototype = {
 				
                 break;
             }
-            case "LeakSensor": {
+            case "Z-Wave Water Leak Alarm":
+			case "LeakSensor": 
+			{
                 var leakSensorService = new Service.LeakSensor();
                 leakSensorService
                     .getCharacteristic(Characteristic.LeakDetected)
@@ -698,7 +745,8 @@ HomeSeerAccessory.prototype = {
 
                 break;
             }
-
+		
+			case "Z-Wave Door Lock":
             case "Lock": {
                 this.config.lockRef = this.ref;
                 var lockService = new Service.LockMechanism();
@@ -802,7 +850,8 @@ HomeSeerAccessory.prototype = {
 			}
 	*/		
 			
-            case "Lightbulb": 
+            case "Z-Wave Switch Multilevel":
+			case "Lightbulb": 
 			default: 
 			{
 				if(!this.config || !this.config.type || (this.config.type == null))
@@ -983,7 +1032,7 @@ function updateCharacteristicFromHSData(characteristicObject)
 		// The following "if" is a quick check to see if any change is needed.
 		// if the HomeKit object value already matches what was received in the poll, then return and skip
 		// processing the rest of this function code!
-		if (!_pollingStartup && (characteristicObject.value == newValue)) return; 
+		if ((pollingCount != 0) && (characteristicObject.value == newValue)) return; 
 
 
 		switch(true)
@@ -1108,7 +1157,7 @@ function updateAllFromHSData()
 		updateCharacteristicFromHSData(_statusObjects[aIndex]);
 	} // end for aindex
 	
-	_pollingStartup = false; // after at least 1 round of updates, no longer in startup mode!
+	pollingCount++; // Increase each time you poll. After at least 1 round of updates, no longer in startup mode!
 	
 } // end function
 

@@ -2,7 +2,7 @@
 
 # homebridge-homeseer-plugin-2018
 
-This Version 2.0 plugin is still undergoing testing! See notes below regarding non-implemented features!
+This Version 2.x plugin is still undergoing testing! See notes below regarding non-implemented features!
 
 Note: This package is based on version 1.0.17 of the jrhubott/homebridge-homeseer plugin. 
 
@@ -12,6 +12,23 @@ This version uses a new polling mechanism in which all HomeSeer devices are poll
 This plugin also changes the way in which device characteristics are updated. In particular, the brightness characteristic of dimmable lights is now updated on the Apple Home application in "real time" (well, on each poll), so you no longer need to refresh the screen in the Home application to see brighness changes that occur due to manual interactions with the Z-Wave switch or via HomeSeer.
 
 Code architecture has been changed to use JavaScript native Promises for HTTP access. Required node version has been updated to Version 4.0 to ensure that Promises are implemented.
+
+## Easier config.json setup!
+* Device name is now obtained from HomeSeer if it hasn't been specified in the config.json file!
+* Device type is now taken from HomeSeer if it hasn't been specified in the config.json file. This plugin now looks at the "Device Type (String)" field on HomeSeer to determine a mapping to a HomeKit device. The mappings are fairly simple and not all HomeKit devices are supported. Supported Mappings are:
+
+  - "Z-Wave Switch Binary"        ->  "Switch"
+  - "Z-Wave Switch Multilevel"    ->  "Lightbulb" 
+  - "Z-Wave Door Lock"            ->  "Lock"
+  - "Z-Wave Temperature"          ->  "TemperatureSensor"
+  - "Z-Wave Water Leak Alarm"     ->  "LeakSensor"
+  
+  ** If you know of other mappings that can be included suhc as for the Fan, Outlet, MotionSensor, CarbonMonoxideSensor, CarbonDioxideSensor, ContactSensore, OccupancySensor, SmokeSensor, LightSensor, HumiditySensor types, please let me know and I'll include them
+
+Note that a user can manually alter their HomeSeer Device type (String) so this mapping mechanism only works if the user hasn't touched it! A better approach may be to use the device type / subtype numbers returned from HomeSeer as those aren't subject to user-manipulation. However, I can't find documentation for those (so if anybody can point to the mappings using those numbers, I'll try to revise the code and base device type on those).
+
+* Default uuid_base is now set to the string "Ref" plus the HomeSeer device reference number. This allows a consistent and predictable uuid_base across startups even if the HomeSeer device name changes. It is possible to use the same HomeSeer device reference for multiple HomeKit devices - if you are doing that, you should still manually specify the uuid_base to specify unique values for that group of devices.
+
 
 ## Unsupported Devices
 This Plugin removes support for the following device types (Sorry, but I don't have these device types so I can't test them. Therefore, they have been removed):
@@ -25,11 +42,6 @@ This Plugin removes support for the following device types (Sorry, but I don't h
   
 ## Certain config.json Settings No longer supported
 Note that "onValues", "offValues", "LockSecuredValues", "LockUnsecuredValues", and "LockJammedValues" config.json settings are not implemented. Instead this plugin uses the standared Z-Wave values for these settings.  If a specific use case exist for implementing these settings (or if the plugin doesn't work without them for your Z-Wave device), please indicate that as an issue and support may be implemented in a future revision.
-
-## Future Work
-* Get device name from HomeSeer rather than manual input via config.json.
-* Get device type from HomeSeer rather than manual input via config.json.
-* Automatically identify devices by polling HomeSeer.
 
 ## Cautions
 Extreme caution should be used when using this plugin with sensors and, in particular, any safety oriented sensors. This plugin does not provide real-time update to the sensor status and updates are delayed by at least the polling period. Sensor status should not be relied on for critical safety or security applications.
