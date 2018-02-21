@@ -604,6 +604,9 @@ HomeSeerAccessory.prototype = {
                 var temperatureSensorService = new Service.TemperatureSensor();
 				temperatureSensorService.isPrimaryService = true;
 				temperatureSensorService.displayName = "Service.TemperatureSensor";
+				
+                temperatureSensorService
+                    .getCharacteristic(Characteristic.CurrentTemperature).setProps({ minValue: -100 });				
 
                 temperatureSensorService
                     .getCharacteristic(Characteristic.CurrentTemperature)
