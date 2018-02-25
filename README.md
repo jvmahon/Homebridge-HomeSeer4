@@ -2,19 +2,23 @@
 
 # homebridge-homeseer-plugin-2018
 
-This Version 2.x plugin is still undergoing testing! See notes below regarding non-implemented features!
+### New Installation and Setup Wiki pages - check the Wiki pages for instructions on Installing HomeBridge on Windows 10 - 64 Bit  and on enabling the Instant Status feature.
 
-Note: This package is based on version 1.0.17 of the jrhubott/homebridge-homeseer plugin. 
+## *New in Version 2.1 -* Instant Status Update Feature - Check it out!
+In addition to the new polling mechanism, described below, this version can also retrieve "Instant" status updates without polling. To enable this feature, you must enable HomeSeer's "Enable Control using ASCII commands" feature which can be accessed from the HomeSeer browers interface at [Tools menu] -> [Setup] -> [Network tab].  Its recommened that you leave the control port at the default setting of "11000".  The plugin will automatically attempt a connection to HomeSeer using the ASCII commands feature and, if that is not available, will then revert to using polling over the HTTP / JSON interface for status updates. Status messages displayed during startup will let you know if the Instant Status feature has been enabled.
 
-## What's Changed - New Features
-This version uses a new polling mechanism in which all HomeSeer devices are polled in a single HTTP call rather than individual HTTP calls. This reduces the polling stress on HomeSeer and allows for much more frequent polling. E.g., in testing, a 100 Z-Wave node system shows minimal load even with poll times as low as 5 seconds. Only the sysem polling time setting is used, individual polling settings are no longer needed. 
+When Instant Status is enbled, dimmer devices supporting the Last-Level feature (most Z-Wave Dimmers) will turn on to the last level they were at prior to being turned off rather than always turning on at 100%.
+
+If Instant Status is enabled, polling is also reduced to once per minute. This shouldn't really be needed at all, but an occasionall poll is done out of caution to ensure that HomeBridge / HomeSeer remain properly synchronized.
+
+## Versopm 2.x - What's Changed - New Features beyond Version 1.x
+Version 2.x of this plugin uses a new polling mechanism in which all HomeSeer devices are polled in a single HTTP call rather than individual HTTP calls. This reduces the polling stress on HomeSeer and allows for much more frequent polling. E.g., in testing, a 100 Z-Wave node system shows minimal load even with poll times as low as 5 seconds. Only the sysem polling time setting is used, individual polling settings are no longer needed.
 
 This plugin also changes the way in which device characteristics are updated. In particular, the brightness characteristic of dimmable lights is now updated on the Apple Home application in "real time" (well, on each poll), so you no longer need to refresh the screen in the Home application to see brighness changes that occur due to manual interactions with the Z-Wave switch or via HomeSeer.
 
 Code architecture has been changed to use JavaScript native Promises for HTTP access. Required node version has been updated to Version 4.0 to ensure that Promises are implemented.
 
 ## Easier config.json setup!
-* Device name is now obtained from HomeSeer if it hasn't been specified in the config.json file!
 * Device type is now taken from HomeSeer if it hasn't been specified in the config.json file. This plugin now looks at the "Device Type (String)" field on HomeSeer to determine a mapping to a HomeKit device. The mappings are fairly simple and not all HomeKit devices are supported. Supported Mappings are:
 
   - "Z-Wave Switch Binary"        ->  "Switch"
@@ -70,6 +74,7 @@ Windows
 "name": "HomeSeer",                 // Required
 "host": "http://yourserver",        // Required - If you did setup HomeSeer authentication, use "http://user:password@ip_address:port"
 "poll" : 10                         // Optional - Default polling rate in seconds to check for changed device status
+"ASCIIPort":11000                   // Optional - Defaults to 11000. This is the TCP/IP Port for ASCII control interface. Used for Instant Status. Must match setting on "Tools" -> "Setup" -> "Network" tab of HomeSeer.
 ```
 
 ## All Accessories options
@@ -77,7 +82,7 @@ Windows
 "ref":8,                            // Required - HomeSeer Device Reference (To get it, select the HS Device - then Advanced Tab)
 "type":"Lightbulb",                 // Required - Identifies a supported device type.
 "name":"My Light",                  // Optional - HomeSeer device name is the default
-"uuid_base":"SomeUniqueId2"         // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+"uuid_base":"SomeUniqueId2"         // Optional - HomeKit identifier will be derived from this parameter instead of the name. Defaults to the string "Ref" plus the HomeSeer Device Reference added on (e.g., "REF235")
 
 
 See [index.js](https://raw.githubusercontent.com/jrhubott/homebridge-homeseer/master/index.js) for full configuration information or [config.js](https://raw.githubusercontent.com/jrhubott/homebridge-homeseer/master/config/config.json) for sample configuration

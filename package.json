@@ -1,6 +1,6 @@
 {
   "name": "homebridge-homeseer-plugin-2018",
-  "version": "2.0.4",
+  "version": "2.1.0",
   "description": "Homeseer Plugin for homebridge: https://github.com/jvmahon/homebridge-homeseer",
   "license": "ISC",
   "keywords": [

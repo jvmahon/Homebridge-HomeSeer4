@@ -109,7 +109,7 @@
 // - Lock                   
 
 
-
+var net = require('net');
 var promiseHTTP = require("request-promise-native");
 var chalk = require("chalk");
 var HSutilities = require("./lib/HomeSeerUtilities");
@@ -173,6 +173,8 @@ var _statusObjects = [];
 
 var HomeSeerHost = "";
 
+var instantStatusEnabled = false;
+
 module.exports = function (homebridge) {
     console.log("homebridge API version: " + homebridge.version);
 
@@ -197,7 +199,7 @@ function forceHSValue(ref, level)
 		// This function is used to temporarily 'fake' a HomeSeer poll update.
 		// Used when, e.g., you set a new value of an accessory in HomeKit - this provides a fast update to the
 		// Retrieved HomeSeer device values which will then be "corrected / confirmed" on the next poll.
-		_HSValues[ref] = level;
+		 _HSValues[ref] = parseFloat(level);
 		
 		// Debugging
 		// console.log("** DEBUG ** - called forceHSValue with reference: %s,  level: %s, resulting in new value: %s", ref, level, _HSValues[ref]);
@@ -216,7 +218,8 @@ function HomeSeerPlatform(log, config, api) {
 	}
 }
 
-HomeSeerPlatform.prototype = {
+HomeSeerPlatform.prototype = 
+{
 	
     accessories: function (callback) 
 	{
@@ -224,164 +227,198 @@ HomeSeerPlatform.prototype = {
 		var that = this;
         var refList = [];
 
-		try
-		{
-			HSutilities.checkConfig.call(this, this.config);
-		}
-		catch(err)
-		{
-			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
-			this.log(chalk.bold.red("** Format error in your config.json file. Fix it to continue."));
-			this.log(chalk.bold.red(err));
-			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
-			throw err;
-		}
-		
+			
+		// Check entries in the config.json file to make sure there are no obvious errors.		
+		HSutilities.checkConfig.call(this, this.config);
+
 		/////////////////////////////////////////////////////////////////////////////////		
 		// Make devices for each HomeSeer event in the config.json file
-		try
+		if (this.config.events) 
 		{
-			if (this.config.events) {
-				for (var i = 0; i < this.config.events.length; i++) {
-					var event = new HomeSeerEvent(that.log, that.config, that.config.events[i]);
-					foundAccessories.push(event);
-				}
+			for (var i in this.config.events) 
+			{
+				var event = new HomeSeerEvent(that.log, that.config, that.config.events[i]);
+				foundAccessories.push(event);
 			}
 		}
-		catch(err)
+		//////////////////  Identify all of the HomeSeer References of interest  /////////////////////////
+		var allHSRefs = [];
+			allHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
+
+		for (var i in this.config.accessories) 
 		{
-			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
-			this.log("** ERROR ** ERROR ** ERROR ** Etc. **");
-			this.log("** ERROR attempting to add HomeSeer event specified in config.json to HomeKit **")
-			this.log("Processing will continue with adding of Accessories");
-			this.log(chalk.bold.red("--------------------------------------------------------------------------------"));
-		}
+
+			refList.push(this.config.accessories[i].ref);
+			
+			allHSRefs.pushUnique(this.config.accessories[i].ref);
+			
+			_HSValues[this.config.accessories[i].ref] = parseFloat(0);
+			
+			_statusObjects[this.config.accessories[i].ref] = [];
+			
+			if(this.config.accessories[i].batteryRef) 
+			{
+				_statusObjects[this.config.accessories[i].batteryRef] = [];
+				allHSRefs.pushUnique(this.config.accessories[i].batteryRef);
+				_HSValues[this.config.accessories[i].batteryRef] = parseFloat(0);
+			}
+		} // end for
 		
+		//For New Polling Method to poll all devices at once
+		allHSRefs.sort();
+
 		/////////////////////////////////////////////////////////////////////////////////
+		
+		
 
 		// Then make a HomeKit device for each "regular" HomeSeer device.
-        this.log("Fetching HomeSeer devices.");
+		this.log("Fetching HomeSeer devices.");
+
+		// Get status on everything that isn't a battery!
+		var allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + allHSRefs.concat();
 		
-		try
-		{
-			// better yet would be to have this repeat and wait until it is fulfilled 
-			promiseHTTP(this.config["host"] + "/JSON?request=getstatus")
-			.then( function(body) 
+		promiseHTTP({ uri: allStatusUrl, json:true})
+			.then( function(response) 
 				{
-					this.log("Successfully accessed HomeSeer and obtained data: ");
-
-				}.bind(this) // need to bind to "this" for logging to work.
-			)				
-			.catch(function(err) 
-				{ 
-					this.log(""); this.log("");
-					this.log(chalk.bold.red("**************************************************************************"));
-					this.log(chalk.bold.red("----------------------------    ERROR    ---------------------------------"));				
-					this.log("Unable to Access HomeSeer at address %s", this.config["host"]);
-					this.log("HTTP Error Message: %s", err);
-					this.log("            *** Check if HomeSeer is running. ***");
-					this.log(chalk.bold.red("--------------------------------------------------------------------------"));
-					this.log(chalk.bold.red("**************************************************************************\n\n"));
-					throw(err);
-				}.bind(this) // need to bind to "this" for logging to work.
-			)
-
-	
-			///////////////////////
-			var allHSRefs = [];
-				allHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
-
-			for (var i = 0; i < this.config.accessories.length; i++) {
-
-				refList.push(this.config.accessories[i].ref);
-				
-				//Gather all HS References For polling. References in allHSRefs can include references that do not
-				// create a new HomeKit device such as batteries
-				allHSRefs.pushUnique(this.config.accessories[i].ref);
-				
-				if(this.config.accessories[i].batteryRef) allHSRefs.pushUnique(this.config.accessories[i].batteryRef);
-			} // end for
-			
-			//For New Polling Method to poll all devices at once
-			allHSRefs.sort();
-
-			
-			
-			var url = this.config["host"] + "/JSON?request=getstatus&ref=" + refList.concat();
-		
-			// ********************************	
-			// Add a check that the HomeSeer web server is available. Maybe via a promise which contains a SetInterval loop
-			// To ping the server until you get a response and then continue to do remaining processing.
-			///
-			/*
-					waitForHomeseer = new Promise(function(resolve, reject) { add a loop to check that HomeSeer is available }); 
-			
-			*/
-		
-			promiseHTTP({ uri: url, json:true}).then( function(response) 
-				{
+					for(var i in response.Devices)
+					{
+						_HSValues[response.Devices[i].ref] = parseFloat(response.Devices[i].value);
+					}
+					
 					this.log('HomeSeer status function succeeded!');
-					for (var i = 0; i < this.config.accessories.length; i++) {
+					for (var i in this.config.accessories) {
 						for (var j = 0; j < response.Devices.length; j++) {
 							// Set up initial array of HS Response Values during startup
-							_HSValues[response.Devices[j].ref] = response.Devices[j].value;
 							if (this.config.accessories[i].ref == response.Devices[j].ref) {
 								var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[j]);
 								foundAccessories.push(accessory);
 								break;
-							} //endfor
-						}
-					} //end else.
-				
-				// This is the new Polling Mechanism to poll all at once.	
-				
-				var allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + allHSRefs.concat();
-				this.log("Retrieve All HomeSeer Device Status URL is " + allStatusUrl);
-				
-				setInterval( function () 
+							} //endif
+						} // endfor
+					} //endfor.
+					return response
+				}.bind(this))
+			.catch((err) => 
 				{
-					// Now do the poll
-					promiseHTTP({ uri: allStatusUrl, json:true})
-						.then( function(json) 
-							{
-								_currentHSDeviceStatus = json.Devices;
-								that.log("HomeSeer Poll # %s: Retrieved values for %s HomeSeer devices.",  pollingCount, _currentHSDeviceStatus.length);
-								for (var index in _currentHSDeviceStatus)
-								{
-									_HSValues[_currentHSDeviceStatus[index].ref] = _currentHSDeviceStatus[index].value;
-								} //endfor
+					console.log("Error setting up Devices: " + err);
+					throw err;
+				})
+			.then((response)=> 
+				{
+					callback(foundAccessories);
+					updateAllFromHSData();
+					return response
+				})
+			.then((response) =>
+				{
+					function HSData(array) 
+					{
+						this.ref = array[1];
+						this.newValue = array[2];
+						this.oldValue = array[3];
+					}
+					var ASCIIPort = "11000";
+						if(this.config["ASCIIPort"]) ASCIIPort = this.config["ASCIIPort"];
 
-									updateAllFromHSData();
-									
-							} // end then's function
-							) // end then
-						.catch(function(err)
-							{
-								that.log("HomeSeer poll attempt failed with error %s", err);
-							} // end catch's fuction
-							);//end catch
-
-				}, this.config.platformPoll * 1000 // end SetInterval's function
-				);	//end setInterval function for polling loop
-			
-				callback(foundAccessories);
-            
-			}.bind(this)) // bind the promise's function body to "this", else ??
-			.catch (function(err) 
-				{ 
-					this.log('HomeSeer status function failed: %s', error.message); 
-					callback(foundAccessories)
-				});
 				
-		} //end the try!
-		catch(err)
-		{
-			this.log("Error in trying to add a HomeSeer device");
-			callback(foundAccessories);
-			// throw(err);
-		}
+					var uri = parseUri(this.config["host"]);
+					this.log("Host for ASCII Interface set to: " + uri.host + " at port " + ASCIIPort);
+				
+					return new Promise((resolve, reject) => 
+					{
+						// this.log(chalk.green.bold("Attempting connection to HomeSeer ASCII Port: "));
+						var client = net.createConnection({port:ASCIIPort, host:uri.host}, () => 
+							{
+								this.log(chalk.green.bold("Successfully connected to ASCII Control Interface of HomeSeer. Instant Status Enabled."));
+								instantStatusEnabled = true;
+								client.on('data', (data) => 
+									{
+
+										var myData = new HSData(data.toString().slice(0, -2).split(","));
+										
+										//Only need to do an update if there is HomeKit data associated with it!
+										// Which occurs if the _statusObjects array has a non-zero length for the reference reported.
+										if( _statusObjects[myData.ref])
+										{
+											this.log("Received HomeSeer status update data: " + data);
+											_HSValues[myData.ref] = 	parseFloat(myData.newValue);	
+
+											var statusObjectGroup = _statusObjects[myData.ref];
+											for (var thisCharacteristic in statusObjectGroup)
+											{
+												updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
+											}
+
+											// updateAllFromHSData();
+										} else
+										{
+											
+											// this.log(chalk.magenta.bold("*Debug* - Received Instant Status data " + data ));
+										}
+									});
+								resolve(true);
+							});
+						client.on('error', (data) => 
+							{
+								this.log(chalk.red.bold("Unable to connect to HomeSeer ASCII Port: " + ASCIIPort + ". Instant Status Not Enabled."));
+								if (ASCIIPort != 11000) 
+								{
+								this.log(chalk.red.bold("ASCIIPort configuration value of: " + ASCIIPort + " is unusual. Typical value is 11000. Check setting."));
+								}
+								this.log(chalk.red.bold('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
+								this.log(chalk.red.bold("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));
+								resolve(false)
+							});
+					});
+				})
+			.then((instantStatusEnabled) =>
+				{
+
+					// This is the new Polling Mechanism to poll all at once.	
+					// If instantStatusEnabled is true, then poll less frequently (once per minute);
+					
+					// this.log(chalk.yellow.bold("Monitoring HomeSeer Device Status for references: " + allHSRefs.concat()));
+
+					if(instantStatusEnabled)
+					{
+						this.config.platformPoll = 60;
+						this.log(chalk.green.bold("Reducing HomeSeer polling rate to: " + this.config.platformPoll + " seconds."))
+
+					}
+						
+						setInterval( function () 
+						{
+							// Now do the poll
+							promiseHTTP({ uri: allStatusUrl, json:true})
+								.then( function(json) 
+									{
+										_currentHSDeviceStatus = json.Devices;
+										that.log("Poll # %s: Retrieved values for %s HomeSeer references.",  pollingCount, _currentHSDeviceStatus.length);
+										for (var index in _currentHSDeviceStatus)
+										{
+											_HSValues[_currentHSDeviceStatus[index].ref] = parseFloat(_currentHSDeviceStatus[index].value);
+										} //endfor
+
+											updateAllFromHSData();
+											
+									} // end then's function
+									) // end then
+								.catch(function(err)
+									{
+										that.log("HomeSeer poll attempt failed with error %s", err);
+									} // end catch's function
+									);//end catch
+
+						}, this.config.platformPoll * 1000 // end SetInterval's function
+						);	//end setInterval function for polling loop
+
+					return true;
+				});
 	}
 }
+
+
+
 
 function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     this.log = log;
@@ -391,6 +428,8 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     this.model = status.device_type_string;
 
     this.access_url = platformConfig["host"] + "/JSON?";
+	
+	// this.log(chalk.magenta.bold("ASCII Instant Status Port is: " + platformConfig["ASCIIPort"]));
 	
 	this.HomeSeerHost = platformConfig["host"];
 	// _accessURL = this.access_url;
@@ -425,6 +464,7 @@ HomeSeerAccessory.prototype = {
 		var url;
 		var callbackValue = 1;
 		var transmitValue = level;
+		var performUpdate = true;
 		
 		// Uncomment for Debugging
 		// console.log ("** Debug ** - Called setHSValue with level %s for UUID %s", level, this.UUID);
@@ -443,8 +483,17 @@ HomeSeerAccessory.prototype = {
 					case(Characteristic.RotationSpeed.UUID):
 					case(Characteristic.Brightness.UUID ): 
 					{
+						// If the _HSValues array has a 255 value, it means that this Brightness / Rotation speed change
+						// Is being sent as part of an initial dimmable device turn-on pair. 
+						// In HomeSeer, it is better not to send this second value until after the last-level feature settles to a new value.
+						// So inhibit the transmission but only if you have Instant Status feature enabled. 
+						if(instantStatusEnabled && (_HSValues[this.HSRef] == 255))
+						{
+							performUpdate = false;
+						}
+						
 						// Maximum ZWave value is 99 so covert 100% to 99!
-						transmitValue = (transmitValue == 100) ? 99 : level;
+						transmitValue = (level == 100) ? 99 : level;
 						
 						forceHSValue(this.HSRef, transmitValue); 
 						callbackValue = level; // but call back with the value instructed by HomeKit rather than the modified 99 sent to HomeSeer
@@ -486,7 +535,7 @@ HomeSeerAccessory.prototype = {
 							{
 								// if it is off, turn on to full level.
 								transmitValue = 255;
-								forceHSValue(this.HSRef, 99);
+								forceHSValue(this.HSRef, 255);
 								callbackValue = 1; // and callback with a 1 meaning it was turned on
 							}
 							else // If it appears to be on, then send same value!
@@ -497,7 +546,7 @@ HomeSeerAccessory.prototype = {
 								// if a poll occurs during ramping.
 								transmitValue = getHSValue(this.HSRef); // if it is already on, then just transmit its current value
 								callbackValue = 1;
-								// noUpdate = true; // or maybe don't transmit at all (testing this feature)
+								performUpdate = false; // or maybe don't transmit at all (testing this feature)
 							}
 						}
 						break; // 
@@ -531,16 +580,23 @@ HomeSeerAccessory.prototype = {
  
 		 // console.log("Sending URL %s", url);
 
-		 promiseHTTP(url)
-			.then( function(htmlString) {
-					console.log(this.displayName + ': HomeSeer setHSValue function succeeded!');
-					callback(null, callbackValue);
-					// updateCharacteristic(this);// poll for this one changed Characteristic after setting its value.
-			}.bind(this))
-			.catch(function(err)
-				{ 	console.log(chalk.bold.red("Error attempting to update %s, with error %s", this.displayName, this.UUID, err));
-				}.bind(this)
-			);
+		if (performUpdate)
+		 {
+			 promiseHTTP(url)
+				.then( function(htmlString) {
+						// console.log(this.displayName + ': HomeSeer setHSValue function succeeded!');
+						callback(null, callbackValue);
+						// updateCharacteristic(this);// poll for this one changed Characteristic after setting its value.
+				}.bind(this))
+				.catch(function(err)
+					{ 	console.log(chalk.bold.red("Error attempting to update %s, with error %s", this.displayName, this.UUID, err));
+					}.bind(this)
+				);
+		 } 
+		else 
+			{
+				callback(null, callbackValue);
+			}
     },
 
 
@@ -554,7 +610,7 @@ HomeSeerAccessory.prototype = {
 		// Use the Z-Wave Model Info. from HomeSeer if the type is undefined!
 		if(this.config.type == undefined) this.config.type = this.model;
 		
-		this.log(chalk.bold.yellow("Configuring Device with user selected type " + this.config.type + " and HomeSeer Device Type: " + this.model));
+		this.log("Configuring Device with user selected type " + this.config.type + " and HomeSeer Device Type: " + this.model);
 
 
         switch (this.config.type) {
@@ -574,7 +630,7 @@ HomeSeerAccessory.prototype = {
                 switchService
                     .getCharacteristic(Characteristic.On)
                     .on('set', this.setHSValue.bind(switchService.getCharacteristic(Characteristic.On)));
-				_statusObjects.push(switchService.getCharacteristic(Characteristic.On));
+				_statusObjects[this.config.ref].push(switchService.getCharacteristic(Characteristic.On));
 
                 services.push(switchService);
                 break;
@@ -593,7 +649,7 @@ HomeSeerAccessory.prototype = {
                     .getCharacteristic(Characteristic.On)
                     .on('set', this.setHSValue.bind(outletService.getCharacteristic(Characteristic.On)));
 
-				_statusObjects.push(outletService.getCharacteristic(Characteristic.On));
+				_statusObjects[this.config.ref].push(outletService.getCharacteristic(Characteristic.On));
                 services.push(outletService);
                 break;
             }
@@ -618,7 +674,7 @@ HomeSeerAccessory.prototype = {
 
                 services.push(temperatureSensorService);
 				
-				_statusObjects.push(temperatureSensorService.getCharacteristic(Characteristic.CurrentTemperature));	
+				_statusObjects[this.config.ref].push(temperatureSensorService.getCharacteristic(Characteristic.CurrentTemperature));	
 
                 break;
             }
@@ -633,7 +689,7 @@ HomeSeerAccessory.prototype = {
 
                 services.push(carbonMonoxideSensorService);
 				
-				_statusObjects.push(carbonMonoxideSensorService.getCharacteristic(Characteristic.CarbonMonoxideDetected));	
+				_statusObjects[this.config.ref].push(carbonMonoxideSensorService.getCharacteristic(Characteristic.CarbonMonoxideDetected));	
 				
                 break;
             }
@@ -647,7 +703,7 @@ HomeSeerAccessory.prototype = {
 
                 services.push(carbonDioxideSensorService);
 				
-				_statusObjects.push(carbonDioxideSensorService.getCharacteristic(Characteristic.CarbonDioxideDetected));	
+				_statusObjects[this.config.ref].push(carbonDioxideSensorService.getCharacteristic(Characteristic.CarbonDioxideDetected));	
 
                 break;
             }
@@ -661,7 +717,7 @@ HomeSeerAccessory.prototype = {
 
                 services.push(contactSensorService);
 
-				_statusObjects.push(contactSensorService.getCharacteristic(Characteristic.ContactSensorState));	
+				_statusObjects[this.config.ref].push(contactSensorService.getCharacteristic(Characteristic.ContactSensorState));	
 
                 break;
             }
@@ -676,7 +732,7 @@ HomeSeerAccessory.prototype = {
 
                 services.push(motionSensorService);
 				
-				_statusObjects.push(motionSensorService.getCharacteristic(Characteristic.MotionDetected));	
+				_statusObjects[this.config.ref].push(motionSensorService.getCharacteristic(Characteristic.MotionDetected));	
 				
                 break;
             }
@@ -690,7 +746,7 @@ HomeSeerAccessory.prototype = {
 
                 services.push(leakSensorService);
 
-				_statusObjects.push(leakSensorService.getCharacteristic(Characteristic.LeakDetected));	
+				_statusObjects[this.config.ref].push(leakSensorService.getCharacteristic(Characteristic.LeakDetected));	
 				
                 break;
             }
@@ -702,7 +758,7 @@ HomeSeerAccessory.prototype = {
 
                 services.push(occupancySensorService);
 				
-				_statusObjects.push(occupancySensorService.getCharacteristic(Characteristic.OccupancyDetected));	
+				_statusObjects[this.config.ref].push(occupancySensorService.getCharacteristic(Characteristic.OccupancyDetected));	
 				
                 break;
             }
@@ -714,7 +770,7 @@ HomeSeerAccessory.prototype = {
 
                 services.push(smokeSensorService);
 				
-				_statusObjects.push(smokeSensorService.getCharacteristic(Characteristic.SmokeDetected));	
+				_statusObjects[this.config.ref].push(smokeSensorService.getCharacteristic(Characteristic.SmokeDetected));	
 
                 break;
             }
@@ -729,7 +785,7 @@ HomeSeerAccessory.prototype = {
 
                 services.push(lightSensorService);
 				
-				_statusObjects.push(lightSensorService.getCharacteristic(Characteristic.CurrentAmbientLightLevel));	
+				_statusObjects[this.config.ref].push(lightSensorService.getCharacteristic(Characteristic.CurrentAmbientLightLevel));	
 
                 break;
             }
@@ -744,7 +800,7 @@ HomeSeerAccessory.prototype = {
 					
                 services.push(humiditySensorService);
 				
-				_statusObjects.push(humiditySensorService.getCharacteristic(Characteristic.CurrentRelativeHumidity));	
+				_statusObjects[this.config.ref].push(humiditySensorService.getCharacteristic(Characteristic.CurrentRelativeHumidity));	
 
                 break;
             }
@@ -779,8 +835,8 @@ HomeSeerAccessory.prototype = {
 		    
 				services.push(lockService);
 				
-		    	_statusObjects.push(lockService.getCharacteristic(Characteristic.LockCurrentState));
-				_statusObjects.push(lockService.getCharacteristic(Characteristic.LockTargetState));
+		    	_statusObjects[this.config.ref].push(lockService.getCharacteristic(Characteristic.LockCurrentState));
+				_statusObjects[this.config.ref].push(lockService.getCharacteristic(Characteristic.LockTargetState));
 								
                 break;
             }
@@ -796,9 +852,32 @@ HomeSeerAccessory.prototype = {
                     .getCharacteristic(Characteristic.On)
                     .on('set', this.setHSValue.bind(fanService.getCharacteristic(Characteristic.On)));
 					
-				_statusObjects.push(fanService.getCharacteristic(Characteristic.On));					
+				_statusObjects[this.config.ref].push(fanService.getCharacteristic(Characteristic.On));	
+
+		    	if (this.config.can_dim == null) // if can_dim is undefined, set it to 'true' unless its a Z-Wave Binary Switch.
+				{
+					this.config.can_dim = true; // default to true
+					
+					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model == "Z-Wave Switch Binary"))
+					{
+						this.config.can_dim = false;
+					}
+				}
+				
+				if (typeof(this.config.can_dim) == "string")
+				{	// This error should have been checked and fixe by the checkConfig() function, but this is a debugging check.
+					var error = chalk.red.bold("Program Error. can_dim setting has a type of 'string'. Should be 'boolean' for device with reference " + this.ref)
+					throw new SyntaxError(error);
+				}
 
                 if (this.config.can_dim == true) {
+					
+					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model != "Z-Wave Switch Multilevel"))
+					{
+						this.log(chalk.magenta.bold("* Warning * - Check can_dim setting for Fan named: " + this.name + ", and HomeSeer reference: " + this.config.ref ));
+						this.log(chalk.magenta.bold("HomeSeer reports model type: " + this.model + ", which typically does not provide rotation speed adjustment."));
+					}
+					
 					this.log("          Adding RotationSpeed to Fan");
                     fanService
                         .addCharacteristic(new Characteristic.RotationSpeed())
@@ -807,14 +886,23 @@ HomeSeerAccessory.prototype = {
 					fanService
 						.getCharacteristic(Characteristic.RotationSpeed)
 						.on('set', this.setHSValue.bind(fanService.getCharacteristic(Characteristic.RotationSpeed)));
-				_statusObjects.push(fanService.getCharacteristic(Characteristic.RotationSpeed));						
+				_statusObjects[this.config.ref].push(fanService.getCharacteristic(Characteristic.RotationSpeed));						
                 }
+				else
+				{
+					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model == "Z-Wave Switch Multilevel"))
+					{
+						this.log(chalk.magenta.bold("* Warning * - Check can_dim setting for Fan named: " + this.name + ", and HomeSeer reference: " + this.config.ref ));
+						this.log(chalk.magenta.bold("Setting without rotation speed adjustment, but HomeSeer reports model type: " + this.model + ", which typically does provide rotation speed adjustment."));
+					}					
+				}
 
 				
                 services.push(fanService);
                 break;
             }	
-/*			case ("RGBLight"):
+/*			
+			case ("RGBLight"):
 			{
 				// this.log("** Debug ** - Setting up bulb %s with can_dim %s", this.config.name, this.config.can_dim);
                 var lightbulbService = new Service.Lightbulb();
@@ -823,7 +911,7 @@ HomeSeerAccessory.prototype = {
 				
 				lightbulbService
 					.getCharacteristic(Characteristic.On)
-					.RGB = this.config.RGB;
+					.HSREf = this.config.ref;
 				
                 lightbulbService
                     .getCharacteristic(Characteristic.On)
@@ -831,24 +919,62 @@ HomeSeerAccessory.prototype = {
 
 					
 				lightbulbService
-                        .addCharacteristic(new Characteristic.Brightness())
+                        .addCharacteristic(new Characteristic.Brightness());
+				
+				var RBG = 	{	
+								red:this.config.red, 
+								green:this.config.green, 
+								blue:this.config.blue
+							};
+
+				
+				lightbulbService
+						.getCharacteristic(Characteristic.Brightness)
 						.HSRef = this.config.ref;
-					
-				lightbulbService
-						.addCharacteristic(new Characteristic.Hue);
 						
+				lightbulbService
+						.getCharacteristic(Characteristic.Brightness)						
+						.RGB = RGB;	
 					
 				lightbulbService
-						.addCharacteristic(new Characteristic.Saturation);
+						.addCharacteristic(new Characteristic.Hue());
+						
+				lightbulbService
+						.getCharacteristic(Characteristic.Hue)
+						.HSRef = this.config.ref;	
+						
+				lightbulbService
+						.getCharacteristic(Characteristic.Hue)						
+						.RGB = RGB;
+						
+				lightbulbService
+						.addCharacteristic(new Characteristic.Saturation());
+						
+				lightbulbService
+						.getCharacteristic(Characteristic.Saturation)
+						.HSRef = this.config.ref;	
+						
+				lightbulbService
+						.getCharacteristic(Characteristic.Saturation)
+						.RGB = RGB;		
 
 						
-					lightbulbService
-						.getCharacteristic(Characteristic.Brightness)
-                        .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.Brightness)));
-                        // .on('get', this.getValue.bind(this));
 					
-				_statusObjects.push(lightbulbService.getCharacteristic(Characteristic.On));
+				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.On));
+				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
+				_statusObjects[this.config.red].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
+				_statusObjects[this.config.green].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
+				_statusObjects[this.config.blue].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
+				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.Hue));
+				_statusObjects[this.config.red].push(lightbulbService.getCharacteristic(Characteristic.Hue));
+				_statusObjects[this.config.green].push(lightbulbService.getCharacteristic(Characteristic.Hue));
+				_statusObjects[this.config.blue].push(lightbulbService.getCharacteristic(Characteristic.Hue));				
+				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.Saturation));
+				_statusObjects[this.config.red].push(lightbulbService.getCharacteristic(Characteristic.Saturation));
+				_statusObjects[this.config.green].push(lightbulbService.getCharacteristic(Characteristic.Saturation));
+				_statusObjects[this.config.blue].push(lightbulbService.getCharacteristic(Characteristic.Saturation));
 				
+                services.push(lightbulbService);				
 				break;
 			}
 	*/		
@@ -864,7 +990,7 @@ HomeSeerAccessory.prototype = {
 					this.log(chalk.bold.yellow("Please update your config.json file to specify the device type."));
 				}
 				
-				// this.log("** Debug ** - Setting up bulb %s with can_dim %s", this.config.name, this.config.can_dim);
+				// this.log("** Debug ** - Setting up bulb %s with can_dim: %s", this.config.name, this.config.can_dim);
                 var lightbulbService = new Service.Lightbulb();
 				lightbulbService.isPrimaryService = true;
 				lightbulbService.displayName = "Service.Lightbulb"
@@ -878,10 +1004,35 @@ HomeSeerAccessory.prototype = {
                     .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.On)));
                     // .on('get', this.getPowerState.bind(this));
 					
-				_statusObjects.push(lightbulbService.getCharacteristic(Characteristic.On));
-		    
-                if (this.config.can_dim == null || this.config.can_dim == true) {
-					// this.log("          Making lightbulb dimmable");
+				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.On));
+				
+
+		    	if (this.config.can_dim == null) // if can_dim is undefined, set it to 'true' unless its a Z-Wave Binary Switch.
+				{
+					this.config.can_dim = true; // default to true
+					
+					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model == "Z-Wave Switch Binary"))
+					{
+						this.config.can_dim = false;
+					}
+				}
+		
+				if (typeof(this.config.can_dim) == "string")
+				{	// This error should have been checked and fixe by the checkConfig() function, but this is a debugging check.
+					var error = chalk.red.bold("Program Error. can_dim setting has a type of 'string'. Should be 'boolean' for device with reference " + this.ref)
+					throw new SyntaxError(error);
+				}
+
+                if (this.config.can_dim == true) 
+				{
+					// this.log(chalk.magenta.bold("*Debug* Making lightbulb dimmable"));
+					
+					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model != "Z-Wave Switch Multilevel"))
+					{
+						this.log(chalk.magenta.bold("* Warning * - Check can_dim setting. Setting Lightbulb named " + this.name + " and HomeSeer reference " + this.config.ref + " as dimmable, but"));
+						this.log(chalk.magenta.bold("HomeSeer reports model type: " + this.model + " which is typically a non-dimmable type"));
+
+					}
 					
                     lightbulbService
                         .addCharacteristic(new Characteristic.Brightness())
@@ -891,8 +1042,17 @@ HomeSeerAccessory.prototype = {
 						.getCharacteristic(Characteristic.Brightness)
                         .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.Brightness)));
 						
-					_statusObjects.push(lightbulbService.getCharacteristic(Characteristic.Brightness));
+					_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
                 }
+				else
+				{
+					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model == "Z-Wave Switch Multilevel"))
+					{
+						this.log(chalk.magenta.bold("* Warning * - Check can_dim setting. Setting Lightbulb named " + this.name + " and HomeSeer reference " + this.config.ref + " as non-dimmable, but"));
+						this.log(chalk.magenta.bold("HomeSeer reports model type: " + this.model + " which is typically a dimmable type"));
+
+					}
+				}
 
                 services.push(lightbulbService);
 
@@ -921,8 +1081,8 @@ HomeSeerAccessory.prototype = {
 						
                     services.push(batteryService);
 					
-					_statusObjects.push(batteryService.getCharacteristic(Characteristic.BatteryLevel));
-					_statusObjects.push(batteryService.getCharacteristic(Characteristic.StatusLowBattery));					
+					_statusObjects[this.config.ref].push(batteryService.getCharacteristic(Characteristic.BatteryLevel));
+					_statusObjects[this.config.ref].push(batteryService.getCharacteristic(Characteristic.StatusLowBattery));					
                 }
 				
 		// And add a basic Accessory Information service		
@@ -1090,7 +1250,7 @@ function updateCharacteristicFromHSData(characteristicObject)
 			case(characteristicObject.UUID == Characteristic.CurrentRelativeHumidity.UUID):
 			case(characteristicObject.UUID == Characteristic.BatteryLevel.UUID):
 			{
-				characteristicObject.updateValue(newValue);
+				characteristicObject.updateValue(parseFloat(newValue));
 				break;
 			}
 			
@@ -1128,36 +1288,15 @@ function updateCharacteristicFromHSData(characteristicObject)
 	} // end if
 }
 
-/* Following function is currently unused but may be needed for future development
-// For a given Service object, update all its Characteristics
-function updateServicesFromHSData(service)
-{
-	 // Received an array of service objects and then Loop over each characteristic object in a service object 
-	 // and then send the characteristic object for updating
-		for(var cIndex = 0; cIndex < service.characteristics.length; cIndex++)
-		{
-			updateCharacteristicFromHSData(service.characteristics[cIndex]);
-		}		
-}
-*/
-
-/* Following function is currently unused but may be needed for future development
-// Function will update all services for a specific accessory.
-function updateAccessoryFromHSData(accessory)
-{
-		for(var sIndex = 0; sIndex < accessory.length; sIndex++)
-		{
-			// console.log ("Debug #%s", sIndex);
-		updateServicesFromHSData( accessory[sIndex] );
-		} // end for sIndex
-}
-*/
-
 function updateAllFromHSData()
 {
-	for (var aIndex in _statusObjects)
+	for (var HSReference in _statusObjects)
 	{
-		updateCharacteristicFromHSData(_statusObjects[aIndex]);
+		var statusObjectGroup = _statusObjects[HSReference];
+		for (var thisCharacteristic in statusObjectGroup)
+		{
+		updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
+		}
 	} // end for aindex
 	
 	pollingCount++; // Increase each time you poll. After at least 1 round of updates, no longer in startup mode!
@@ -1165,6 +1304,45 @@ function updateAllFromHSData()
 } // end function
 
 
+
 ////////////////////    End of Polling HomeSeer Code    /////////////////////////////				
 
 module.exports.platform = HomeSeerPlatform;
+
+////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
+
+
+////////////////////////   Code to Parse a URI and separate out Host and Port /////////////
+// parseUri 1.2.2
+// (c) Steven Levithan <stevenlevithan.com>
+// MIT License
+
+function parseUri (str) {
+	var	o   = parseUri.options,
+		m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
+		uri = {},
+		i   = 14;
+
+	while (i--) uri[o.key[i]] = m[i] || "";
+
+	uri[o.q.name] = {};
+	uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+		if ($1) uri[o.q.name][$1] = $2;
+	});
+
+	return uri;
+};
+
+parseUri.options = {
+	strictMode: false,
+	key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
+	q:   {
+		name:   "queryKey",
+		parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+	},
+	parser: {
+		strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+		loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
+	}
+};
+
