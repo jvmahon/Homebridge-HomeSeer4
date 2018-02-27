@@ -12,7 +12,7 @@
      {
          "platform": "HomeSeer",              
          "name": "HomeSeer",                 
-         "host": "http://salix",
+         "host": "http://127.0.0.1:80",
 
 	"events":[                           
 	       	{
@@ -23,61 +23,17 @@
 		}
 	],
 
-	"accessories":[
-		{
-			"name":"Lamp",
-			"uuid_base":"Office Lamp",
-	               	"ref":582,
-			"can_dim":false             
-            	},
-		{
-              		"ref":570,                      
-		        "type":"Lock",                  
-              		"name":"Front Door",        
-              		"lockUnsecuredValues":[0],      
-              		"lockSecuredValues":[255],        
-              		"lockJammedValues":[254],         
-              		"unlockValue":0,                
-              		"lockValue":255                   
-            	},
-		{
-                        "ref":573,
-                        "type":"Lock",
-                        "name":"Side Door",
-			"uuid_base":"Garage Side Door",
-                        "lockUnsecuredValues":[0],
-                        "lockSecuredValues":[255],
-                        "lockJammedValues":[254],
-                        "unlockValue":0,
-                        "lockValue":255
-                },
-		{
-			"ref":760,
-			"type":"GarageDoorOpener",
-	                "name":"Main Garage Door",
-			"uuid_base":"Garage Garage Door", 
-			"statusUpdateCount":40,    
-	                "stateRef":760,           
-	                "stateOpenValues":[0],    
-	                "stateClosedValues":[100],
-			"controlRef":761,
-	                "controlOpenValue":100,          
-	                "controlCloseValue":100
-		},
-		{
-                        "ref":751,
-                        "type":"GarageDoorOpener",
-                        "name":"Second Garage Door",
-                        "uuid_base":"Garage Second Garage Door",
-                        "stateRef":751,
-                        "stateOpenValues":[0],
-                        "stateClosedValues":[100],
-                        "controlRef":752,
-                        "controlOpenValue":100,
-                        "controlCloseValue":100
-                }
-
+	"accessories":
+	[
+		{"type":"Libhtbulb", 	"name":"Lamp" 		"ref":582    	},
+		{"type":"Lock",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
+		 		{"type":"Switch",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
+		 		{"type":"Outlet",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
+		 		{"type":"Fan",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
+		 		{"type":"TemperatureSensor",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
+		 
 	]
+		 
      }
 	
   ]
