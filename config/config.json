@@ -10,9 +10,10 @@
 
     "platforms": [
      {
-         "platform": "HomeSeer",              
-         "name": "HomeSeer",                 
-         "host": "http://127.0.0.1:80",
+        "platform": "HomeSeer",              
+        "name": "HomeSeer",                 
+        "host": "http://127.0.0.1:80",
+	"ASCIIport":11000,
 
 	"events":[                           
 	       	{
@@ -25,16 +26,18 @@
 
 	"accessories":
 	[
-		{"type":"Libhtbulb", 	"name":"Lamp" 		"ref":582    	},
-		{"type":"Lock",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
-		 		{"type":"Switch",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
-		 		{"type":"Outlet",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
-		 		{"type":"Fan",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
-		 		{"type":"TemperatureSensor",      	"name":"Front Door"  	"ref:600, 	"batteryRef":601 },
-		 
+		{"type":"Lightbulb", 			"name":"Lamp" 		"ref":582    	},
+		{"type":"Lock",      			"name":"Front Door"  	"ref":600, 	"batteryRef":601, "batteryThreshold":30 },
+		{"type":"Switch",      			"name":"Hallway"  	"ref":620	},
+		{"type":"Outlet",      			"name":"Bedroom"  	"ref":630	},
+		{"type":"Fan",      			"name":"Attic"  	"ref":640	},
+		{"type":"TemperatureSensor",		"name":"Front Door"  	"ref":650, 	"batteryRef":651, "batteryThreshold":30 },
+		{"type":"ContactSensor", 		"name":"C02" 		"ref":660, 	"batteryRef":661, "batteryThreshold":30	},
+		{"type":"MotionSensor",      		"name":"Garage"  	"ref":670, 	"batteryRef":671, "batteryThreshold":30 },
+		{"type":"LeakSensor",      		"name":"Hallway"  	"ref":680, 	"batteryRef":681, "batteryThreshold":30 },
+		{"type":"CarbonMonoxideSensor", 	"name":"Bedroom"  	"ref":690, 	"batteryRef":691, "batteryThreshold":30 },
+		{"type":"CarbonDioxideSensor",  	"name":"Attic"  	"ref":700, 	"batteryRef":701, "batteryThreshold":30 }		 
 	]
-		 
      }
-	
   ]
 }
