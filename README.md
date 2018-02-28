@@ -61,17 +61,32 @@ Based on and includes code from [hap-nodejs](https://github.com/KhaosT/HAP-NodeJ
 
 # Installation
 
-See Wiki entries for Windows installation instrucitons.
 
-Linux (Ubuntu/Debian based)
+## Windows
 
-1. `sudo npm install -g homebridge`
-2. `sudo npm install -g homebridge-homeseer-2018`
+See Wiki entries at https://github.com/jvmahon/homebridge-homeseer/wiki for Windows installation instrucitons.
 
-Windows
 
-1. Follow [these](http://board.homeseer.com/showpost.php?p=1204012&postcount=250) instructions for homebridge Installation
-2. Run `npm install homebridge-homeseer-2018` from the homebridge-homeseer directory
+## Linux (Ubuntu/Debian based)
+
+My Linux knowledge is limited, so I'd welcome any additional clarifications to this section that Linux users can provide! Here are the basics:
+
+Check your 'node' version. From a command prompt, enter 'node -v' . I've heard that there are problems getting the plugin to work if node is less than version 7.  You can get an updated node from here: www.nodejs.org
+
+Then, remove any other HomeSeer plugin you may have installed (e.g., homebridge-homeseer or homebridge-homeseer-plugin).
+
+You will need to install homebridge first. A problem that many Linux users seem to have is with getting homebridge to install on Linux. I haven't done much testing on Linux (I use the plugin on Windows), so I strongly recommend you check out the homebridge site for that information at:https://www.npmjs.com/package/homebridge and at  www.github.comhttps://www.npmjs.com/package/homebridge. The homebridge installation instructions there are much more thorough.
+
+But in summary, what you need to do (after updating node) is:
+
+1. 'sudo apt-get install libavahi-compat-libdnssd-dev'
+2. `sudo npm install -g --unsafe-perm homebridge`
+3. `sudo npm install -g --unsafe-perm homebridge-homeseer-2018`
+
+Finally, I've found that incorrect Linux permissions settings are often an issue. I've  found it helpful to change all of the node_modules permissions to RWXRWXRWX using the command:
+    sudo chmod -R 777 /usr/lib/node_modules
+  
+
 
 # Usage
 ## Platform options
