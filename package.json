@@ -17,7 +17,7 @@
     "url": "https://github.com/jvmahon/homebridge-homeseer/issues"
   },
   "engines": {
-    "node": ">=4.0.0",
+    "node": ">=7.0.0",
     "homebridge": ">=0.4.0"
   },
   "dependencies": {
