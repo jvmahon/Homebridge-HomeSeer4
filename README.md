@@ -66,7 +66,7 @@ See Wiki entries for Windows installation instrucitons.
 Linux (Ubuntu/Debian based)
 
 1. `sudo npm install -g homebridge`
-2. `sudo npm install -g homebridge-homeseer--2018`
+2. `sudo npm install -g homebridge-homeseer-2018`
 
 Windows
 
