@@ -1,0 +1,58 @@
+{
+	"bridge": 
+	{
+		"name": "Test-Homebridge",
+		"username": "CD:22:3D:E3:CE:31",
+		"port": 51826,
+		"pin": "032-45-155"
+	},
+
+	"description": "This is an test configuration file.",
+
+	"platforms": 
+	[
+	     {
+			"platform": "HomeSeer",              
+			"name": "HomeSeer",                 
+			"host": "http://127.0.0.1:80",
+			"ASCIIport":11000,
+
+			"events":
+			[                           
+			{ "name":"All lights off",	"eventGroup":"Lighting",	"eventName":"All lights off",	"uuid_base":"All lights off" },
+			{ "name":"Night Mode",		"eventGroup":"Lighting",	"eventName":"Night Mode",	"offEventGroup":"Lighting", "offEventName":"Daytime Lighting", 	"uuid_base":"1234593" }																
+			],
+
+			"accessories":
+			[
+			{"type":"Lightbulb", 			"name":"Lamp", 			"ref":582    	},
+			{"type":"Lock",      			"name":"Front Door", 	"ref":600, 	"batteryRef":601, "batteryThreshold":30 },
+			{"type":"Switch",      			"name":"Hallway",  		"ref":620		},
+			{"type":"Outlet",      			"name":"Bedroom",  		"ref":630		},
+			{"type":"Fan",      			"name":"Attic",  		"ref":640		},
+			{"type":"TemperatureSensor",	"name":"Front Door",	"ref":650, 	"batteryRef":651, "batteryThreshold":30, "temperatureUnit":"F" },
+			{"type":"ContactSensor", 		"name":"C02", 			"ref":660, 	"batteryRef":661, "batteryThreshold":30	},
+			{"type":"MotionSensor",      	"name":"Garage",  		"ref":670, 	"batteryRef":671, "batteryThreshold":30 },
+			{"type":"LeakSensor",      		"name":"Hallway",  		"ref":680, 	"batteryRef":681, "batteryThreshold":30 },
+			{"type":"CarbonMonoxideSensor", "name":"Bedroom",  		"ref":690, 	"batteryRef":691, "batteryThreshold":30 },
+			{"type":"CarbonDioxideSensor",  "name":"Attic",  		"ref":700, 	"batteryRef":701, "batteryThreshold":30 }		 
+			]
+		},
+	     {
+			"platform": "HomeSeerOrignal",              
+			"name": "HomeSeerOriginal",                 
+			"host": "http://127.0.0.1:80",
+
+			"accessories":
+			[
+			{"type":"Thermostat", 			"name":"Bedroom", 		... add other parameters here ...},
+			{"type":"GarageDoorOpener",     "name":"Garage Door",  	... add other parameters here ...},
+			{"type":"SecuritySystem",      	"name":"Security",  		... add other parameters here ...},
+			{"type":"Window",      			"name":"Front Window",  	... add other parameters here ...},
+			{"type":"WindowCovering",      	"name":"Shade",  		... add other parameters here ...},
+			{"type":"Battery",				"name":"Radio",  		... add other parameters here ...}		 
+			]
+		}		
+
+	  ]
+}
