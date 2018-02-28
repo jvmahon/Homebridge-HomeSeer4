@@ -35,7 +35,7 @@ Note that a user can manually alter their HomeSeer Device type (String) so this 
 
 
 ## Unsupported Devices
-The jrhubott/homebridge-homeseer plugin included support for the following device types. However, they are not supported in this updated plugin. Support will not be added (unless someone wants to donate to me devices for testing and implementing the feature):
+The jrhubott/homebridge-homeseer plugin included support for several device types that are not supported in this updated -2018 plugin. These types include:
 
 * Battery (now added as a service to the other devices; no longer a separate device)
 * Door (but you can still configure a Lock)
@@ -43,6 +43,10 @@ The jrhubott/homebridge-homeseer plugin included support for the following devic
 * Security System
 * Thermostats (but Temperature Sensors can still be configured!)
 * Window Coverings
+
+In order to allow continued use of these device types, I have implemented a slightly modified version of the original plugin which you can use in parallel with the -2018 plugin to support these devices. Of course, you won't get the instant-status updates and other features of the -2018 plugin, but you won't lose anything either. See the wiki entry "Using 'original' and 'new' Plugin in Parallel." (https://github.com/jvmahon/homebridge-homeseer/wiki/Using-'original'-and-'new'-Plugin-in-Parallel)]
+
+I may add support for some of these devices in the future; however, I don't have a schedule for doing so and may not be able to do so unless someone wants to donate to me devices for testing and implementing the feature.
   
 ## Certain config.json Settings No longer supported
 The jrhubott/homebridge-homeseer plugin included support for the specifying the following device configureation parameters in the config.json file: "onValues", "offValues", "LockSecuredValues", "LockUnsecuredValues", and "LockJammedValues." These configuration settings are no longer necessary and have no function in this HomeSeer plugin. Instead this plugin uses the standared Z-Wave values for these settings.  If a specific use case exist for implementing these settings (or if the plugin doesn't work without them for your Z-Wave device), please indicate that as an issue and I'll consider adding support in a future revision.
