@@ -80,8 +80,8 @@ You will need to install homebridge first. A problem that many Linux users seem 
 But in summary, what you need to do (after updating node) is:
 
 1. 'sudo apt-get install libavahi-compat-libdnssd-dev'
-2. `sudo npm install -g --unsafe-perm homebridge`
-3. `sudo npm install -g --unsafe-perm homebridge-homeseer-plugin-2018`
+2. `sudo npm -g install --unsafe-perm homebridge`
+3. `sudo npm -g install homebridge-homeseer-plugin-2018`
 
 Finally, I've found that incorrect Linux permissions settings are often an issue. I've  found it helpful to change all of the node_modules permissions to RWXRWXRWX using the command:
     sudo chmod -R 777 /usr/lib/node_modules
