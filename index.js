@@ -225,7 +225,7 @@ HomeSeerPlatform.prototype =
 	{
         var foundAccessories = [];
 		var that = this;
-        var refList = [];
+        // var refList = [];
 
 			
 		// Check entries in the config.json file to make sure there are no obvious errors.		
@@ -248,7 +248,7 @@ HomeSeerPlatform.prototype =
 		for (var i in this.config.accessories) 
 		{
 
-			refList.push(this.config.accessories[i].ref);
+			// refList.push(this.config.accessories[i].ref);
 			
 			allHSRefs.pushUnique(this.config.accessories[i].ref);
 			
@@ -256,12 +256,20 @@ HomeSeerPlatform.prototype =
 			
 			_statusObjects[this.config.accessories[i].ref] = [];
 			
+			// Add extra references if the device had a battery
 			if(this.config.accessories[i].batteryRef) 
 			{
 				_statusObjects[this.config.accessories[i].batteryRef] = [];
 				allHSRefs.pushUnique(this.config.accessories[i].batteryRef);
 				_HSValues[this.config.accessories[i].batteryRef] = parseFloat(0);
 			}
+			// Add extran references for Garage Door Openers
+			if(this.config.accessories[i].obstructionRef) 
+			{
+				_statusObjects[this.config.accessories[i].obstructionRef] = [];
+				allHSRefs.pushUnique(this.config.accessories[i].obstructionRef);
+				_HSValues[this.config.accessories[i].obstructionRef] = parseFloat(0);
+			}			
 		} // end for
 		
 		//For New Polling Method to poll all devices at once
@@ -301,6 +309,7 @@ HomeSeerPlatform.prototype =
 			.catch((err) => 
 				{
 					console.log("Error setting up Devices: " + err);
+					err = chalk.red.bold(err + " Check if HomeSeer is running, then start homebridge again.");
 					throw err;
 				})
 			.then((response)=> 
@@ -360,7 +369,7 @@ HomeSeerPlatform.prototype =
 							});
 						client.on('error', (data) => 
 							{
-								this.log(chalk.red.bold("Unable to connect to HomeSeer ASCII Port: " + ASCIIPort + ". Instant Status Not Enabled."));
+								this.log(chalk.red.bold("* Warning * - Unable to connect to HomeSeer ASCII Port: " + ASCIIPort + ". Instant Status Not Enabled."));
 								if (ASCIIPort != 11000) 
 								{
 								this.log(chalk.red.bold("ASCIIPort configuration value of: " + ASCIIPort + " is unusual. Typical value is 11000. Check setting."));
@@ -394,6 +403,12 @@ HomeSeerPlatform.prototype =
 									{
 										_currentHSDeviceStatus = json.Devices;
 										that.log("Poll # %s: Retrieved values for %s HomeSeer references.",  pollingCount, _currentHSDeviceStatus.length);
+										if(instantStatusEnabled == false && ((pollingCount % 5) == 0)) // only display once every 5 polls!
+										{
+											that.log(chalk.red.bold("* Warning * - Instant status not enabled. Operating in polling mode only which may degrade performance."));
+											that.log(chalk.red.bold('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
+											that.log(chalk.red.bold("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));											
+										}
 										for (var index in _currentHSDeviceStatus)
 										{
 											_HSValues[_currentHSDeviceStatus[index].ref] = parseFloat(_currentHSDeviceStatus[index].value);
@@ -504,6 +519,7 @@ HomeSeerAccessory.prototype = {
 						break;
 					}
 					
+					case(Characteristic.TargetDoorState.UUID):
 					case(Characteristic.LockTargetState.UUID ):
 					{
 						switch(level)
@@ -836,10 +852,44 @@ HomeSeerAccessory.prototype = {
 				services.push(lockService);
 				
 		    	_statusObjects[this.config.ref].push(lockService.getCharacteristic(Characteristic.LockCurrentState));
+				
+				// If an manual lock / unlock occurs, then you need to change the TargetState so that HomeKit
+				// presents correct informration about the states. I.e., you need the target state to be updated to be
+				// set to the actual state.
 				_statusObjects[this.config.ref].push(lockService.getCharacteristic(Characteristic.LockTargetState));
 								
                 break;
             }
+			case "GarageDoorOpener": 
+			{
+				var garageDoorOpenerService = new Service.GarageDoorOpener();
+				garageDoorOpenerService
+					.getCharacteristic(Characteristic.CurrentDoorState)
+					.HSRef = this.config.ref;
+					
+				garageDoorOpenerService
+					.getCharacteristic(Characteristic.TargetDoorState)
+					.HSRef = this.config.ref;
+
+				garageDoorOpenerService
+					.getCharacteristic(Characteristic.TargetDoorState)
+					.on('set', this.setHSValue.bind(garageDoorOpenerService.getCharacteristic(Characteristic.TargetDoorState)));		
+
+				if(this.config.obstructionRef != null)
+				{
+				garageDoorOpenerService
+					.getCharacteristic(Characteristic.ObstructionDetected)
+					.HSRef = this.config.obstructionRef;
+					_statusObjects[this.config.obstructionRef].push(garageDoorOpenerService.getCharacteristic(Characteristic.ObstructionDetected));
+				}
+					
+				services.push(garageDoorOpenerService);
+			_statusObjects[this.config.ref].push(garageDoorOpenerService.getCharacteristic(Characteristic.CurrentDoorState));
+			_statusObjects[this.config.ref].push(garageDoorOpenerService.getCharacteristic(Characteristic.TargetDoorState));
+
+
+				break;
+			}			
             case "Fan": {
                 var fanService = new Service.Fan
 				fanService.isPrimaryService = true;
@@ -1206,7 +1256,20 @@ function updateCharacteristicFromHSData(characteristicObject)
 				characteristicObject.updateValue((newValue < characteristicObject.batteryThreshold) ? true : false);
 				break;
 			}
-			case(characteristicObject.UUID == Characteristic.LockCurrentState.UUID):
+			case(characteristicObject.UUID == Characteristic.CurrentDoorState.UUID): // For a Garage Door Opener
+			{
+				// console.log(chalk.magenta.bold("Debug - Setting CurrentDoorState to: " + newValue));
+				switch(newValue)
+				{
+					case(0):	{	characteristicObject.updateValue(0);	break;	} // Open
+					case(255):	{	characteristicObject.updateValue(1);	break;	} // Closed
+					case(254):	{	characteristicObject.updateValue(2);	break;	} // Opening
+					case(252):	{	characteristicObject.updateValue(3);	break;	} // Closing
+					case(253):	{	characteristicObject.updateValue(4);	break;	} // Stopped
+				}
+				break;
+			}
+			case(characteristicObject.UUID == Characteristic.LockCurrentState.UUID): // For a Lock.
 			{
 				// Set to 0 = UnSecured, 1 - Secured, 2 = Jammed.
 				// console.log("** Debug ** - Attempting LockCurrentState update with received HS value %s", newValue);
@@ -1219,17 +1282,32 @@ function updateCharacteristicFromHSData(characteristicObject)
 				}
 				break;
 			}
-			case (characteristicObject.UUID == Characteristic.LockTargetState.UUID):
+			case (characteristicObject.UUID == Characteristic.TargetDoorState.UUID): // For garage door openers
+			case (characteristicObject.UUID == Characteristic.LockTargetState.UUID): // For door locks
 			{
+				// console.log(chalk.magenta.bold("Deug - Setting TargetDoorState to: " + newValue));
 				switch(newValue)
 				{
-					case(0):	{	characteristicObject.updateValue(0);	break;	} // Locked
-					case(255):	{	characteristicObject.updateValue(1);	break;	} // unlocked
+					case(0):	{	characteristicObject.updateValue(0);	break;	} // unlocked / Open
+					case(255):	{	characteristicObject.updateValue(1);	break;	} // Locked / Closed
 					default:	{ 	console.log("ERROR - Unexpected Lock Target State Value %s", newValue); break;}
 				}
 				break;
 			}
-			
+			// The following is for garage door openers and is an attempt to map the Z-Wave "Barrier" class
+			// to an obstruction value. For some bizarre reason, some Z-Wave garage door openers use the value
+			// of 74 to indicate a low bettery in the sensor so if we get that value, ignore it.
+			case( characteristicObject.UUID == Characteristic.ObstructionDetected.UUID ):
+			{
+				switch(newValue)
+				{
+					case(74): return; // The data was for a battery value update. Ignore it
+					case(0):{	characteristicObject.updateValue(0);	break;	} // No Event Value
+					default: {	characteristicObject.updateValue(1);	break;	} // Anything else, consider it obstructed.
+					
+				}
+				break;
+			}
 			case( characteristicObject.UUID == Characteristic.CarbonDioxideDetected.UUID ):
 			case( characteristicObject.UUID == Characteristic.CarbonMonoxideDetected.UUID):
 			case( characteristicObject.UUID == Characteristic.ContactSensorState.UUID 	):
