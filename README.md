@@ -8,7 +8,17 @@ Please see the Wiki pages for instructions on Installing HomeBridge on Windows 1
 If you have problems getting this to work, I will try to help, but please reveiw this entire ReadMe page and reveiw the Wiki pages concerning installation on Windows and Linux before asking for assistance and, if you get specific error messages, try a few google searches for the error messages to see if there are known solutionss. Also, problems may relate to HomeBridge itself, rather than this plugin, so you should also review information posted on the HomeBridge site at: https://github.com/nfarina/homebridge in its "issues" tab and its wiki. All assistance request should be raise in the "Issues" tab.
 
 ## B. Recent Changes
-## B.1. *New in Version 2.2 -* Garage Door Openers
+
+## B.1 *New in Version 2.2.5 * - Easier Lighting Configuration
+Since lightbulbs are one of the most common accessories, the plugin has been updated to make it easier to specify lightbulb accessories. You no longer need to individually specify each as an accessory. Instead, you can specify the HomeSeer references for lightbulbs (both dimmable and binary-switched) as a group using the lightbulb group entry identifyer "lightbulbs" in your config.json file like so:
+    
+    			"lightbulbs": [308, 311, 314, 317, 400, 415],
+          
+Note that you * must * use square brackets. 
+
+Use of the "lightbulbs" entry is optional and you can, instead, continue to specify bulbs individually in config.json. See the sample configuration files in the "config" folder for an example of how the "lightbulbs" entry is specified. This may not work reliably for non-Z-Wave devices as it relies on the  presence of the string "Z-Wave Switch Binary" or "Z-Wave Switch Multilevel" in the HomeSeer device data to determine whether the bulb is dimmable or not. If you include a non-Z-Wave binary switch in this array, it will default to dimmable even if it is a binary switch! The solution to this is to simply specify non-Z-Wave bulbs as part of the "accessories" array as in prior versions.     
+
+## B.2. *New in Version 2.2 -* Garage Door Openers
 Support for Garage Door Openers has returned. To add a garage door opener, put a GarageDoorOpener entry in the accessories section of your config.json file along the lines of:
 
 {"type":"GarageDoorOpener", "name":"myGarageDoor", "ref":648, "obstructionRef":649 },
@@ -19,14 +29,14 @@ where "obstructionRef": identifies the obstruction sensor. This may be designate
 This has been tested with the GoControl/Liner GD00Z-4 garage door opener. I believe it will also work with the Aeotec garage door opener. If you have another Z-Wave opener and can't get that to work, please let me know in the "issues" section. Note that hte "Barrier Sensor" in the GoControl/Linear/Aeotec devices has an odd implementation - sometimes, its used to report whether the barrier (garage door) is obstructed, but at times it reports a "special" value (74) indicating its battery is low. The plugin doesn't distinguish between a battery warning or a true obsruction so if you see an alert (!) symbol  displayed on the HomeKit device icon, you should check on HomeSeer to determine if this is a battery issue or something else. Also, the fact that an obstruction is indicated in the iPhone Home act doesn't actually affect operation - your "real" door opener is what actually decides whether the door can be moved.
 
 
-## B.2. *New in Version 2.1 -* Instant Status Update Feature - Check it out!
+## B.3. *New in Version 2.1 -* Instant Status Update Feature - Check it out!
 In addition to the new polling mechanism, described below, this version can also retrieve "Instant" status updates without polling. To enable this feature, you must enable HomeSeer's "Enable Control using ASCII commands" feature which can be accessed from the HomeSeer browers interface at [Tools menu] -> [Setup] -> [Network tab].  Its recommened that you leave the control port at the default setting of "11000".  The plugin will automatically attempt a connection to HomeSeer using the ASCII commands feature and, if that is not available, will then revert to using polling over the HTTP / JSON interface for status updates. Status messages displayed during startup will let you know if the Instant Status feature has been enabled.
 
 When Instant Status is enbled, dimmer devices supporting the Last-Level feature (most Z-Wave Dimmers) will turn on to the last level they were at prior to being turned off rather than always turning on at 100%.
 
 If Instant Status is enabled, polling is also reduced to once per minute. This shouldn't really be needed at all, but an occasionall poll is done out of caution to ensure that HomeBridge / HomeSeer remain properly synchronized.
 
-## B.3 Version 2.x - What's Changed - New Features beyond Version 1.x
+## B.4 Version 2.x - What's Changed - New Features beyond Version 1.x
 Version 2.x of this plugin uses a new polling mechanism in which all HomeSeer devices are polled in a single HTTP call rather than individual HTTP calls. This reduces the polling stress on HomeSeer and allows for much more frequent polling. A poll time of 5-10 seconds is recommended.
 
 ## C. Changes to config.json setup!

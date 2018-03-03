@@ -22,6 +22,8 @@
 			{ "name":"All lights off",	"eventGroup":"Lighting",	"eventName":"All lights off",	"uuid_base":"All lights off" },
 			{ "name":"Night Mode",		"eventGroup":"Lighting",	"eventName":"Night Mode",	"offEventGroup":"Lighting", "offEventName":"Daytime Lighting", 	"uuid_base":"1234593" }																
 			],
+		     
+		        "lightbulbs": [308, 311, 314, 401, 419, 450, 478],
 
 			"accessories":
 			[

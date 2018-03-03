@@ -233,12 +233,24 @@ HomeSeerPlatform.prototype =
 
 		/////////////////////////////////////////////////////////////////////////////////		
 		// Make devices for each HomeSeer event in the config.json file
+
 		if (this.config.events) 
 		{
 			for (var i in this.config.events) 
 			{
 				var event = new HomeSeerEvent(that.log, that.config, that.config.events[i]);
 				foundAccessories.push(event);
+			}
+		}
+	
+		// If the config.json file contains a "lightbulbs =" group of references, push them onto the accessories array as "type":"Lightbulb"
+		if(this.config.lightbulbs)
+		{
+			if(this.config.accessories == null) this.config.accessories = []; // make sure there's an accessories array to push bulbs onto
+			for (var thisRef in this.config.lightbulbs)
+			{
+				var addLight = { "type":"Lightbulb", "ref":this.config.lightbulbs[thisRef] };
+				this.config.accessories.push(addLight);
 			}
 		}
 		//////////////////  Identify all of the HomeSeer References of interest  /////////////////////////
