@@ -1383,6 +1383,7 @@ function updateAllFromHSData()
 	for (var HSReference in _statusObjects)
 	{
 		var statusObjectGroup = _statusObjects[HSReference];
+		// console.log(chalk.magenta.bold("* Debug * - Updating for reference " + HSReference + " a group with length " + statusObjectGroup.length));
 		for (var thisCharacteristic in statusObjectGroup)
 		{
 		updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
