@@ -55,7 +55,7 @@
 //              "temperatureUnit":"F",          // Optional - C is the default
 //              "name":"Bedroom temp",          // Optional - HomeSeer device name is the default
 //              "batteryRef":112,               // Optional - HomeSeer device reference for the sensor battery level
-//              "batteryThreshold":15           // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
+//              "batteryThreshold":15           // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
 //              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 //            },
 //            {
@@ -64,14 +64,14 @@
 //              "name":"Kichen smoke detector", // Optional - HomeSeer device name is the default
 //              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
 //              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
-//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
+//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
 //            },
 //            {
 //              "ref":34,                       // Required - HomeSeer Device Reference for your sensor (Here it's the same device as the SmokeSensor above)
 //              "type":"CarbonMonoxideSensor",  // Required for a carbon monoxide sensor
-//              "name":"Kichen CO detector",    // Optional - HomeSeer device name is the default
+//              "name":"Kitchen CO detector",    // Optional - HomeSeer device name is the default
 //              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
-//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
+//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
 //              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 //            },
 //            {
@@ -79,13 +79,13 @@
 //              "type":"Lock",                  // Required for a Lock
 //              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
 //              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
-//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
+//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
 //            },
 //            {
 //              "ref":115,                      // Required - HomeSeer Device Reference for a device holding battery level (0-100)
 //              "type":"Battery",               // Required for a Battery
 //              "name":"Roomba battery",        // Optional - HomeSeer device name is the default
-//              "batteryThreshold":15           // Optional - If the level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 10
+//              "batteryThreshold":15           // Optional - If the level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
 //              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
 //            },
 //         ]
@@ -124,6 +124,8 @@ var pollingCount = 0;
 // Following variable stores the full HomeSeer JSON-ified Device status data structure.
 // This includes Device data for all of the HomeSeer devices of interest.
 var _currentHSDeviceStatus = []; 
+var _everyHSDevice = [];
+var allHSDevices = [];
 // Note that the HomeSeer json date in _currentHSDeviceStatus is of the following form where _currentHSDeviceStatus is an array so
 // an index must be specified to access the properties, such as 
 //  _currentHSDeviceStatus[indexvalue] for a dimmer would be of the form...
@@ -226,6 +228,8 @@ HomeSeerPlatform.prototype =
         var foundAccessories = [];
 		var that = this;
         // var refList = [];
+		
+		
 
 			
 		// Check entries in the config.json file to make sure there are no obvious errors.		
@@ -253,51 +257,91 @@ HomeSeerPlatform.prototype =
 				this.config.accessories.push(addLight);
 			}
 		}
-		//////////////////  Identify all of the HomeSeer References of interest  /////////////////////////
-		var allHSRefs = [];
-			allHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
 
-		for (var i in this.config.accessories) 
-		{
-
-			// refList.push(this.config.accessories[i].ref);
+			var self = this;	// Assign this to self so you can access its values inside the promise.
+			var allStatusUrl = "";
 			
-			allHSRefs.pushUnique(this.config.accessories[i].ref);
-			
-			_HSValues[this.config.accessories[i].ref] = parseFloat(0);
-			
-			_statusObjects[this.config.accessories[i].ref] = [];
-			
-			// Add extra references if the device had a battery
-			if(this.config.accessories[i].batteryRef) 
-			{
-				_statusObjects[this.config.accessories[i].batteryRef] = [];
-				allHSRefs.pushUnique(this.config.accessories[i].batteryRef);
-				_HSValues[this.config.accessories[i].batteryRef] = parseFloat(0);
-			}
-			// Add extran references for Garage Door Openers
-			if(this.config.accessories[i].obstructionRef) 
-			{
-				_statusObjects[this.config.accessories[i].obstructionRef] = [];
-				allHSRefs.pushUnique(this.config.accessories[i].obstructionRef);
-				_HSValues[this.config.accessories[i].obstructionRef] = parseFloat(0);
-			}			
-		} // end for
-		
-		//For New Polling Method to poll all devices at once
-		allHSRefs.sort();
+			promiseHTTP({ uri: this.config["host"] + "/JSON?request=getstatus", json:true})
+			.then( function(json) //  Find the Batteries!
+					{
+						allHSDevices = json.Devices;
 
-		/////////////////////////////////////////////////////////////////////////////////
-		
-		
+						for (var i in self.config.accessories)
+						{
+							var deviceBattery = findBattery(self.config.accessories[i].ref);
+							if ((self.config.accessories[i].batteryRef == null) && (deviceBattery != (-1)))
+							{
+								console.log(chalk.magenta.bold("Device Reference #: " + self.config.accessories[i].ref 
+								+ " appears to be a battery operated device, but no battery was specified. Adding a battery reference: " + deviceBattery));
+								self.config.accessories[i].batteryRef = deviceBattery;
+							}
+							if ((deviceBattery != (-1)) && (self.config.accessories[i].batteryRef != deviceBattery)  )
+							{
+								console.log(chalk.red.bold("Wrong battery Specified for device Reference #: " + self.config.accessories[i].ref 
+								+ " You specified reference: " + self.config.accessories[i].batteryRef + " but correct device reference appears to be: " + deviceBattery +". Fixing error."));
+								self.config.accessories[i].batteryRef = deviceBattery;
+							}	
 
-		// Then make a HomeKit device for each "regular" HomeSeer device.
-		this.log("Fetching HomeSeer devices.");
+							if ((deviceBattery == (-1)) && (self.config.accessories[i].batteryRef)  )
+							{
+								console.log(chalk.yellow.bold("You specified battery reference: "+ self.config.accessories[i].batteryRef + " for device Reference #: " + self.config.accessories[i].ref 
+								+ " but device does not seem to be battery operated. Check config.json file and fix if this is an error."));
 
-		// Get status on everything that isn't a battery!
-		var allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + allHSRefs.concat();
-		
-		promiseHTTP({ uri: allStatusUrl, json:true})
+							}									
+						}
+
+						return (1);
+					} // end then's function
+				)
+			.then (()=> 
+				{
+					//////////////////  Identify all of the HomeSeer References of interest  /////////////////////////
+					var allHSRefs = [];
+						allHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
+
+				
+					for (var i in this.config.accessories) 
+					{
+						// console.log(chalk.bold.green("Returned Battery  Value" + findBattery(this.config, this.config.accessories[i].ref) ));
+
+						// refList.push(this.config.accessories[i].ref);
+						
+						allHSRefs.pushUnique(this.config.accessories[i].ref);
+						
+						_HSValues[this.config.accessories[i].ref] = parseFloat(0);
+						
+						_statusObjects[this.config.accessories[i].ref] = [];
+						
+						// Add extra references if the device had a battery
+						if(this.config.accessories[i].batteryRef) 
+						{
+							_statusObjects[this.config.accessories[i].batteryRef] = [];
+							allHSRefs.pushUnique(this.config.accessories[i].batteryRef);
+							_HSValues[this.config.accessories[i].batteryRef] = parseFloat(0);
+						}
+						// Add an extra references for Garage Door Openers
+						if(this.config.accessories[i].obstructionRef) 
+						{
+							_statusObjects[this.config.accessories[i].obstructionRef] = [];
+							allHSRefs.pushUnique(this.config.accessories[i].obstructionRef);
+							_HSValues[this.config.accessories[i].obstructionRef] = parseFloat(0);
+						}			
+					} // end for
+					
+					//For New Polling Method to poll all devices at once
+					allHSRefs.sort();
+
+					/////////////////////////////////////////////////////////////////////////////////
+
+					// Then make a HomeKit device for each "regular" HomeSeer device.
+					this.log("Fetching HomeSeer devices.");
+
+					// Get status on everything that isn't a battery!
+					allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + allHSRefs.concat();
+
+					return promiseHTTP({ uri: allStatusUrl, json:true})	
+				}) // End Battery Check		
+
 			.then( function(response) 
 				{
 					for(var i in response.Devices)
@@ -532,12 +576,22 @@ HomeSeerAccessory.prototype = {
 					}
 					
 					case(Characteristic.TargetDoorState.UUID):
+					{
+						switch(level)
+						{
+							case 0: {transmitValue =  255;   callbackValue = 0;  break;} // Door Open
+							case 1: {transmitValue =  0; callbackValue = 1;  break; } // Door Closed
+						}
+						// setHSValue(this.HSRef, transmitValue); ** Don't assume success for the lock. Wait for a poll!
+						console.log("Set TransmitValue for lock characteristic %s to %s ", this.displayName, transmitValue);
+						break;
+					}					
 					case(Characteristic.LockTargetState.UUID ):
 					{
 						switch(level)
 						{
-							case 0: {transmitValue =  0;   callbackValue = 0;  break;}
-							case 1: {transmitValue =  255; callbackValue = 1;  break; }
+							case 0: {transmitValue =  0;   callbackValue = 0;  break;} // Lock Unsecured
+							case 1: {transmitValue =  255; callbackValue = 1;  break; } // Lock Secured
 						}
 						// setHSValue(this.HSRef, transmitValue); ** Don't assume success for the lock. Wait for a poll!
 						console.log("Set TransmitValue for lock characteristic %s to %s ", this.displayName, transmitValue);
@@ -1136,15 +1190,17 @@ HomeSeerAccessory.prototype = {
 					batteryService
                         .getCharacteristic(Characteristic.StatusLowBattery)
 						.HSRef = this.config.batteryRef;
-						
+					
+					if (this.config.batteryThreshold == null) this.config.batteryThreshold = 25;
+					
 					batteryService
                         .getCharacteristic(Characteristic.StatusLowBattery)
 						.batteryThreshold = this.config.batteryThreshold;						
 						
                     services.push(batteryService);
 					
-					_statusObjects[this.config.ref].push(batteryService.getCharacteristic(Characteristic.BatteryLevel));
-					_statusObjects[this.config.ref].push(batteryService.getCharacteristic(Characteristic.StatusLowBattery));					
+					_statusObjects[this.config.batteryRef].push(batteryService.getCharacteristic(Characteristic.BatteryLevel));
+					_statusObjects[this.config.batteryRef].push(batteryService.getCharacteristic(Characteristic.StatusLowBattery));					
                 }
 				
 		// And add a basic Accessory Information service		
@@ -1273,8 +1329,8 @@ function updateCharacteristicFromHSData(characteristicObject)
 				// console.log(chalk.magenta.bold("Debug - Setting CurrentDoorState to: " + newValue));
 				switch(newValue)
 				{
-					case(0):	{	characteristicObject.updateValue(0);	break;	} // Open
-					case(255):	{	characteristicObject.updateValue(1);	break;	} // Closed
+					case(255):	{	characteristicObject.updateValue(0);	break;	} // Open
+					case(0):	{	characteristicObject.updateValue(1);	break;	} // Closed
 					case(254):	{	characteristicObject.updateValue(2);	break;	} // Opening
 					case(252):	{	characteristicObject.updateValue(3);	break;	} // Closing
 					case(253):	{	characteristicObject.updateValue(4);	break;	} // Stopped
@@ -1295,20 +1351,31 @@ function updateCharacteristicFromHSData(characteristicObject)
 				break;
 			}
 			case (characteristicObject.UUID == Characteristic.TargetDoorState.UUID): // For garage door openers
+			{
+				// console.log(chalk.magenta.bold("Deug - Setting TargetDoorState to: " + newValue));
+				switch(newValue)
+				{
+					case(0):	{	characteristicObject.updateValue(1);	break;	} // Door Closed
+					case(255):	{	characteristicObject.updateValue(0);	break;	} // 255=Door Opened
+					default:	{ 	console.log("ERROR - Unexpected Lock Target State Value %s", newValue); break;}
+				}
+				break;
+			}			
+			
 			case (characteristicObject.UUID == Characteristic.LockTargetState.UUID): // For door locks
 			{
 				// console.log(chalk.magenta.bold("Deug - Setting TargetDoorState to: " + newValue));
 				switch(newValue)
 				{
-					case(0):	{	characteristicObject.updateValue(0);	break;	} // unlocked / Open
-					case(255):	{	characteristicObject.updateValue(1);	break;	} // Locked / Closed
+					case(0):	{	characteristicObject.updateValue(0);	break;	} // Lock Unlocked
+					case(255):	{	characteristicObject.updateValue(1);	break;	} // Lock Locked
 					default:	{ 	console.log("ERROR - Unexpected Lock Target State Value %s", newValue); break;}
 				}
 				break;
 			}
 			// The following is for garage door openers and is an attempt to map the Z-Wave "Barrier" class
 			// to an obstruction value. For some bizarre reason, some Z-Wave garage door openers use the value
-			// of 74 to indicate a low bettery in the sensor so if we get that value, ignore it.
+			// of 74 to indicate a low battery in the sensor so if we get that value, ignore it.
 			case( characteristicObject.UUID == Characteristic.ObstructionDetected.UUID ):
 			{
 				switch(newValue)
@@ -1401,6 +1468,51 @@ function updateAllFromHSData()
 module.exports.platform = HomeSeerPlatform;
 
 ////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
+
+// Testing Only!
+
+function findBattery(findRef)
+{
+	var returnValue = 9999;
+			
+	// first find the index of the HomeSeer device having the reference findRef
+	var deviceIndex = allHSDevices.findIndex( (element, index, array)=> {return (element.ref == findRef)} );
+	if (deviceIndex == -1) return (-1);
+	
+	var thisDevice = allHSDevices[deviceIndex]; // this is the HomeSeer data for the device being checked!
+	if ((thisDevice.associated_devices == null) || (thisDevice.associated_devices.length == 0)) return (-1);
+
+	
+	// The associated device should be a root device. Get it! ...
+	var rootDevice = allHSDevices[ allHSDevices.findIndex( (element, index, array)=> {return (element.ref == thisDevice.associated_devices)} )];
+	
+	if(rootDevice.device_type_string.indexOf("Battery") != (-1)) return (rootDevice.ref);
+	
+	if(rootDevice.device_type_string.indexOf("Root Device") != (-1)) // if true, we found the root device. Check all its elements for a battery
+	{
+		// console.log(chalk.green.bold("Found a Root Device with associated devices: " + rootDevice.associated_devices));
+		
+		// does the found device have associated devices?
+		if (rootDevice.associated_devices != null)
+		{
+			for (var j in rootDevice.associated_devices)
+			{
+				var checkDeviceIndex = allHSDevices.findIndex( (element, index, array)=> {return (element.ref == rootDevice.associated_devices[j])} )
+				if (checkDeviceIndex != -1)
+				{
+					var candidateDevice = allHSDevices[checkDeviceIndex]
+					if (candidateDevice.device_type_string.indexOf("Battery") != -1)
+					{
+						// console.log(chalk.bold.red("Found a Battery reference: " + candidateDevice.ref + " for device reference " + findRef));
+						return (candidateDevice.ref);
+					}
+				}
+			}
+		}
+	}	
+	return (-1);
+}
+
 
 
 ////////////////////////   Code to Parse a URI and separate out Host and Port /////////////

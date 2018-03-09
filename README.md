@@ -9,7 +9,12 @@ Please see the Wiki pages for instructions on Installing HomeBridge on Windows 1
 
 If you have problems getting this to work, I will try to help, but please reveiw this entire ReadMe page and reveiw the Wiki pages concerning installation on Windows and Linux before asking for assistance and, if you get specific error messages, try a few google searches for the error messages to see if there are known solutionss. Also, problems may relate to HomeBridge itself, rather than this plugin, so you should also review information posted on the HomeBridge site at: https://github.com/nfarina/homebridge in its "issues" tab and its wiki. All assistance request should be raise in the "Issues" tab.
 
-## B. Recent Changes
+## B. Overview of Recent Changes and Additions
+
+## B.1 **New in Version 2.3 ** - Battery Detection, Bug Fixes
+Automatically detects if a Z-Wave device has an associated battery and detects/corrects when a wrong battery reference is specified for a device in config.json. 
+
+Also bug fixes for Garage Door Opener.
 
 ## B.1 *New in Version 2.2.5 * - Easier Lighting Configuration
 Since lightbulbs are one of the most common accessories, the plugin has been updated to make it easier to specify lightbulb accessories. You no longer need to individually specify each as an accessory. Instead, you can specify the HomeSeer references for lightbulbs (both dimmable and binary-switched) as a group using the lightbulb group entry identifyer "lightbulbs" in your config.json file like so:
@@ -38,8 +43,8 @@ When Instant Status is enbled, dimmer devices supporting the Last-Level feature 
 
 If Instant Status is enabled, polling is also reduced to once per minute. This shouldn't really be needed at all, but an occasionall poll is done out of caution to ensure that HomeBridge / HomeSeer remain properly synchronized.
 
-## B.4 Version 2.x - What's Changed - New Features beyond Version 1.x
-Version 2.x of this plugin uses a new polling mechanism in which all HomeSeer devices are polled in a single HTTP call rather than individual HTTP calls. This reduces the polling stress on HomeSeer and allows for much more frequent polling. A poll time of 5-10 seconds is recommended.
+## B.4 Version 2.0 - What's Changed - New Features beyond jrhubott / Version 1.x plugin
+Version 2.0 of this plugin introduced a new polling mechanism in which all HomeSeer devices are polled in a single HTTP call rather than individual HTTP calls. This reduces the polling stress on HomeSeer and allows for much more frequent polling. A poll time of 5-10 seconds is recommended.
 
 ## C. Changes to config.json setup!
 For further infomration on setting up the config.json file, see Wiki page entry at: https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.
