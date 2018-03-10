@@ -272,7 +272,7 @@ HomeSeerPlatform.prototype =
 							if ((self.config.accessories[i].batteryRef == null) && (deviceBattery != (-1)))
 							{
 								console.log(chalk.magenta.bold("Device Reference #: " + self.config.accessories[i].ref 
-								+ " appears to be a battery operated device, but no battery was specified. Adding a battery reference: " + deviceBattery));
+								+ " identifies as a battery operated device, but no battery was specified. Adding a battery reference: " + deviceBattery));
 								self.config.accessories[i].batteryRef = deviceBattery;
 							}
 							if ((deviceBattery != (-1)) && (self.config.accessories[i].batteryRef != deviceBattery)  )
@@ -295,6 +295,7 @@ HomeSeerPlatform.prototype =
 				)
 			.then (()=> 
 				{
+					
 					//////////////////  Identify all of the HomeSeer References of interest  /////////////////////////
 					var allHSRefs = [];
 						allHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
@@ -411,6 +412,7 @@ HomeSeerPlatform.prototype =
 											var statusObjectGroup = _statusObjects[myData.ref];
 											for (var thisCharacteristic in statusObjectGroup)
 											{
+												console.log(chalk.magenta.bold("Executing line 414 characteristic #: " + thisCharacteristic + " named " + statusObjectGroup[thisCharacteristic].displayName));
 												updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
 											}
 
@@ -574,6 +576,28 @@ HomeSeerAccessory.prototype = {
 
 						break;
 					}
+					// The following is for window coverings, but it is only partially implemented
+					// And not working correctly yet! Not yet suitable for use!					
+					case(Characteristic.TargetPosition.UUID):
+					{
+						// if a simple binary switch is used, then either fully open or fully closed! 
+						if (this.binarySwitch)
+						{
+							transmitValue = (level < 50) ? 0 : 255; // Turn to "on"
+							forceHSValue(this.HSRef, transmitValue); 
+							callbackValue = (level == 0) ? 0 : level;
+
+						} 
+						else
+						{ 
+							transmitValue = ((level == 100) ? 99 : level);
+							callbackValue = level;
+							forceHSValue(this.HSRef, transmitValue); 							
+						 } 
+							
+						console.log("Set TransmitValue for WindowCovering %s to %s ", this.displayName, transmitValue);
+						break;
+					}		
 					
 					case(Characteristic.TargetDoorState.UUID):
 					{
@@ -669,6 +693,23 @@ HomeSeerAccessory.prototype = {
 						// console.log(this.displayName + ': HomeSeer setHSValue function succeeded!');
 						callback(null, callbackValue);
 						// updateCharacteristic(this);// poll for this one changed Characteristic after setting its value.
+						
+					// Strange special case of extra poll needed for window coverings that are controlled by a binary switch.
+					// For odd reason, if poll isn't done, then the icon remains in a changing state until next poll!
+					if (this.UUID == Characteristic.CurrentPosition.UUID || this.UUID == Characteristic.TargetPosition.UUID)
+					{
+							setTimeout ( ()=>
+							{
+								// console.log(chalk.cyan.bold("Window Covering Extra Polling!"));
+								var statusObjectGroup = _statusObjects[this.HSRef];
+								for (var thisCharacteristic in statusObjectGroup)
+								{
+									updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
+								}
+							}, 500);
+					} 
+			
+			
 				}.bind(this))
 				.catch(function(err)
 					{ 	console.log(chalk.bold.red("Error attempting to update %s, with error %s", this.displayName, this.UUID, err));
@@ -955,7 +996,59 @@ HomeSeerAccessory.prototype = {
 
 
 				break;
-			}			
+			}
+
+			case "WindowCovering": 
+			{
+				var windowService = new Service.WindowCovering();
+				windowService
+					.getCharacteristic(Characteristic.CurrentPosition)
+					.HSRef = this.config.ref;
+					
+				windowService
+					.getCharacteristic(Characteristic.TargetPosition)
+					.HSRef = this.config.ref;
+					
+				// Is this a simple binary on / off switch (fully opened / fully closed)?
+				// Then identify it as such if the user hasn't already done so!
+				if (this.config.binarySwitch == null)
+				{
+					if(this.model == "Z-Wave Switch Binary")
+					{
+						this.config.binarySwitch = true;
+
+					}
+					else 
+					{ 
+						this.config.binarySwitch = false; 
+					};
+				}
+				
+				// console.log(chalk.cyan.bold("Window Binary Setting is: " + this.config.binarySwitch));
+				windowService
+						.getCharacteristic(Characteristic.TargetPosition)
+						.binarySwitch = this.config.binarySwitch;				
+				
+				windowService
+					.getCharacteristic(Characteristic.TargetPosition)
+					.on('set', this.setHSValue.bind(windowService.getCharacteristic(Characteristic.TargetPosition)));		
+
+				if(this.config.obstructionRef != null)
+				{
+				windowService
+					.getCharacteristic(Characteristic.ObstructionDetected)
+					.HSRef = this.config.obstructionRef;
+					_statusObjects[this.config.obstructionRef].push(windowService.getCharacteristic(Characteristic.ObstructionDetected));
+				}
+					
+				services.push(windowService);
+			_statusObjects[this.config.ref].push(windowService.getCharacteristic(Characteristic.CurrentPosition));
+			_statusObjects[this.config.ref].push(windowService.getCharacteristic(Characteristic.TargetPosition));
+
+
+				break;
+			}		
+			
             case "Fan": {
                 var fanService = new Service.Fan
 				fanService.isPrimaryService = true;
@@ -1178,7 +1271,7 @@ HomeSeerAccessory.prototype = {
 		
 		 // If batteryRef has been defined, then add a battery service.
                 if (this.config.batteryRef) {
-                    this.log("          Adding a Battery Service");
+                    // this.log("          Adding a Battery Service");
 
                     var batteryService = new Service.BatteryService();
 					batteryService.displayName = "Service.BatteryService";
@@ -1313,7 +1406,7 @@ function updateCharacteristicFromHSData(characteristicObject)
 		// The following "if" is a quick check to see if any change is needed.
 		// if the HomeKit object value already matches what was received in the poll, then return and skip
 		// processing the rest of this function code!
-		if ((pollingCount != 0) && (characteristicObject.value == newValue)) return; 
+		// if ((pollingCount != 0) && (characteristicObject.value == newValue)) return; 
 
 
 		switch(true)
@@ -1324,6 +1417,25 @@ function updateCharacteristicFromHSData(characteristicObject)
 				characteristicObject.updateValue((newValue < characteristicObject.batteryThreshold) ? true : false);
 				break;
 			}
+			
+			// Window Coverings are only partially implemented!  Needs more testing with "real" devices.
+			case(characteristicObject.UUID == Characteristic.TargetPosition.UUID): 
+			case(characteristicObject.UUID == Characteristic.CurrentPosition.UUID): // For a Window Covering!
+			{
+				if ((newValue > 100) && (newValue < 255))
+				{	
+				console.log(chalk.bold.red("** Warning - Possible Illegal value for window covering setting"));
+				}
+				
+				// console.log(chalk.bold.magenta("Updating Characteristic: " + characteristicObject.displayName + " to value " + ((newValue == 255) ? 100 : newValue)  ));
+				
+				// If you get a value of 255, then its probably from a binary switch, so set as fully open.
+				// Else, its from a percentage-adjustable shade, so set to the percentage.
+				characteristicObject.updateValue( ( ((newValue == 255) || (newValue == 99)) ? 100 : newValue) );	
+				break;
+
+			}
+			
 			case(characteristicObject.UUID == Characteristic.CurrentDoorState.UUID): // For a Garage Door Opener
 			{
 				// console.log(chalk.magenta.bold("Debug - Setting CurrentDoorState to: " + newValue));
@@ -1425,7 +1537,7 @@ function updateCharacteristicFromHSData(characteristicObject)
 			}
 			case (characteristicObject.UUID == Characteristic.CurrentTemperature.UUID):
 			{
-				// HomeKit uses celsius, so if HS is using Fahrenheit, convert to Celsius.
+				// HomeKit uses Celsius, so if HS is using Fahrenheit, convert to Celsius.
 				if (characteristicObject.HStemperatureUnit && (characteristicObject.HStemperatureUnit == "F")) 
 					{ newValue = (newValue -32 )* (5/9);}
 								
