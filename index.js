@@ -412,7 +412,7 @@ HomeSeerPlatform.prototype =
 											var statusObjectGroup = _statusObjects[myData.ref];
 											for (var thisCharacteristic in statusObjectGroup)
 											{
-												console.log(chalk.magenta.bold("Executing line 414 characteristic #: " + thisCharacteristic + " named " + statusObjectGroup[thisCharacteristic].displayName));
+												// console.log(chalk.magenta.bold("Executing line 414 characteristic #: " + thisCharacteristic + " named " + statusObjectGroup[thisCharacteristic].displayName));
 												updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
 											}
 
