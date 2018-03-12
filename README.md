@@ -13,7 +13,7 @@ If you have problems getting this to work, I will try to help, but please reveiw
 
 ## B.1 **New in 2.3.1 ** - Window Coverings
 
-Control for simple window coverings has returned. To add a Window Covering, put a GarageDoorOpener entry in the accessories section of your config.json file along the lines of:
+Control for simple window coverings has returned. To add a Window Covering, put a WindowCovering entry in the accessories section of your config.json file along the lines of:
 
 			{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"obstructionRef":716	}
 
