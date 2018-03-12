@@ -27,6 +27,19 @@
 
 			"accessories":
 			[
+			{"type":"Lightbulb", 			"ref":400    	},
+			{"type":"Lock",      			"ref":401, 	},
+			{"type":"Switch",      			"ref":402	},
+			{"type":"Outlet",      			"ref":403	},
+			{"type":"Fan",      			"ref":404	},
+			{"type":"TemperatureSensor",		"ref":405, 	"temperatureUnit":"F" },
+			{"type":"ContactSensor", 		"ref":406, 	},
+			{"type":"MotionSensor",      		"ref":407, 	},
+			{"type":"LeakSensor",      		"ref":408, 	},
+			{"type":"CarbonMonoxideSensor", 	"ref":409, 	},
+			{"type":"CarbonDioxideSensor",  	"ref":410, 	}, 
+			{"type":"GarageDoorOpener", 		"ref":411, 	},
+			{"type":"WindowCovering", 		"ref" 412, 	},				
 			{"type":"Lightbulb", 			"name":"Lamp", 		"ref":582    	},
 			{"type":"Lock",      			"name":"Front Door",  	"ref":600, 	"batteryRef":601, "batteryThreshold":30 },
 			{"type":"Switch",      			"name":"Hallway",  	"ref":620	},
