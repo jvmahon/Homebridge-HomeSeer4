@@ -393,38 +393,63 @@ HomeSeerPlatform.prototype =
 					return new Promise((resolve, reject) => 
 					{
 						// this.log(chalk.green.bold("Attempting connection to HomeSeer ASCII Port: "));
-						var client = net.createConnection({port:ASCIIPort, host:uri.host}, () => 
+						var client;
+					client = net.createConnection({port:ASCIIPort, host:uri.host}, ()=> {resolve(true)});
+						
+					client.on('connect', () =>
+						{
+							this.log(chalk.cyan.bold("Successfully connected to ASCII Control Interface of HomeSeer. Instant Status Enabled."));
+							instantStatusEnabled = true;
+							// resolve(true);
+						});	
+							
+					client.on('data', (data) => 
 							{
-								this.log(chalk.green.bold("Successfully connected to ASCII Control Interface of HomeSeer. Instant Status Enabled."));
-								instantStatusEnabled = true;
-								client.on('data', (data) => 
+
+								var myData = new HSData(data.toString().slice(0, -2).split(","));
+								
+								//Only need to do an update if there is HomeKit data associated with it!
+								// Which occurs if the _statusObjects array has a non-zero length for the reference reported.
+								if( _statusObjects[myData.ref])
+								{
+									this.log("Received HomeSeer status update data: " + data);
+									_HSValues[myData.ref] = 	parseFloat(myData.newValue);	
+
+									var statusObjectGroup = _statusObjects[myData.ref];
+									for (var thisCharacteristic in statusObjectGroup)
 									{
+										// console.log(chalk.magenta.bold("Executing line 414 characteristic #: " + thisCharacteristic + " named " + statusObjectGroup[thisCharacteristic].displayName));
+										updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
+									}
 
-										var myData = new HSData(data.toString().slice(0, -2).split(","));
-										
-										//Only need to do an update if there is HomeKit data associated with it!
-										// Which occurs if the _statusObjects array has a non-zero length for the reference reported.
-										if( _statusObjects[myData.ref])
-										{
-											this.log("Received HomeSeer status update data: " + data);
-											_HSValues[myData.ref] = 	parseFloat(myData.newValue);	
-
-											var statusObjectGroup = _statusObjects[myData.ref];
-											for (var thisCharacteristic in statusObjectGroup)
-											{
-												// console.log(chalk.magenta.bold("Executing line 414 characteristic #: " + thisCharacteristic + " named " + statusObjectGroup[thisCharacteristic].displayName));
-												updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
-											}
-
-											// updateAllFromHSData();
-										} else
-										{
-											
-											// this.log(chalk.magenta.bold("*Debug* - Received Instant Status data " + data ));
-										}
-									});
-								resolve(true);
+									// updateAllFromHSData();
+								} 
 							});
+						var numAttempts = 0;
+						client.on('close', () => 
+							{
+								this.log(chalk.red.bold("* Warning * - ASCII Port closed - Instant Status Failure!. Restart system if failure continues."));
+								
+								// Try to re-connect every 30 seconds If there is a failure, another error will be generated
+								// which will cause this code to run again.
+								
+								setTimeout( ()=>
+								{
+									numAttempts = numAttempts +1;
+									try
+									{
+										this.log(chalk.red.bold("Attempting to re-start ASCII Port Interface, Attempt: " + numAttempts));
+										// client = net.createConnection({port:ASCIIPort, host:uri.host});
+										client.connect({port:ASCIIPort, host:uri.host});
+									} catch(err)
+									{
+										this.log(chalk.red.bold("Attempt not successful with error: "));
+									}
+								}, 30000); // Try to connect every 30 seconds
+							
+							});
+					
+
 						client.on('error', (data) => 
 							{
 								this.log(chalk.red.bold("* Warning * - Unable to connect to HomeSeer ASCII Port: " + ASCIIPort + ". Instant Status Not Enabled."));
@@ -432,10 +457,11 @@ HomeSeerPlatform.prototype =
 								{
 								this.log(chalk.red.bold("ASCIIPort configuration value of: " + ASCIIPort + " is unusual. Typical value is 11000. Check setting."));
 								}
-								this.log(chalk.red.bold('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
-								this.log(chalk.red.bold("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));
+								this.log(chalk.yellow.bold('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
+								this.log(chalk.yellow.bold("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));
 								resolve(false)
 							});
+						// resolve (true);
 					});
 				})
 			.then((instantStatusEnabled) =>
@@ -451,6 +477,9 @@ HomeSeerPlatform.prototype =
 						this.config.platformPoll = 60;
 						this.log(chalk.green.bold("Reducing HomeSeer polling rate to: " + this.config.platformPoll + " seconds."))
 
+					}
+					else{
+						this.log(chalk.red.bold("Instant Status Was Not Enabled"));
 					}
 						
 						setInterval( function () 
