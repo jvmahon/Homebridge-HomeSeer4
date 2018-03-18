@@ -11,7 +11,7 @@ If you have problems getting this to work, I will try to help, but please reveiw
 
 ## B. Overview of Recent Changes and Additions
 
-## B.1 **New in 2.3.4** - Thermostat and onValue Support
+## B.1 **New in 2.3.5** - Thermostat and onValue Support
 
 Support has been added for Z-Wave Thermostats. This is still somewhat "untested" so post an issue if have any problems. See Section G of the Wiki page "Seting Up Your Config.json file" for more information on configuring thermostats. https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.
 
@@ -81,10 +81,8 @@ Note that a user can manually alter their HomeSeer Device type (String) so this 
 ## C.2. Unsupported Devices
 The jrhubott/homebridge-homeseer plugin included support for several device types that are not supported in this updated -2018 plugin. These types include:
 
-* Battery (now added as a service to the other devices; no longer a separate device)
 * Door (but you can still configure a Lock)
 * Security System
-* Thermostats (but Temperature Sensors can still be configured!)
 
 In order to allow continued use of these device types, I have implemented a slightly modified version of the original plugin which you can use in parallel with the -2018 plugin to support these devices. Of course, you won't get the instant-status updates and other features of the -2018 plugin, but you won't lose anything either. See the wiki entry "Using 'original' and 'new' Plugin in Parallel." (https://github.com/jvmahon/homebridge-homeseer/wiki/Using-'original'-and-'new'-Plugin-in-Parallel)]
 
