@@ -24,7 +24,7 @@
 //               "offEventGroup":"My Group",    // Optional - The HomeSeer event group for turn-off <event>
 //               "offEventName":"My Off Event", // Optional - The HomeSeer event name for turn-off <event>
 //               "name":"Test",                 // Optional - HomeSeer event name is the default
-//               "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name
+//               "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
 //            }
 //         ],
 //
@@ -33,21 +33,30 @@
 //              "ref":8,                        // Required - HomeSeer Device Reference (To get it, select the HS Device - then Advanced Tab) 
 //              "type":"Lightbulb",             // Required - Lightbulb (currently not enforced, but may be in future)
 //              "name":"My Light",              // Optional - HomeSeer device name is the default
+//				"onValue":255					// Optional.  Don't include for Z-Wave devices. For non-Zwave, set to value used in HomeSeer to designate "on".
 //              "can_dim":true,                 // Optional - true is the default - false for a non dimmable lightbulb
-//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
 //            },
 //            {
 //              "ref":8,                        // Required - HomeSeer Device Reference (To get it, select the HS Device - then Advanced Tab) 
 //              "type":"Fan",             		// Required for a Fan
 //              "name":"My Fan",              	// Optional - HomeSeer device name is the default
+//				"onValue":255					// Optional.  Don't include for Z-Wave devices. For non-Zwave, set to value used in HomeSeer to designate "on".
 //              "can_dim":true,                 // Optional - true is the default - false for fixed speed fan.
-//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
 //            },
 //            {
 //              "ref":58,                       // This is a controllable outlet
 //              "type":"Outlet"
-//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
-
+//				"onValue":255					// Optional.  Don't include for Z-Wave devices. For non-Zwave, set to value used in HomeSeer to designate "on".
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
+//            },
+//              "ref":113,                      // Required - HomeSeer Device Reference of the Current Temperature Device
+//              "type":"Thermostat",            // Required for a Thermostat
+//              "name":"Living Room",     		// Optional - HomeSeer device name is the default
+//              "temperatureUnit":"C",          // Optional - Temperature Unit Used by HomeSeer. F for Fahrenheit, C for Celsius, F is the default
+//              "setPointRef":167,              // Required - HomeSeer device reference for your thermostat Set Point.
+//              "controlRef":168,               // Required - HomeSeer device reference for your thermostat mode control (It can be the same as stateRef for some thermostats).
 //            },
 //            {
 //              "ref":111,                      // Required - HomeSeer Device Reference for your sensor
@@ -56,14 +65,14 @@
 //              "name":"Bedroom temp",          // Optional - HomeSeer device name is the default
 //              "batteryRef":112,               // Optional - HomeSeer device reference for the sensor battery level
 //              "batteryThreshold":15           // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
-//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
 //            },
 //            {
 //              "ref":34,                       // Required - HomeSeer Device Reference for your sensor
 //              "type":"SmokeSensor",           // Required for a smoke sensor
 //              "name":"Kichen smoke detector", // Optional - HomeSeer device name is the default
 //              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
-//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
 //              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
 //            },
 //            {
@@ -72,22 +81,15 @@
 //              "name":"Kitchen CO detector",    // Optional - HomeSeer device name is the default
 //              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
 //              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
-//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
 //            },
 //            {
 //              "ref":210,                      // Required - HomeSeer Device Reference of a Lock
 //              "type":"Lock",                  // Required for a Lock
 //              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
-//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
+//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
 //              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
-//            },
-//            {
-//              "ref":115,                      // Required - HomeSeer Device Reference for a device holding battery level (0-100)
-//              "type":"Battery",               // Required for a Battery
-//              "name":"Roomba battery",        // Optional - HomeSeer device name is the default
-//              "batteryThreshold":15           // Optional - If the level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
-//              "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the name. You SHOULD add this parameter to all accessories !
-//            },
+//            }
 //         ]
 //     }
 // ],
@@ -113,6 +115,8 @@ var net = require('net');
 var promiseHTTP = require("request-promise-native");
 var chalk = require("chalk");
 var HSutilities = require("./lib/HomeSeerUtilities");
+var HKSetup = require("./lib/HomeKitDeviceSetup");
+var DataExchange = require("./lib/DataExchange");
 var Accessory, Service, Characteristic, UUIDGen;
 	
 // The following variable is set to 0 ("true" the first time HomeSeer is polled.
@@ -227,17 +231,14 @@ HomeSeerPlatform.prototype =
 	{
         var foundAccessories = [];
 		var that = this;
-        // var refList = [];
-		
-		
 
-			
 		// Check entries in the config.json file to make sure there are no obvious errors.		
 		HSutilities.checkConfig.call(this, this.config);
 
 		/////////////////////////////////////////////////////////////////////////////////		
 		// Make devices for each HomeSeer event in the config.json file
 
+		// Make Devices for each 'Event' entry in the config.json file.
 		if (this.config.events) 
 		{
 			for (var i in this.config.events) 
@@ -258,264 +259,308 @@ HomeSeerPlatform.prototype =
 			}
 		}
 
-			var self = this;	// Assign this to self so you can access its values inside the promise.
-			var allStatusUrl = "";
+		var self = this;	// Assign this to self so you can access its values inside the promise.
+		var allStatusUrl = "";
 			
-			promiseHTTP({ uri: this.config["host"] + "/JSON?request=getstatus", json:true})
-			.then( function(json) //  Find the Batteries!
-					{
-						allHSDevices = json.Devices;
+		promiseHTTP({ uri: this.config["host"] + "/JSON?request=getstatus", json:true})
+		.then( function(json) //  Find the Batteries!
+			{
+				allHSDevices = json.Devices;
 
-						for (var i in self.config.accessories)
-						{
-							var deviceBattery = findBattery(self.config.accessories[i].ref);
-							if ((self.config.accessories[i].batteryRef == null) && (deviceBattery != (-1)))
-							{
-								console.log(chalk.magenta.bold("Device Reference #: " + self.config.accessories[i].ref 
-								+ " identifies as a battery operated device, but no battery was specified. Adding a battery reference: " + deviceBattery));
-								self.config.accessories[i].batteryRef = deviceBattery;
-							}
-							if ((deviceBattery != (-1)) && (self.config.accessories[i].batteryRef != deviceBattery)  )
-							{
-								console.log(chalk.red.bold("Wrong battery Specified for device Reference #: " + self.config.accessories[i].ref 
-								+ " You specified reference: " + self.config.accessories[i].batteryRef + " but correct device reference appears to be: " + deviceBattery +". Fixing error."));
-								self.config.accessories[i].batteryRef = deviceBattery;
-							}	
-
-							if ((deviceBattery == (-1)) && (self.config.accessories[i].batteryRef)  )
-							{
-								console.log(chalk.yellow.bold("You specified battery reference: "+ self.config.accessories[i].batteryRef + " for device Reference #: " + self.config.accessories[i].ref 
-								+ " but device does not seem to be battery operated. Check config.json file and fix if this is an error."));
-
-							}									
-						}
-
-						return (1);
-					} // end then's function
-				)
-			.then (()=> 
+				for (var i in self.config.accessories)
 				{
-					
-					//////////////////  Identify all of the HomeSeer References of interest  /////////////////////////
-					var allHSRefs = [];
-						allHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
+					var deviceBattery = findBattery(self.config.accessories[i].ref);
+					if ((self.config.accessories[i].batteryRef == null) && (deviceBattery != (-1)))
+					{
+						console.log(chalk.magenta.bold("Device Reference #: " + self.config.accessories[i].ref 
+						+ " identifies as a battery operated device, but no battery was specified. Adding a battery reference: " + deviceBattery));
+						self.config.accessories[i].batteryRef = deviceBattery;
+					}
+					if ((deviceBattery != (-1)) && (self.config.accessories[i].batteryRef != deviceBattery)  )
+					{
+						console.log(chalk.red.bold("Wrong battery Specified for device Reference #: " + self.config.accessories[i].ref 
+						+ " You specified reference: " + self.config.accessories[i].batteryRef + " but correct device reference appears to be: " + deviceBattery +". Fixing error."));
+						self.config.accessories[i].batteryRef = deviceBattery;
+					}	
 
+					if ((deviceBattery == (-1)) && (self.config.accessories[i].batteryRef)  )
+					{
+						console.log(chalk.yellow.bold("You specified battery reference: "+ self.config.accessories[i].batteryRef + " for device Reference #: " + self.config.accessories[i].ref 
+						+ " but device does not seem to be battery operated. Check config.json file and fix if this is an error."));
+
+					}									
+				}
+
+				return (1);
+			}) // end then's function
+		.then (()=> 
+			{
 				
-					for (var i in this.config.accessories) 
-					{
-						// console.log(chalk.bold.green("Returned Battery  Value" + findBattery(this.config, this.config.accessories[i].ref) ));
+				//////////////////  Identify all of the HomeSeer References of interest  /////////////////////////
+				var allHSRefs = [];
+					allHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
 
-						// refList.push(this.config.accessories[i].ref);
-						
-						allHSRefs.pushUnique(this.config.accessories[i].ref);
-						
-						_HSValues[this.config.accessories[i].ref] = parseFloat(0);
-						
-						_statusObjects[this.config.accessories[i].ref] = [];
-						
-						// Add extra references if the device had a battery
-						if(this.config.accessories[i].batteryRef) 
-						{
-							_statusObjects[this.config.accessories[i].batteryRef] = [];
-							allHSRefs.pushUnique(this.config.accessories[i].batteryRef);
-							_HSValues[this.config.accessories[i].batteryRef] = parseFloat(0);
-						}
-						// Add an extra references for Garage Door Openers
-						if(this.config.accessories[i].obstructionRef) 
-						{
-							_statusObjects[this.config.accessories[i].obstructionRef] = [];
-							allHSRefs.pushUnique(this.config.accessories[i].obstructionRef);
-							_HSValues[this.config.accessories[i].obstructionRef] = parseFloat(0);
-						}			
-					} // end for
-					
-					//For New Polling Method to poll all devices at once
-					allHSRefs.sort();
-
-					/////////////////////////////////////////////////////////////////////////////////
-
-					// Then make a HomeKit device for each "regular" HomeSeer device.
-					this.log("Fetching HomeSeer devices.");
-
-					// Get status on everything that isn't a battery!
-					allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + allHSRefs.concat();
-
-					return promiseHTTP({ uri: allStatusUrl, json:true})	
-				}) // End Battery Check		
-
-			.then( function(response) 
+			
+				for (var i in this.config.accessories) 
 				{
-					for(var i in response.Devices)
+					// console.log(chalk.bold.green("Returned Battery  Value" + findBattery(this.config, this.config.accessories[i].ref) ));
+
+					// refList.push(this.config.accessories[i].ref);
+					
+					allHSRefs.pushUnique(this.config.accessories[i].ref);
+					
+					_HSValues[this.config.accessories[i].ref] = parseFloat(0);
+					
+					if(_statusObjects[this.config.accessories[i].ref] === undefined)  _statusObjects[this.config.accessories[i].ref] = [];
+					
+					// Add extra references if the device had a battery
+					if(this.config.accessories[i].batteryRef) 
 					{
-						_HSValues[response.Devices[i].ref] = parseFloat(response.Devices[i].value);
+						if(_statusObjects[this.config.accessories[i].batteryRef] === undefined) _statusObjects[this.config.accessories[i].batteryRef] = [];
+						allHSRefs.pushUnique(this.config.accessories[i].batteryRef);
+						_HSValues[this.config.accessories[i].batteryRef] = parseFloat(0);
+					}
+					// Add an extra references for Garage Door Openers
+					if(this.config.accessories[i].obstructionRef) 
+					{
+						if(_statusObjects[this.config.accessories[i].obstructionRef] === undefined) _statusObjects[this.config.accessories[i].obstructionRef] = [];
+						allHSRefs.pushUnique(this.config.accessories[i].obstructionRef);
+						_HSValues[this.config.accessories[i].obstructionRef] = parseFloat(0);
 					}
 					
-					this.log('HomeSeer status function succeeded!');
-					for (var i in this.config.accessories) {
-						for (var j = 0; j < response.Devices.length; j++) {
-							// Set up initial array of HS Response Values during startup
-							if (this.config.accessories[i].ref == response.Devices[j].ref) {
-								var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[j]);
-								foundAccessories.push(accessory);
-								break;
-							} //endif
-						} // endfor
-					} //endfor.
-					return response
-				}.bind(this))
-			.catch((err) => 
-				{
-					console.log("Error setting up Devices: " + err);
-					err = chalk.red.bold(err + " Check if HomeSeer is running, then start homebridge again.");
-					throw err;
-				})
-			.then((response)=> 
-				{
-					callback(foundAccessories);
-					updateAllFromHSData();
-					return response
-				})
-			.then((response) =>
-				{
-					function HSData(array) 
+					// Add additional references used by Thermostats!
+					if(this.config.accessories[i].stateRef)
 					{
-						this.ref = array[1];
-						this.newValue = array[2];
-						this.oldValue = array[3];
+						if(_statusObjects[this.config.accessories[i].stateRef] === undefined) _statusObjects[this.config.accessories[i].stateRef] = [];
+						allHSRefs.pushUnique(this.config.accessories[i].stateRef);
+						_HSValues[this.config.accessories[i].stateRef] = parseFloat(0);
 					}
-					var ASCIIPort = "11000";
-						if(this.config["ASCIIPort"]) ASCIIPort = this.config["ASCIIPort"];
-
-				
-					var uri = parseUri(this.config["host"]);
-					this.log("Host for ASCII Interface set to: " + uri.host + " at port " + ASCIIPort);
-				
-					return new Promise((resolve, reject) => 
+					// Thermostat
+					if(this.config.accessories[i].controlRef)
 					{
-						// this.log(chalk.green.bold("Attempting connection to HomeSeer ASCII Port: "));
-						var client;
-					client = net.createConnection({port:ASCIIPort, host:uri.host}, ()=> {resolve(true)});
-						
-					client.on('connect', () =>
-						{
-							this.log(chalk.cyan.bold("Successfully connected to ASCII Control Interface of HomeSeer. Instant Status Enabled."));
-							instantStatusEnabled = true;
-							// resolve(true);
-						});	
-							
-					client.on('data', (data) => 
-							{
-
-								var myData = new HSData(data.toString().slice(0, -2).split(","));
-								
-								//Only need to do an update if there is HomeKit data associated with it!
-								// Which occurs if the _statusObjects array has a non-zero length for the reference reported.
-								if( _statusObjects[myData.ref])
-								{
-									this.log("Received HomeSeer status update data: " + data);
-									_HSValues[myData.ref] = 	parseFloat(myData.newValue);	
-
-									var statusObjectGroup = _statusObjects[myData.ref];
-									for (var thisCharacteristic in statusObjectGroup)
-									{
-										// console.log(chalk.magenta.bold("Executing line 414 characteristic #: " + thisCharacteristic + " named " + statusObjectGroup[thisCharacteristic].displayName));
-										updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
-									}
-
-									// updateAllFromHSData();
-								} 
-							});
-						var numAttempts = 0;
-						client.on('close', () => 
-							{
-								this.log(chalk.red.bold("* Warning * - ASCII Port closed - Instant Status Failure!. Restart system if failure continues."));
-								
-								// Try to re-connect every 30 seconds If there is a failure, another error will be generated
-								// which will cause this code to run again.
-								
-								setTimeout( ()=>
-								{
-									numAttempts = numAttempts +1;
-									try
-									{
-										this.log(chalk.red.bold("Attempting to re-start ASCII Port Interface, Attempt: " + numAttempts));
-										// client = net.createConnection({port:ASCIIPort, host:uri.host});
-										client.connect({port:ASCIIPort, host:uri.host});
-									} catch(err)
-									{
-										this.log(chalk.red.bold("Attempt not successful with error: "));
-									}
-								}, 30000); // Try to connect every 30 seconds
-							
-							});
+						if(_statusObjects[this.config.accessories[i].controlRef] === undefined) _statusObjects[this.config.accessories[i].controlRef] = [];
+						allHSRefs.pushUnique(this.config.accessories[i].controlRef);
+						_HSValues[this.config.accessories[i].controlRef] = parseFloat(0);
+					}
+					// Thermostat 
+					if(this.config.accessories[i].setPointRef)
+					{
+						if(_statusObjects[this.config.accessories[i].setPointRef] === undefined) _statusObjects[this.config.accessories[i].setPointRef] = [];
+						allHSRefs.pushUnique(this.config.accessories[i].setPointRef);
+						_HSValues[this.config.accessories[i].setPointRef] = parseFloat(0);
+					}
+					if(this.config.accessories[i].humidityRef)
+					{
+						if(_statusObjects[this.config.accessories[i].humidityRef] === undefined) _statusObjects[this.config.accessories[i].humidityRef] = [];
+						allHSRefs.pushUnique(this.config.accessories[i].humidityRef);
+						_HSValues[this.config.accessories[i].humidityRef] = parseFloat(0);
+					}
+					if(this.config.accessories[i].humidityTargetRef)
+					{
+						if(_statusObjects[this.config.accessories[i].humidityTargetRef] === undefined) _statusObjects[this.config.accessories[i].humidityTargetRef] = [];
+						allHSRefs.pushUnique(this.config.accessories[i].humidityTargetRef);
+						_HSValues[this.config.accessories[i].humidityTargetRef] = parseFloat(0);
+					}					
 					
+				} // end for
+				
+				//Sorted list of all HomeSeer References. Used to obtain status data from HomeSeer
+				allHSRefs.sort();
 
-						client.on('error', (data) => 
+				/////////////////////////////////////////////////////////////////////////////////
+
+				// Then make a HomeKit device for each "regular" HomeSeer device.
+				this.log("Fetching HomeSeer devices.");
+
+				// URL to get status on everything.
+				allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + allHSRefs.concat();
+
+				// now get the data from HomeSeer and pass it as the 'response' to the .then stage.
+				return promiseHTTP({ uri: allStatusUrl, json:true})	
+				
+			}) // End of gathering HomeSeer references
+		
+		// Next - For each device value retrieved from HomeSeer, store it in the _HSValues array 
+		// and  create HomeKit Accessories for each accessory in the config.json 'accessories' array!		
+		.then( function(response) 
+			{  
+				for(var i in response.Devices)
+				{
+					_HSValues[response.Devices[i].ref] = parseFloat(response.Devices[i].value);
+				}
+				
+				this.log('HomeSeer status function succeeded!');
+				for (var i in this.config.accessories) {
+					for (var j = 0; j < response.Devices.length; j++) {
+						// Set up initial array of HS Response Values during startup
+						if (this.config.accessories[i].ref == response.Devices[j].ref) {
+							var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[j]);
+							foundAccessories.push(accessory);
+							break;
+						} //endif
+					} // endfor
+				} //endfor.
+				return response
+			}.bind(this))
+		.catch((err) => 
+			{
+				console.log("Error setting up Devices: " + err);
+				err = chalk.red.bold(err + " Check if HomeSeer is running, then start homebridge again.");
+				throw err;
+			})
+		// Next - if prior .then block was completed without errors, next step is to return all the values to HomeBridge
+		.then((response)=> 
+			{
+				callback(foundAccessories);
+				updateAllFromHSData();
+				return response
+			})
+		// Next step is to check if HomeSeer's ASCII control port is enabled and to make a connection to that port
+		.then((response) =>
+			{
+				function HSData(array) 
+				{
+					this.ref = array[1];
+					this.newValue = array[2];
+					this.oldValue = array[3];
+				}
+				var ASCIIPort = "11000";
+					if(this.config["ASCIIPort"]) ASCIIPort = this.config["ASCIIPort"];
+
+			
+				var uri = parseUri(this.config["host"]);
+				this.log("Host for ASCII Interface set to: " + uri.host + " at port " + ASCIIPort);
+			
+				return new Promise((resolve, reject) => 
+				{
+					// this.log(chalk.green.bold("Attempting connection to HomeSeer ASCII Port: "));
+					var client;
+				client = net.createConnection({port:ASCIIPort, host:uri.host}, ()=> {resolve(true)});
+					
+				client.on('connect', () =>
+					{
+						this.log(chalk.cyan.bold("Successfully connected to ASCII Control Interface of HomeSeer. Instant Status Enabled."));
+						instantStatusEnabled = true;
+						// resolve(true);
+					});	
+				
+				// Next, set up an event listener to receive any change data from HomeSeer and then update HomeKit				
+				client.on('data', (data) => 
+						{
+
+							var myData = new HSData(data.toString().slice(0, -2).split(","));
+							
+							//Only need to do an update if there is HomeKit data associated with it!
+							// Which occurs if the _statusObjects array has a non-zero length for the reference reported.
+							if( _statusObjects[myData.ref])
 							{
-								this.log(chalk.red.bold("* Warning * - Unable to connect to HomeSeer ASCII Port: " + ASCIIPort + ". Instant Status Not Enabled."));
-								if (ASCIIPort != 11000) 
+								this.log("Received HomeSeer status update data: " + data);
+								_HSValues[myData.ref] = 	parseFloat(myData.newValue);	
+
+								var statusObjectGroup = _statusObjects[myData.ref];
+								for (var thisCharacteristic in statusObjectGroup)
 								{
-								this.log(chalk.red.bold("ASCIIPort configuration value of: " + ASCIIPort + " is unusual. Typical value is 11000. Check setting."));
+									// console.log(chalk.magenta.bold("Executing line 414 characteristic #: " + thisCharacteristic + " named " + statusObjectGroup[thisCharacteristic].displayName));
+									updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
 								}
-								this.log(chalk.yellow.bold('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
-								this.log(chalk.yellow.bold("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));
-								resolve(false)
-							});
-						// resolve (true);
-					});
-				})
-			.then((instantStatusEnabled) =>
-				{
 
-					// This is the new Polling Mechanism to poll all at once.	
-					// If instantStatusEnabled is true, then poll less frequently (once per minute);
-					
-					// this.log(chalk.yellow.bold("Monitoring HomeSeer Device Status for references: " + allHSRefs.concat()));
-
-					if(instantStatusEnabled)
-					{
-						this.config.platformPoll = 60;
-						this.log(chalk.green.bold("Reducing HomeSeer polling rate to: " + this.config.platformPoll + " seconds."))
-
-					}
-					else{
-						this.log(chalk.red.bold("Instant Status Was Not Enabled"));
-					}
-						
-						setInterval( function () 
+								// updateAllFromHSData();
+							} 
+						});
+					var numAttempts = 0;
+					// If the status port closes, print a warning and then try to re-open it in 30 seconds.
+					client.on('close', () => 
 						{
-							// Now do the poll
-							promiseHTTP({ uri: allStatusUrl, json:true})
-								.then( function(json) 
-									{
-										_currentHSDeviceStatus = json.Devices;
-										that.log("Poll # %s: Retrieved values for %s HomeSeer references.",  pollingCount, _currentHSDeviceStatus.length);
-										if(instantStatusEnabled == false && ((pollingCount % 5) == 0)) // only display once every 5 polls!
-										{
-											that.log(chalk.red.bold("* Warning * - Instant status not enabled. Operating in polling mode only which may degrade performance."));
-											that.log(chalk.red.bold('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
-											that.log(chalk.red.bold("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));											
-										}
-										for (var index in _currentHSDeviceStatus)
-										{
-											_HSValues[_currentHSDeviceStatus[index].ref] = parseFloat(_currentHSDeviceStatus[index].value);
-										} //endfor
-
-											updateAllFromHSData();
-											
-									} // end then's function
-									) // end then
-								.catch(function(err)
-									{
-										that.log("HomeSeer poll attempt failed with error %s", err);
-									} // end catch's function
-									);//end catch
-
-						}, this.config.platformPoll * 1000 // end SetInterval's function
-						);	//end setInterval function for polling loop
-
-					return true;
+							this.log(chalk.red.bold("* Warning * - ASCII Port closed - Instant Status Failure!. Restart system if failure continues."));
+							
+							// Try to re-connect every 30 seconds If there is a failure, another error will be generated
+							// which will cause this code to run again.
+							
+							setTimeout( ()=>
+							{
+								numAttempts = numAttempts +1;
+								try
+								{
+									this.log(chalk.red.bold("Attempting to re-start ASCII Port Interface, Attempt: " + numAttempts));
+									// client = net.createConnection({port:ASCIIPort, host:uri.host});
+									client.connect({port:ASCIIPort, host:uri.host});
+								} catch(err)
+								{
+									this.log(chalk.red.bold("Attempt not successful with error: "));
+								}
+							}, 30000); // Try to connect every 30 seconds
+						
+						});
+				
+					// If there is an error setting up the ASCII status port, print a message. Note that client.on('close', ...) is automatically called
+					// by the 'error' listener and will cause code to try and re-open the port every 30 seconds.
+					client.on('error', (data) => 
+						{
+							this.log(chalk.red.bold("* Warning * - Unable to connect to HomeSeer ASCII Port: " + ASCIIPort + ". Instant Status Not Enabled."));
+							if (ASCIIPort != 11000) 
+							{
+							this.log(chalk.red.bold("ASCIIPort configuration value of: " + ASCIIPort + " is unusual. Typical value is 11000. Check setting."));
+							}
+							this.log(chalk.yellow.bold('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
+							this.log(chalk.yellow.bold("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));
+							resolve(false)
+						});
+					// resolve (true);
 				});
+			})
+		// Next, set up the Polling mechanism as a 'backup' to the instant status.  If instant status is enabled, poll less frequently.	
+		.then((instantStatusEnabled) =>
+			{
+
+				// This is the new Polling Mechanism to poll all at once.	
+				// If instantStatusEnabled is true, then poll less frequently (once per minute);
+				
+				// this.log(chalk.yellow.bold("Monitoring HomeSeer Device Status for references: " + allHSRefs.concat()));
+
+				if(instantStatusEnabled)
+				{
+					this.config.platformPoll = 60;
+					this.log(chalk.green.bold("Reducing HomeSeer polling rate to: " + this.config.platformPoll + " seconds."))
+
+				}
+				else{
+					this.log(chalk.red.bold("Instant Status Was Not Enabled"));
+				}
+					//set the polling interval.
+					setInterval( function () 
+					{
+						// Now do the poll
+						promiseHTTP({ uri: allStatusUrl, json:true})
+							.then( function(json) 
+								{
+									_currentHSDeviceStatus = json.Devices;
+									that.log("Poll # %s: Retrieved values for %s HomeSeer references.",  pollingCount, _currentHSDeviceStatus.length);
+									if(instantStatusEnabled == false && ((pollingCount % 5) == 0)) // only display once every 5 polls!
+									{
+										that.log(chalk.red.bold("* Warning * - Instant status not enabled. Operating in polling mode only which may degrade performance."));
+										that.log(chalk.red.bold('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
+										that.log(chalk.red.bold("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));											
+									}
+									for (var index in _currentHSDeviceStatus)
+									{
+										_HSValues[_currentHSDeviceStatus[index].ref] = parseFloat(_currentHSDeviceStatus[index].value);
+									} //endfor
+
+										updateAllFromHSData();
+										
+								} // end then's function
+								) // end then
+							.catch(function(err)
+								{
+									that.log("HomeSeer poll attempt failed with error %s", err);
+								} // end catch's function
+								);//end catch
+
+					}, this.config.platformPoll * 1000 // end SetInterval's function
+					);	//end setInterval function for polling loop
+
+				return true;
+			});
 	}
 }
 
@@ -561,779 +606,21 @@ HomeSeerAccessory.prototype = {
         callback();
     },
 
-	// setHSValue function expects to be bound by .bind() to a HomeKit Service Object Characteristic!
+	// setHSValue function should be bound by .bind() to a HomeKit Service Object Characteristic!
 	setHSValue: function (level, callback) {
-		var url;
-		var callbackValue = 1;
-		var transmitValue = level;
-		var performUpdate = true;
-		
-		// Uncomment for Debugging
-		// console.log ("** Debug ** - Called setHSValue with level %s for UUID %s", level, this.UUID);
-		
-		if (!this.UUID) {
-			var error = "*** PROGRAMMING ERROR **** - setHSValue called by something without a UUID";
-			console.log (chalk.bold.red("*** PROGRAMMING ERROR **** - setHSValue called by something without a UUID"));
-			console.log (this);                
-			callback(error);
-		}
-
-			// Add Any Special Handling Based on the UUID
-			// Uncomment any UUID's actually used!
-				switch( this.UUID)
-				{
-					case(Characteristic.RotationSpeed.UUID):
-					case(Characteristic.Brightness.UUID ): 
-					{
-						// If the _HSValues array has a 255 value, it means that this Brightness / Rotation speed change
-						// Is being sent as part of an initial dimmable device turn-on pair. 
-						// In HomeSeer, it is better not to send this second value until after the last-level feature settles to a new value.
-						// So inhibit the transmission but only if you have Instant Status feature enabled. 
-						if(instantStatusEnabled && (_HSValues[this.HSRef] == 255))
-						{
-							performUpdate = false;
-						}
-						
-						// Maximum ZWave value is 99 so covert 100% to 99!
-						transmitValue = (level == 100) ? 99 : level;
-						
-						forceHSValue(this.HSRef, transmitValue); 
-						callbackValue = level; // but call back with the value instructed by HomeKit rather than the modified 99 sent to HomeSeer
-						
-						// this.updateValue(transmitValue); // Assume success. This gets corrected on next poll if assumption is wrong.
-						// console.log ("          ** Debug ** called for Brightness update with level %s then set to transmitValue %s", level, transmitValue); 
-
-						break;
-					}
-					// The following is for window coverings, but it is only partially implemented
-					// And not working correctly yet! Not yet suitable for use!					
-					case(Characteristic.TargetPosition.UUID):
-					{
-						// if a simple binary switch is used, then either fully open or fully closed! 
-						if (this.binarySwitch)
-						{
-							transmitValue = (level < 50) ? 0 : 255; // Turn to "on"
-							forceHSValue(this.HSRef, transmitValue); 
-							callbackValue = (level == 0) ? 0 : level;
-
-						} 
-						else
-						{ 
-							transmitValue = ((level == 100) ? 99 : level);
-							callbackValue = level;
-							forceHSValue(this.HSRef, transmitValue); 							
-						 } 
-							
-						console.log("Set TransmitValue for WindowCovering %s to %s ", this.displayName, transmitValue);
-						break;
-					}		
-					
-					case(Characteristic.TargetDoorState.UUID):
-					{
-						switch(level)
-						{
-							case 0: {transmitValue =  255;   callbackValue = 0;  break;} // Door Open
-							case 1: {transmitValue =  0; callbackValue = 1;  break; } // Door Closed
-						}
-						// setHSValue(this.HSRef, transmitValue); ** Don't assume success for the lock. Wait for a poll!
-						console.log("Set TransmitValue for lock characteristic %s to %s ", this.displayName, transmitValue);
-						break;
-					}					
-					case(Characteristic.LockTargetState.UUID ):
-					{
-						switch(level)
-						{
-							case 0: {transmitValue =  0;   callbackValue = 0;  break;} // Lock Unsecured
-							case 1: {transmitValue =  255; callbackValue = 1;  break; } // Lock Secured
-						}
-						// setHSValue(this.HSRef, transmitValue); ** Don't assume success for the lock. Wait for a poll!
-						console.log("Set TransmitValue for lock characteristic %s to %s ", this.displayName, transmitValue);
-						break;
-					}
-	
-					case(Characteristic.On.UUID ):  
-					{
-						// For devices such as dimmers, HomeKit sends both "on" and "brightness" when you adjust brightness.
-						// But Z-Wave only expects a brighness value if light is already on. So, if the device is already on (non-Zero ZWave value)
-						// then don't send again.
-						// HomeKit level == false means turn off, level == true means turn on.
-						
-						if (level == false) 
-							{
-								transmitValue = 0 ; 
-								callbackValue = 0;
-								forceHSValue(this.HSRef, 0); // assume success and set to 0 to avoid jumping of any associated dimmer / range slider.
-						}
-						else // turn on!
-						{
-							if(getHSValue(this.HSRef) == 0)	// if it is currently off, then turn fully on.
-							{
-								// if it is off, turn on to full level.
-								transmitValue = 255;
-								forceHSValue(this.HSRef, 255);
-								callbackValue = 1; // and callback with a 1 meaning it was turned on
-							}
-							else // If it appears to be on, then send same value!
-							{
-								// if it is on then use current value.
-								// don't use the "255" value because Z-Wave dimmer's can be ramping up/down 
-								// and use of set-last-value (255)  will cause jumping of the HomeKit Dimmer slider interface
-								// if a poll occurs during ramping.
-								transmitValue = getHSValue(this.HSRef); // if it is already on, then just transmit its current value
-								callbackValue = 1;
-								performUpdate = false; // or maybe don't transmit at all (testing this feature)
-							}
-						}
-						break; // 
-					}
-
-					default:
-					{
-						console.log (chalk.bold.red("*** PROGRAMMING ERROR **** - Service or Characteristic UUID not handled by setHSValue routine"));
-						
-						var err = "*** PROGRAMMING ERROR **** - Service or Characteristic UUID not handled by setHSValue routine" 
-										+ characteristicObject.UUID + "  named  " + characteristicObject.displayName;
-						callback(err, 0);
-						return;
-						break;
-					}
-				}
-		
-		if (isNaN(transmitValue)) 
-			{
-			console.log(chalk.bold.red("*************************** PROGRAM ERROR ***************************"));
-			console.log ("Attempting to transmit non-numeric value to HomeSeer for %s with UUID %s", this.displayName, this.UUID);
-			callback("Programming Error in function setHSValue. Attempt to send value to HomeSeer that is not a number");
-			console.log(chalk.bold.red("*********************************************************************"));
-
-			};
-	
-		 url = HomeSeerHost + "/JSON?request=controldevicebyvalue&ref=" + this.HSRef + "&value=" + transmitValue;
- 
-		 // For debugging
-		 //console.log ("Debug - Called setHSValue has URL = %s", url);
- 
-		 // console.log("Sending URL %s", url);
-
-		if (performUpdate)
-		 {
-			 promiseHTTP(url)
-				.then( function(htmlString) {
-						// console.log(this.displayName + ': HomeSeer setHSValue function succeeded!');
-						callback(null, callbackValue);
-						// updateCharacteristic(this);// poll for this one changed Characteristic after setting its value.
-						
-					// Strange special case of extra poll needed for window coverings that are controlled by a binary switch.
-					// For odd reason, if poll isn't done, then the icon remains in a changing state until next poll!
-					if (this.UUID == Characteristic.CurrentPosition.UUID || this.UUID == Characteristic.TargetPosition.UUID)
-					{
-							setTimeout ( ()=>
-							{
-								// console.log(chalk.cyan.bold("Window Covering Extra Polling!"));
-								var statusObjectGroup = _statusObjects[this.HSRef];
-								for (var thisCharacteristic in statusObjectGroup)
-								{
-									updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
-								}
-							}, 500);
-					} 
-			
-			
-				}.bind(this))
-				.catch(function(err)
-					{ 	console.log(chalk.bold.red("Error attempting to update %s, with error %s", this.displayName, this.UUID, err));
-					}.bind(this)
-				);
-		 } 
-		else 
-			{
-				callback(null, callbackValue);
-			}
+		// Pass all the variables and functions used. There's probably a cleaner way to do this with module.exports but this works for now!
+		DataExchange.sendToHomeSeer(level, callback, HomeSeerHost, Characteristic, forceHSValue, getHSValue, instantStatusEnabled, this);
     },
 
-
     getServices: function () {
-		// this.log("---------------getServices function called --------- Debug ----------------------------");
-		// this.log("Configuration ", this.config);
-		// this.log("---------------getServices function called --------- Debug ----------------------------");
 				
         var services = [];
-		
-		// Use the Z-Wave Model Info. from HomeSeer if the type is undefined!
-		if(this.config.type == undefined) this.config.type = this.model;
-		
-		this.log("Configuring Device with user selected type " + this.config.type + " and HomeSeer Device Type: " + this.model);
 
-
-        switch (this.config.type) {
-			
-		case "Appliance Module":
-		case "Lamp Module":
-		case "Z-Wave Switch Binary":
-	    	case "Switch": 
-			{
-                var switchService = new Service.Switch();
-				switchService.isPrimaryService = true;
-				
-				switchService
-					.getCharacteristic(Characteristic.On)
-					.HSRef = this.config.ref;
-					
-                switchService
-                    .getCharacteristic(Characteristic.On)
-                    .on('set', this.setHSValue.bind(switchService.getCharacteristic(Characteristic.On)));
-				_statusObjects[this.config.ref].push(switchService.getCharacteristic(Characteristic.On));
-
-                services.push(switchService);
-                break;
-            }
-
-			
-            case "Outlet": {
-                var outletService = new Service.Outlet();
-				outletService.isPrimaryService = true;
-				
-				outletService
-					.getCharacteristic(Characteristic.On)
-					.HSRef = this.config.ref;
-				
-                outletService
-                    .getCharacteristic(Characteristic.On)
-                    .on('set', this.setHSValue.bind(outletService.getCharacteristic(Characteristic.On)));
-
-				_statusObjects[this.config.ref].push(outletService.getCharacteristic(Characteristic.On));
-                services.push(outletService);
-                break;
-            }
-			
-            case "Z-Wave Temperature":
-			case "TemperatureSensor": 
-			{
-                var temperatureSensorService = new Service.TemperatureSensor();
-				temperatureSensorService.isPrimaryService = true;
-				temperatureSensorService.displayName = "Service.TemperatureSensor";
-				
-                temperatureSensorService
-                    .getCharacteristic(Characteristic.CurrentTemperature).setProps({ minValue: -100 });				
-
-                temperatureSensorService
-                    .getCharacteristic(Characteristic.CurrentTemperature)
-					.HSRef = this.config.ref;
-					
-				temperatureSensorService
-                    .getCharacteristic(Characteristic.CurrentTemperature)
-					.HStemperatureUnit = ((this.config.temperatureUnit) ? this.config.temperatureUnit : "F" );
-
-                services.push(temperatureSensorService);
-				
-				_statusObjects[this.config.ref].push(temperatureSensorService.getCharacteristic(Characteristic.CurrentTemperature));	
-
-                break;
-            }
-			
-            case "CarbonMonoxideSensor": {
-                var carbonMonoxideSensorService = new Service.CarbonMonoxideSensor();
-                carbonMonoxideSensorService.isPrimaryService = true;
-				
-                carbonMonoxideSensorService
-                    .getCharacteristic(Characteristic.CarbonMonoxideDetected)
-					.HSRef = this.config.ref;
-
-                services.push(carbonMonoxideSensorService);
-				
-				_statusObjects[this.config.ref].push(carbonMonoxideSensorService.getCharacteristic(Characteristic.CarbonMonoxideDetected));	
-				
-                break;
-            }
-            case "CarbonDioxideSensor": {
-                var carbonDioxideSensorService = new Service.CarbonDioxideSensor();
-				carbonDioxideSensorService.isPrimaryService = true;
-				
-                carbonDioxideSensorService
-                    .getCharacteristic(Characteristic.CarbonDioxideDetected)
-                    .HSRef = this.config.ref;
-
-                services.push(carbonDioxideSensorService);
-				
-				_statusObjects[this.config.ref].push(carbonDioxideSensorService.getCharacteristic(Characteristic.CarbonDioxideDetected));	
-
-                break;
-            }
-            case "ContactSensor": {
-                var contactSensorService = new Service.ContactSensor();
-                contactSensorService.isPrimaryService = true;
-				
-				contactSensorService
-                    .getCharacteristic(Characteristic.ContactSensorState)
-                    .HSRef = this.config.ref;
-
-                services.push(contactSensorService);
-
-				_statusObjects[this.config.ref].push(contactSensorService.getCharacteristic(Characteristic.ContactSensorState));	
-
-                break;
-            }
-            case "MotionSensor": {
-                var motionSensorService = new Service.MotionSensor();
-                motionSensorService.isPrimaryService = true;
-                motionSensorService.HSRef = this.config.ref;
-				
-                motionSensorService
-                    .getCharacteristic(Characteristic.MotionDetected)
-                   .HSRef = this.config.ref;
-
-                services.push(motionSensorService);
-				
-				_statusObjects[this.config.ref].push(motionSensorService.getCharacteristic(Characteristic.MotionDetected));	
-				
-                break;
-            }
-            case "Z-Wave Water Leak Alarm":
-			case "LeakSensor": 
-			{
-                var leakSensorService = new Service.LeakSensor();
-                leakSensorService
-                    .getCharacteristic(Characteristic.LeakDetected)
-                    .HSRef = this.config.ref;
-
-                services.push(leakSensorService);
-
-				_statusObjects[this.config.ref].push(leakSensorService.getCharacteristic(Characteristic.LeakDetected));	
-				
-                break;
-            }
-            case "OccupancySensor": {
-                var occupancySensorService = new Service.OccupancySensor();
-                occupancySensorService
-                    .getCharacteristic(Characteristic.OccupancyDetected)
-                    .HSRef = this.config.ref;
-
-                services.push(occupancySensorService);
-				
-				_statusObjects[this.config.ref].push(occupancySensorService.getCharacteristic(Characteristic.OccupancyDetected));	
-				
-                break;
-            }
-            case "SmokeSensor": {
-                var smokeSensorService = new Service.SmokeSensor();
-                smokeSensorService
-                    .getCharacteristic(Characteristic.SmokeDetected)
-					.HSRef = this.config.ref;
-
-                services.push(smokeSensorService);
-				
-				_statusObjects[this.config.ref].push(smokeSensorService.getCharacteristic(Characteristic.SmokeDetected));	
-
-                break;
-            }
-			
-			
-            case "LightSensor": 
-			{
-                var lightSensorService = new Service.LightSensor();
-                lightSensorService
-                    .getCharacteristic(Characteristic.CurrentAmbientLightLevel)
-                    .HSRef = this.config.ref;
-
-                services.push(lightSensorService);
-				
-				_statusObjects[this.config.ref].push(lightSensorService.getCharacteristic(Characteristic.CurrentAmbientLightLevel));	
-
-                break;
-            }
-			
-
-            case "HumiditySensor": 
-			{
-                var humiditySensorService = new Service.HumiditySensor();
-                humiditySensorService
-                    .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-					.HSRef = this.config.ref;
-					
-                services.push(humiditySensorService);
-				
-				_statusObjects[this.config.ref].push(humiditySensorService.getCharacteristic(Characteristic.CurrentRelativeHumidity));	
-
-                break;
-            }
-		
-			case "Z-Wave Door Lock":
-            case "Lock": {
-                this.config.lockRef = this.ref;
-                var lockService = new Service.LockMechanism();
-				lockService.isPrimaryService = true;
-				lockService.displayName = "Service.LockMechanism";
-				
-				lockService
-                    .getCharacteristic(Characteristic.LockCurrentState)
-					.HSRef = this.config.ref;
-					
-                lockService
-                    .getCharacteristic(Characteristic.LockTargetState)
-						.HSRef = this.config.ref;
-						
-                lockService
-                    .getCharacteristic(Characteristic.LockTargetState)
-					.on('set', this.setHSValue.bind(lockService.getCharacteristic(Characteristic.LockTargetState)));
-                    // .on('set', this.setLockTargetState.bind(this));
-				
-				// Next two values are not currently used.
-				if (this.config.unlockValue)
-					 lockService.getCharacteristic(Characteristic.LockTargetState).HSunlockValue = this.config.unlockValue;
-				if (this.config.lockValue)
-					lockService.getCharacteristic(Characteristic.LockTargetState).HSlockValue = this.config.lockValue;
-		    
-				lockService.isPrimaryService = true;
-		    
-				services.push(lockService);
-				
-		    	_statusObjects[this.config.ref].push(lockService.getCharacteristic(Characteristic.LockCurrentState));
-				
-				// If an manual lock / unlock occurs, then you need to change the TargetState so that HomeKit
-				// presents correct informration about the states. I.e., you need the target state to be updated to be
-				// set to the actual state.
-				_statusObjects[this.config.ref].push(lockService.getCharacteristic(Characteristic.LockTargetState));
-								
-                break;
-            }
-			case "GarageDoorOpener": 
-			{
-				var garageDoorOpenerService = new Service.GarageDoorOpener();
-				garageDoorOpenerService
-					.getCharacteristic(Characteristic.CurrentDoorState)
-					.HSRef = this.config.ref;
-					
-				garageDoorOpenerService
-					.getCharacteristic(Characteristic.TargetDoorState)
-					.HSRef = this.config.ref;
-
-				garageDoorOpenerService
-					.getCharacteristic(Characteristic.TargetDoorState)
-					.on('set', this.setHSValue.bind(garageDoorOpenerService.getCharacteristic(Characteristic.TargetDoorState)));		
-
-				if(this.config.obstructionRef != null)
-				{
-				garageDoorOpenerService
-					.getCharacteristic(Characteristic.ObstructionDetected)
-					.HSRef = this.config.obstructionRef;
-					_statusObjects[this.config.obstructionRef].push(garageDoorOpenerService.getCharacteristic(Characteristic.ObstructionDetected));
-				}
-					
-				services.push(garageDoorOpenerService);
-			_statusObjects[this.config.ref].push(garageDoorOpenerService.getCharacteristic(Characteristic.CurrentDoorState));
-			_statusObjects[this.config.ref].push(garageDoorOpenerService.getCharacteristic(Characteristic.TargetDoorState));
-
-
-				break;
-			}
-
-			case "WindowCovering": 
-			{
-				var windowService = new Service.WindowCovering();
-				windowService
-					.getCharacteristic(Characteristic.CurrentPosition)
-					.HSRef = this.config.ref;
-					
-				windowService
-					.getCharacteristic(Characteristic.TargetPosition)
-					.HSRef = this.config.ref;
-					
-				// Is this a simple binary on / off switch (fully opened / fully closed)?
-				// Then identify it as such if the user hasn't already done so!
-				if (this.config.binarySwitch == null)
-				{
-					if(this.model == "Z-Wave Switch Binary")
-					{
-						this.config.binarySwitch = true;
-
-					}
-					else 
-					{ 
-						this.config.binarySwitch = false; 
-					};
-				}
-				
-				// console.log(chalk.cyan.bold("Window Binary Setting is: " + this.config.binarySwitch));
-				windowService
-						.getCharacteristic(Characteristic.TargetPosition)
-						.binarySwitch = this.config.binarySwitch;				
-				
-				windowService
-					.getCharacteristic(Characteristic.TargetPosition)
-					.on('set', this.setHSValue.bind(windowService.getCharacteristic(Characteristic.TargetPosition)));		
-
-				if(this.config.obstructionRef != null)
-				{
-				windowService
-					.getCharacteristic(Characteristic.ObstructionDetected)
-					.HSRef = this.config.obstructionRef;
-					_statusObjects[this.config.obstructionRef].push(windowService.getCharacteristic(Characteristic.ObstructionDetected));
-				}
-					
-				services.push(windowService);
-			_statusObjects[this.config.ref].push(windowService.getCharacteristic(Characteristic.CurrentPosition));
-			_statusObjects[this.config.ref].push(windowService.getCharacteristic(Characteristic.TargetPosition));
-
-
-				break;
-			}		
-			
-            case "Fan": {
-                var fanService = new Service.Fan
-				fanService.isPrimaryService = true;
-				fanService.displayName = "Service.Fan";
-				
-				fanService
-					.getCharacteristic(Characteristic.On)
-					.HSRef = this.config.ref;				
-                fanService
-                    .getCharacteristic(Characteristic.On)
-                    .on('set', this.setHSValue.bind(fanService.getCharacteristic(Characteristic.On)));
-					
-				_statusObjects[this.config.ref].push(fanService.getCharacteristic(Characteristic.On));	
-
-		    	if (this.config.can_dim == null) // if can_dim is undefined, set it to 'true' unless its a Z-Wave Binary Switch.
-				{
-					this.config.can_dim = true; // default to true
-					
-					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model == "Z-Wave Switch Binary"))
-					{
-						this.config.can_dim = false;
-					}
-				}
-				
-				if (typeof(this.config.can_dim) == "string")
-				{	// This error should have been checked and fixe by the checkConfig() function, but this is a debugging check.
-					var error = chalk.red.bold("Program Error. can_dim setting has a type of 'string'. Should be 'boolean' for device with reference " + this.ref)
-					throw new SyntaxError(error);
-				}
-
-                if (this.config.can_dim == true) {
-					
-					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model != "Z-Wave Switch Multilevel"))
-					{
-						this.log(chalk.magenta.bold("* Warning * - Check can_dim setting for Fan named: " + this.name + ", and HomeSeer reference: " + this.config.ref ));
-						this.log(chalk.magenta.bold("HomeSeer reports model type: " + this.model + ", which typically does not provide rotation speed adjustment."));
-					}
-					
-					this.log("          Adding RotationSpeed to Fan");
-                    fanService
-                        .addCharacteristic(new Characteristic.RotationSpeed())
-						.HSRef = this.config.ref;
-						
-					fanService
-						.getCharacteristic(Characteristic.RotationSpeed)
-						.on('set', this.setHSValue.bind(fanService.getCharacteristic(Characteristic.RotationSpeed)));
-				_statusObjects[this.config.ref].push(fanService.getCharacteristic(Characteristic.RotationSpeed));						
-                }
-				else
-				{
-					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model == "Z-Wave Switch Multilevel"))
-					{
-						this.log(chalk.magenta.bold("* Warning * - Check can_dim setting for Fan named: " + this.name + ", and HomeSeer reference: " + this.config.ref ));
-						this.log(chalk.magenta.bold("Setting without rotation speed adjustment, but HomeSeer reports model type: " + this.model + ", which typically does provide rotation speed adjustment."));
-					}					
-				}
-
-				
-                services.push(fanService);
-                break;
-            }	
-/*			
-			case ("RGBLight"):
-			{
-				// this.log("** Debug ** - Setting up bulb %s with can_dim %s", this.config.name, this.config.can_dim);
-                var lightbulbService = new Service.Lightbulb();
-				lightbulbService.isPrimaryService = true;
-				lightbulbService.displayName = "Service.Lightbulb"
-				
-				lightbulbService
-					.getCharacteristic(Characteristic.On)
-					.HSREf = this.config.ref;
-				
-                lightbulbService
-                    .getCharacteristic(Characteristic.On)
-                    .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.On)));
-
-					
-				lightbulbService
-                        .addCharacteristic(new Characteristic.Brightness());
-				
-				var RBG = 	{	
-								red:this.config.red, 
-								green:this.config.green, 
-								blue:this.config.blue
-							};
-
-				
-				lightbulbService
-						.getCharacteristic(Characteristic.Brightness)
-						.HSRef = this.config.ref;
-						
-				lightbulbService
-						.getCharacteristic(Characteristic.Brightness)						
-						.RGB = RGB;	
-					
-				lightbulbService
-						.addCharacteristic(new Characteristic.Hue());
-						
-				lightbulbService
-						.getCharacteristic(Characteristic.Hue)
-						.HSRef = this.config.ref;	
-						
-				lightbulbService
-						.getCharacteristic(Characteristic.Hue)						
-						.RGB = RGB;
-						
-				lightbulbService
-						.addCharacteristic(new Characteristic.Saturation());
-						
-				lightbulbService
-						.getCharacteristic(Characteristic.Saturation)
-						.HSRef = this.config.ref;	
-						
-				lightbulbService
-						.getCharacteristic(Characteristic.Saturation)
-						.RGB = RGB;		
-
-						
-					
-				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.On));
-				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
-				_statusObjects[this.config.red].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
-				_statusObjects[this.config.green].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
-				_statusObjects[this.config.blue].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
-				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.Hue));
-				_statusObjects[this.config.red].push(lightbulbService.getCharacteristic(Characteristic.Hue));
-				_statusObjects[this.config.green].push(lightbulbService.getCharacteristic(Characteristic.Hue));
-				_statusObjects[this.config.blue].push(lightbulbService.getCharacteristic(Characteristic.Hue));				
-				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.Saturation));
-				_statusObjects[this.config.red].push(lightbulbService.getCharacteristic(Characteristic.Saturation));
-				_statusObjects[this.config.green].push(lightbulbService.getCharacteristic(Characteristic.Saturation));
-				_statusObjects[this.config.blue].push(lightbulbService.getCharacteristic(Characteristic.Saturation));
-				
-                services.push(lightbulbService);				
-				break;
-			}
-	*/		
-			
-            case "Z-Wave Switch Multilevel":
-			case "Lightbulb": 
-			default: 
-			{
-				if(!this.config || !this.config.type || (this.config.type == null))
-				{
-					this.log(chalk.bold.yellow("WARNING: adding unspecified device type with HomeSeer reference " + this.config.ref + ". Defaulting to type Lightbulb. "));
-					this.log(chalk.bold.yellow("Future versions of this plugin may require specification of the type of each device."));
-					this.log(chalk.bold.yellow("Please update your config.json file to specify the device type."));
-				}
-				
-				// this.log("** Debug ** - Setting up bulb %s with can_dim: %s", this.config.name, this.config.can_dim);
-                var lightbulbService = new Service.Lightbulb();
-				lightbulbService.isPrimaryService = true;
-				lightbulbService.displayName = "Service.Lightbulb"
-				
-				lightbulbService
-					.getCharacteristic(Characteristic.On)
-					.HSRef = this.config.ref;
-				
-                lightbulbService
-                    .getCharacteristic(Characteristic.On)
-                    .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.On)));
-                    // .on('get', this.getPowerState.bind(this));
-					
-				_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.On));
-				
-
-		    	if (this.config.can_dim == null) // if can_dim is undefined, set it to 'true' unless its a Z-Wave Binary Switch.
-				{
-					this.config.can_dim = true; // default to true
-					
-					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model == "Z-Wave Switch Binary"))
-					{
-						this.config.can_dim = false;
-					}
-				}
-		
-				if (typeof(this.config.can_dim) == "string")
-				{	// This error should have been checked and fixe by the checkConfig() function, but this is a debugging check.
-					var error = chalk.red.bold("Program Error. can_dim setting has a type of 'string'. Should be 'boolean' for device with reference " + this.ref)
-					throw new SyntaxError(error);
-				}
-
-                if (this.config.can_dim == true) 
-				{
-					// this.log(chalk.magenta.bold("*Debug* Making lightbulb dimmable"));
-					
-					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model != "Z-Wave Switch Multilevel"))
-					{
-						this.log(chalk.magenta.bold("* Warning * - Check can_dim setting. Setting Lightbulb named " + this.name + " and HomeSeer reference " + this.config.ref + " as dimmable, but"));
-						this.log(chalk.magenta.bold("HomeSeer reports model type: " + this.model + " which is typically a non-dimmable type"));
-
-					}
-					
-                    lightbulbService
-                        .addCharacteristic(new Characteristic.Brightness())
-						.HSRef = this.config.ref;
-					
-					lightbulbService
-						.getCharacteristic(Characteristic.Brightness)
-                        .on('set', this.setHSValue.bind(lightbulbService.getCharacteristic(Characteristic.Brightness)));
-						
-					_statusObjects[this.config.ref].push(lightbulbService.getCharacteristic(Characteristic.Brightness));
-                }
-				else
-				{
-					if ( (this.model.indexOf("Z-Wave") != -1) && (this.model == "Z-Wave Switch Multilevel"))
-					{
-						this.log(chalk.magenta.bold("* Warning * - Check can_dim setting. Setting Lightbulb named " + this.name + " and HomeSeer reference " + this.config.ref + " as non-dimmable, but"));
-						this.log(chalk.magenta.bold("HomeSeer reports model type: " + this.model + " which is typically a dimmable type"));
-
-					}
-				}
-
-                services.push(lightbulbService);
-
-                break;
-            }
-        }
-		
-		 // If batteryRef has been defined, then add a battery service.
-                if (this.config.batteryRef) {
-                    // this.log("          Adding a Battery Service");
-
-                    var batteryService = new Service.BatteryService();
-					batteryService.displayName = "Service.BatteryService";
-					
-					batteryService
-                        .getCharacteristic(Characteristic.BatteryLevel)
-						.HSRef = this.config.batteryRef;
-						
-					batteryService
-                        .getCharacteristic(Characteristic.StatusLowBattery)
-						.HSRef = this.config.batteryRef;
-					
-					if (this.config.batteryThreshold == null) this.config.batteryThreshold = 25;
-					
-					batteryService
-                        .getCharacteristic(Characteristic.StatusLowBattery)
-						.batteryThreshold = this.config.batteryThreshold;						
-						
-                    services.push(batteryService);
-					
-					_statusObjects[this.config.batteryRef].push(batteryService.getCharacteristic(Characteristic.BatteryLevel));
-					_statusObjects[this.config.batteryRef].push(batteryService.getCharacteristic(Characteristic.StatusLowBattery));					
-                }
-				
-		// And add a basic Accessory Information service		
-        var informationService = new Service.AccessoryInformation();
-        informationService
-            .setCharacteristic(Characteristic.Manufacturer, "HomeSeer")
-            .setCharacteristic(Characteristic.Model, this.model)
-            .setCharacteristic(Characteristic.SerialNumber, "HS " + this.config.type + " ref " + this.ref);
-        services.push(informationService);
-		// 
-
+		// The following function gets all the services for a device and returns them in the array 'services' 
+		// and also populates the '_statusObjects' array with the Characteristics that need to be updated
+		// when polling HomeSeer
+		HKSetup.setupServices(this, services, _statusObjects, Characteristic, Service);
+	
         return services;
     }
 }
@@ -1423,167 +710,8 @@ HomeSeerEvent.prototype = {
 
 function updateCharacteristicFromHSData(characteristicObject)
 {
-	
 	// This performs the update to the HomeKit value from data received from HomeSeer
-	//Debug
-	// console.log("** Debug ** - Updating Characteristic %s with name %s and current value %s", characteristicObject.UUID, characteristicObject.displayName, characteristicObject.value)
-
-	if (characteristicObject.HSRef)
-	{
-		var newValue = getHSValue(characteristicObject.HSRef);
-		
-		// The following "if" is a quick check to see if any change is needed.
-		// if the HomeKit object value already matches what was received in the poll, then return and skip
-		// processing the rest of this function code!
-		// if ((pollingCount != 0) && (characteristicObject.value == newValue)) return; 
-
-
-		switch(true)
-		{
-			case(characteristicObject.UUID == Characteristic.StatusLowBattery.UUID):
-			{
-				// that.log("Battery Threshold status of battery level %s with threshold %s", newValue, characteristicObject.batteryThreshold);
-				characteristicObject.updateValue((newValue < characteristicObject.batteryThreshold) ? true : false);
-				break;
-			}
-			
-			// Window Coverings are only partially implemented!  Needs more testing with "real" devices.
-			case(characteristicObject.UUID == Characteristic.TargetPosition.UUID): 
-			case(characteristicObject.UUID == Characteristic.CurrentPosition.UUID): // For a Window Covering!
-			{
-				if ((newValue > 100) && (newValue < 255))
-				{	
-				console.log(chalk.bold.red("** Warning - Possible Illegal value for window covering setting"));
-				}
-				
-				// console.log(chalk.bold.magenta("Updating Characteristic: " + characteristicObject.displayName + " to value " + ((newValue == 255) ? 100 : newValue)  ));
-				
-				// If you get a value of 255, then its probably from a binary switch, so set as fully open.
-				// Else, its from a percentage-adjustable shade, so set to the percentage.
-				characteristicObject.updateValue( ( ((newValue == 255) || (newValue == 99)) ? 100 : newValue) );	
-				break;
-
-			}
-			
-			case(characteristicObject.UUID == Characteristic.CurrentDoorState.UUID): // For a Garage Door Opener
-			{
-				// console.log(chalk.magenta.bold("Debug - Setting CurrentDoorState to: " + newValue));
-				switch(newValue)
-				{
-					case(255):	{	characteristicObject.updateValue(0);	break;	} // Open
-					case(0):	{	characteristicObject.updateValue(1);	break;	} // Closed
-					case(254):	{	characteristicObject.updateValue(2);	break;	} // Opening
-					case(252):	{	characteristicObject.updateValue(3);	break;	} // Closing
-					case(253):	{	characteristicObject.updateValue(4);	break;	} // Stopped
-				}
-				break;
-			}
-			case(characteristicObject.UUID == Characteristic.LockCurrentState.UUID): // For a Lock.
-			{
-				// Set to 0 = UnSecured, 1 - Secured, 2 = Jammed.
-				// console.log("** Debug ** - Attempting LockCurrentState update with received HS value %s", newValue);
-				
-				switch(newValue)
-				{
-					case(0):	{	characteristicObject.updateValue(0);	break;	} // Locked
-					case(255):	{	characteristicObject.updateValue(1);	break;	} // unlocked
-					default:	{	characteristicObject.updateValue(2);	break;	} // unknown
-				}
-				break;
-			}
-			case (characteristicObject.UUID == Characteristic.TargetDoorState.UUID): // For garage door openers
-			{
-				// console.log(chalk.magenta.bold("Deug - Setting TargetDoorState to: " + newValue));
-				switch(newValue)
-				{
-					case(0):	{	characteristicObject.updateValue(1);	break;	} // Door Closed
-					case(255):	{	characteristicObject.updateValue(0);	break;	} // 255=Door Opened
-					default:	{ 	console.log("ERROR - Unexpected Lock Target State Value %s", newValue); break;}
-				}
-				break;
-			}			
-			
-			case (characteristicObject.UUID == Characteristic.LockTargetState.UUID): // For door locks
-			{
-				// console.log(chalk.magenta.bold("Deug - Setting TargetDoorState to: " + newValue));
-				switch(newValue)
-				{
-					case(0):	{	characteristicObject.updateValue(0);	break;	} // Lock Unlocked
-					case(255):	{	characteristicObject.updateValue(1);	break;	} // Lock Locked
-					default:	{ 	console.log("ERROR - Unexpected Lock Target State Value %s", newValue); break;}
-				}
-				break;
-			}
-			// The following is for garage door openers and is an attempt to map the Z-Wave "Barrier" class
-			// to an obstruction value. For some bizarre reason, some Z-Wave garage door openers use the value
-			// of 74 to indicate a low battery in the sensor so if we get that value, ignore it.
-			case( characteristicObject.UUID == Characteristic.ObstructionDetected.UUID ):
-			{
-				switch(newValue)
-				{
-					case(74): return; // The data was for a battery value update. Ignore it
-					case(0):{	characteristicObject.updateValue(0);	break;	} // No Event Value
-					default: {	characteristicObject.updateValue(1);	break;	} // Anything else, consider it obstructed.
-					
-				}
-				break;
-			}
-			case( characteristicObject.UUID == Characteristic.CarbonDioxideDetected.UUID ):
-			case( characteristicObject.UUID == Characteristic.CarbonMonoxideDetected.UUID):
-			case( characteristicObject.UUID == Characteristic.ContactSensorState.UUID 	):
-			case( characteristicObject.UUID == Characteristic.MotionDetected.UUID 	):
-			case( characteristicObject.UUID == Characteristic.LeakDetected.UUID 		):
-			case( characteristicObject.UUID == Characteristic.OccupancyDetected.UUID 	):
-			case( characteristicObject.UUID == Characteristic.SmokeDetected.UUID 	):
-			case( characteristicObject.UUID == Characteristic.On.UUID):
-			{
-				characteristicObject.updateValue( ((newValue) ? true: false) );
-				break;
-			}
-			
-			
-			// For the following characteristics, no special handling is needed.
-			// Simply provide HomeKit with whatever you got from HomeSeer
-			case(characteristicObject.UUID == Characteristic.CurrentAmbientLightLevel.UUID):
-			case(characteristicObject.UUID == Characteristic.CurrentRelativeHumidity.UUID):
-			case(characteristicObject.UUID == Characteristic.BatteryLevel.UUID):
-			{
-				characteristicObject.updateValue(parseFloat(newValue));
-				break;
-			}
-			
-			// Handling Percentage values
-			// The following characteristics are all exprssed in percentages.
-			// Homekit uses 0 - 100 values. However, Z-Wave generally uses 0 - 99.
-			// Simply passing the Z-wave value to HomeKit would result in HomeKit never showing 100%
-			// even when device is fully on. So force a Z-Wave "99" to appear as 100%.
-			case (characteristicObject.UUID == Characteristic.RotationSpeed.UUID):
-			case (characteristicObject.UUID == Characteristic.Brightness.UUID):
-			{
-					// Zwave uses 99 as its maximum. Make it appear as 100% in Homekit
-				characteristicObject.updateValue( (newValue == 99) ? 100 : newValue);
-				break;
-			}
-			case (characteristicObject.UUID == Characteristic.CurrentTemperature.UUID):
-			{
-				// HomeKit uses Celsius, so if HS is using Fahrenheit, convert to Celsius.
-				if (characteristicObject.HStemperatureUnit && (characteristicObject.HStemperatureUnit == "F")) 
-					{ newValue = (newValue -32 )* (5/9);}
-								
-				characteristicObject.updateValue(newValue);
-				break;
-			}
-
-			default:
-			{
-					console.log("** WARNING ** -- Possible Incorrect Value Assignment for characteristic %s set to value %s", characteristicObject.displayName, newValue);
-					characteristicObject.updateValue( newValue);
-			}
-		}; //end switch
-		
-		// Uncomment for debugging
-		// console.log("** Debug ** -   %s value after update is: %s", characteristicObject.displayName, characteristicObject.value);
-	} // end if
+	DataExchange.processDataFromHomeSeer(characteristicObject, this, Characteristic, getHSValue);
 }
 
 function updateAllFromHSData()
