@@ -1,29 +1,52 @@
 {
-  "name": "homebridge-homeseer-plugin-2018",
-  "version": "2.3.5",
+  "_from": "git://github.com/jvmahon/homebridge-homeseer.git#Development",
+  "_id": "homebridge-homeseer-plugin-2018@2.3.6",
+  "_inBundle": false,
+  "_location": "/homebridge-homeseer-plugin-2018",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "git",
+    "raw": "git://github.com/jvmahon/homebridge-homeseer.git#Development",
+    "rawSpec": "git://github.com/jvmahon/homebridge-homeseer.git#Development",
+    "saveSpec": "git://github.com/jvmahon/homebridge-homeseer.git#Development",
+    "fetchSpec": "git://github.com/jvmahon/homebridge-homeseer.git",
+    "gitCommittish": "Development"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "git://github.com/jvmahon/homebridge-homeseer.git#54d6180b379e619da7f04278ef9a798f847832a8",
+  "_spec": "git://github.com/jvmahon/homebridge-homeseer.git#Development",
+  "_where": "C:\\Users\\James",
+  "bugs": {
+    "url": "https://github.com/jvmahon/homebridge-homeseer/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "chalk": ">=1.1.1",
+    "hap-nodejs": ">=0.4.0",
+    "request": ">=2.83.0",
+    "request-promise-native": ">=1.0.0"
+  },
+  "deprecated": false,
   "description": "Homeseer Plugin for homebridge: https://github.com/jvmahon/homebridge-homeseer",
-  "license": "ISC",
+  "engines": {
+    "homebridge": ">=0.4.0",
+    "node": ">=6.0.0"
+  },
+  "homepage": "https://github.com/jvmahon/homebridge-homeseer#readme",
   "keywords": [
     "homebridge-plugin",
     "homebridge-homeseer",
     "homebridge-homeseer-plugin-2018",
     "homebridge-homeseer-2018"
   ],
+  "license": "ISC",
+  "name": "homebridge-homeseer-plugin-2018",
   "repository": {
     "type": "git",
-    "url": "git@github.com:jvmahon/homebridge-homeseer.git"
+    "url": "git+ssh://git@github.com/jvmahon/homebridge-homeseer.git"
   },
-  "bugs": {
-    "url": "https://github.com/jvmahon/homebridge-homeseer/issues"
-  },
-  "engines": {
-    "node": ">=6.0.0",
-    "homebridge": ">=0.4.0"
-  },
-  "dependencies": {
-    "request" : ">=2.83.0",
-    "request-promise-native" : ">=1.0.0",
-    "chalk": ">=1.1.1",
-    "hap-nodejs": ">=0.4.0"
-  }
+  "version": "2.3.6"
 }

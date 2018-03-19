@@ -11,40 +11,45 @@ If you have problems getting this to work, I will try to help, but please reveiw
 
 ## B. Overview of Recent Changes and Additions
 
-## B.1 **New in 2.3.5** - Thermostat and onValue Support
+## B.1 **New in 2.3.6** - Security System Support
+Security System support has been added. See sample configuration files in 'config' directory, and wiki pages for configuraiton parameter setings.
+
+Window Coverings can now accept an "openValue" and "closedValue" as well as a "binarySwitch" configuration parameter.See WindowCovering section, below.
+
+## B.2 **New in 2.3.5** - Thermostat and onValue Support
 
 Support has been added for Z-Wave Thermostats. This is still somewhat "untested" so post an issue if have any problems. See Section G of the Wiki page "Seting Up Your Config.json file" for more information on configuring thermostats. https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.
 
 	{"type":"Thermostat", "name":"Living Room", "ref":29, "setPointRef":28, "controlRef":27, "stateRef":26, "humidityRef":32, "humidityTargetRef":33, "temperatureUnit":"F"}
 	
-where "ref" is the current temperature device; "setPointRef" is the target temperature evice, "controlRef" is the device to select the heating mode (Off, Heat, Cool, Auto), and "stateRef" is the device that reports the working state of the system ("Off", "Heating", "Cooling"). The "temperatureUnit" setting is the unit used by your HomeSeer configuration.  Your iPhone's temperature unit is determined by the iPhone's system settings. You may also specify an optional humidity sensor via "humidityRef" and optional device to control relative humidity using "humidityTargetRef".
+where "ref" is the current temperature device; "setPointRef" is the target temperature device, "controlRef" is the device to select the heating mode (Off, Heat, Cool, Auto), and "stateRef" is the device that reports the working state of the system ("Off", "Heating", "Cooling"). The "temperatureUnit" setting is the unit used by your HomeSeer configuration.  Your iPhone's temperature unit is determined by the iPhone's system settings. You may also specify an optional humidity sensor via "humidityRef" and optional device to control relative humidity using "humidityTargetRef".
 
 This update also supports specification of an "onValue" parameter for lightbulb, outlet, fan, and switch accessories. This has been added to allow support of accessories which do not use the "default" Z-Wave value of 255 to turn on the accessory. For example, the Lutron plugin uses values 1-100 to turn on a Lutron bulb. May be also be used for Z-Wave dimmers to always turn the dimmer on to a set value when the accessory icon is tapped (e.g., "onValue":75 will always turn dimmer on to 75%). For Z-Wave, it is generally preferable to leave the onValue undefined which defaults to 255 (on-last-level). If specified for Z-Wave, onValue should be in the range 1-99 or 255.
 
-## B.2 **New in 2.3.1 ** - Window Coverings
+## B.3 **New in 2.3.1 ** - Window Coverings
 
 Control for simple window coverings has returned. To add a Window Covering, put a WindowCovering entry in the accessories section of your config.json file along the lines of:
 
-	{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"obstructionRef":716	}
+	{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"openValue":255, "closedValue: 0,  "obstructionRef":716	}
 
-The "binarySwitch" parameter is optional and used only if your widow covering is controlled by a binary switch and is limited to fully open / fully closed operation. This "should" be detected automatically, but add parameter if needed. The "obstructinRef" parameter is optional.
+The "binarySwitch" parameter is optional and used only if your widow covering is controlled by a binary switch and is limited to fully open / fully closed operation. This "should" be detected automatically, but add the parameter if it doesn't seem to detect correctly. The "openValue" and "closedValue" parameters can be used in conjunction with "binarySwitch" to specify the opening / closing values to be sent to / received from HomeSeer. The "obstructinRef" parameter is optional.
             
 See additional information in "Window Coverings" section of the Wiki entry  [Setting Up Your Config.json file.](https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.)
 
-## B.3 **New in Version 2.3 ** - Battery Detection, Bug Fixes
+## B.4 **New in Version 2.3 ** - Battery Detection, Bug Fixes
 
 Automatically detects if a Z-Wave device has an associated battery and detects/corrects when a wrong battery reference is specified for a device in config.json. 
 
 Also bug fixes for Garage Door Opener.
 
-## B.4 *New in Version 2.2.5 * - Easier Lighting Configuration
+## B.5 *New in Version 2.2.5 * - Easier Lighting Configuration
 Since lightbulbs are one of the most common accessories, the plugin has been updated to make it easier to specify lightbulb accessories. You no longer need to individually specify each as an accessory. Instead, you can specify the HomeSeer references for lightbulbs (both dimmable and binary-switched) as a group using the lightbulb group entry identifyer "lightbulbs" in your config.json file like so:
     
     "lightbulbs": [308, 311, 314, 317, 400, 415],
           
 See additional informatinon in "Lightbulbs Group" section of the Wiki entry  [Setting Up Your Config.json file.](https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.)
 
-## B.5. *New in Version 2.2 -* Garage Door Openers
+## B.6. *New in Version 2.2 -* Garage Door Openers
 Support for Garage Door Openers has returned. To add a garage door opener, put a GarageDoorOpener entry in the accessories section of your config.json file along the lines of:
 
     {"type":"GarageDoorOpener", "name":"myGarageDoor", "ref":648, "obstructionRef":649 },
@@ -52,14 +57,14 @@ Support for Garage Door Openers has returned. To add a garage door opener, put a
 See additional information in "Garage Door Openers" section of the Wiki entry  [Setting Up Your Config.json file.](https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.)
 
 
-## B.6. *New in Version 2.1 -* Instant Status Update Feature - Check it out!
+## B.7. *New in Version 2.1 -* Instant Status Update Feature - Check it out!
 In addition to the new polling mechanism, described below, this version can also retrieve "Instant" status updates without polling. To enable this feature, you must enable HomeSeer's "Enable Control using ASCII commands" feature which can be accessed from the HomeSeer browers interface at [Tools menu] -> [Setup] -> [Network tab].  Its recommened that you leave the control port at the default setting of "11000".  The plugin will automatically attempt a connection to HomeSeer using the ASCII commands feature and, if that is not available, will then revert to using polling over the HTTP / JSON interface for status updates. Status messages displayed during startup will let you know if the Instant Status feature has been enabled.
 
 When Instant Status is enbled, dimmer devices supporting the Last-Level feature (most Z-Wave Dimmers) will turn on to the last level they were at prior to being turned off rather than always turning on at 100%. You can specify the "onValue" parameter to override this default behavior.
 
 If Instant Status is enabled, polling is also reduced to once per minute. This shouldn't really be needed at all, but an occasionall poll is done out of caution to ensure that HomeBridge / HomeSeer remain properly synchronized.
 
-## B.7 Version 2.0 - What's Changed - New Features beyond jrhubott / Version 1.x plugin
+## B.8 Version 2.0 - What's Changed - New Features beyond jrhubott / Version 1.x plugin
 Version 2.0 of this plugin introduced a new polling mechanism in which all HomeSeer devices are polled in a single HTTP call rather than individual HTTP calls. This reduces the polling stress on HomeSeer and allows for much more frequent polling. A poll time of 5-10 seconds is recommended.
 
 ## C. Changes to config.json setup!
@@ -77,16 +82,6 @@ For further infomration on setting up the config.json file, see Wiki page entry 
   ** If you know of other mappings that can be included such as for the Fan, Outlet, MotionSensor, CarbonMonoxideSensor, CarbonDioxideSensor, ContactSensore, OccupancySensor, SmokeSensor, LightSensor, HumiditySensor types, please let me know and I'll include them
 
 Note that a user can manually alter their HomeSeer Device type (String) so this mapping mechanism only works if the user hasn't touched it!
-
-## C.2. Unsupported Devices
-The jrhubott/homebridge-homeseer plugin included support for several device types that are not supported in this updated -2018 plugin. These types include:
-
-* Door (but you can still configure a Lock)
-* Security System
-
-In order to allow continued use of these device types, I have implemented a slightly modified version of the original plugin which you can use in parallel with the -2018 plugin to support these devices. Of course, you won't get the instant-status updates and other features of the -2018 plugin, but you won't lose anything either. See the wiki entry "Using 'original' and 'new' Plugin in Parallel." (https://github.com/jvmahon/homebridge-homeseer/wiki/Using-'original'-and-'new'-Plugin-in-Parallel)]
-
-I may add support for some of these devices in the future; however, I don't have a schedule for doing so and may not be able to do so unless someone wants to donate to me devices for testing and implementing the feature.
 
 # D. Installation
 
