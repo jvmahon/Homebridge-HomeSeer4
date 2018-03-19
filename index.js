@@ -391,14 +391,10 @@ HomeSeerPlatform.prototype =
 				
 				this.log('HomeSeer status function succeeded!');
 				for (var i in this.config.accessories) {
-					for (var j = 0; j < response.Devices.length; j++) {
-						// Set up initial array of HS Response Values during startup
-						if (this.config.accessories[i].ref == response.Devices[j].ref) {
-							var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[j]);
-							foundAccessories.push(accessory);
-							break;
-						} //endif
-					} // endfor
+					let index = response.Devices.findIndex( (element, index, array)=> {return (element.ref == this.config.accessories[i].ref)} )
+					// Set up initial array of HS Response Values during startup
+					var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[index]);
+					foundAccessories.push(accessory);
 				} //endfor.
 				return response
 			}.bind(this))
@@ -460,11 +456,8 @@ HomeSeerPlatform.prototype =
 								var statusObjectGroup = _statusObjects[myData.ref];
 								for (var thisCharacteristic in statusObjectGroup)
 								{
-									// console.log(chalk.magenta.bold("Executing line 414 characteristic #: " + thisCharacteristic + " named " + statusObjectGroup[thisCharacteristic].displayName));
 									updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
 								}
-
-								// updateAllFromHSData();
 							} 
 						});
 					var numAttempts = 0;
@@ -475,7 +468,6 @@ HomeSeerPlatform.prototype =
 							
 							// Try to re-connect every 30 seconds If there is a failure, another error will be generated
 							// which will cause this code to run again.
-							
 							setTimeout( ()=>
 							{
 								numAttempts = numAttempts +1;
@@ -493,7 +485,8 @@ HomeSeerPlatform.prototype =
 						});
 				
 					// If there is an error setting up the ASCII status port, print a message. Note that client.on('close', ...) is automatically called
-					// by the 'error' listener and will cause code to try and re-open the port every 30 seconds.
+					// by the 'error' listener and will cause code to try and re-open the port after 30 seconds. A new error is raised and this cycle repeats
+					// if that fails.
 					client.on('error', (data) => 
 						{
 							this.log(chalk.red.bold("* Warning * - Unable to connect to HomeSeer ASCII Port: " + ASCIIPort + ". Instant Status Not Enabled."));
@@ -610,7 +603,24 @@ HomeSeerAccessory.prototype = {
 	setHSValue: function (level, callback) {
 		// Pass all the variables and functions used. There's probably a cleaner way to do this with module.exports but this works for now!
 		DataExchange.sendToHomeSeer(level, callback, HomeSeerHost, Characteristic, forceHSValue, getHSValue, instantStatusEnabled, this);
-    },
+    
+		// Strange special case of extra poll needed for window coverings that are controlled by a binary switch.
+		// For odd reason, if poll isn't done, then the icon remains in a changing state until next poll!
+		if (this.UUID == Characteristic.CurrentPosition.UUID || this.UUID == Characteristic.TargetPosition.UUID)
+		{
+				setTimeout ( ()=>
+				{
+					// console.log(chalk.cyan.bold("Window Covering Extra Polling!"));
+					var statusObjectGroup = _statusObjects[this.HSRef];
+					for (var thisCharacteristic in statusObjectGroup)
+					{
+						updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic]);
+					}
+				}, 500);
+		} 
+		
+	
+	},
 
     getServices: function () {
 				
