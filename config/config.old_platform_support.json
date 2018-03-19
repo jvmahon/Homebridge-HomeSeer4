@@ -40,6 +40,7 @@
 			{"type":"CarbonDioxideSensor",  	"ref":410, 	}, 
 			{"type":"GarageDoorOpener", 		"ref":411, 	},
 			{"type":"WindowCovering", 		"ref" 412, 	},	
+			{"type":"Thermostat", 			"ref":29, 	"setPointRef":28, 	"controlRef":27, 	"stateRef":26 }
 			{"type":"Lightbulb", 			"name":"Lamp", 			"ref":582    	},
 			{"type":"Lock",      			"name":"Front Door", 	"ref":600, 	"batteryRef":601, "batteryThreshold":30 },
 			{"type":"Switch",      			"name":"Hallway",  		"ref":620		},
@@ -52,7 +53,9 @@
 			{"type":"CarbonMonoxideSensor", "name":"Bedroom",  		"ref":690, 	"batteryRef":691, "batteryThreshold":30 },
 			{"type":"CarbonDioxideSensor",  "name":"Attic",  		"ref":700, 	"batteryRef":701, "batteryThreshold":30 },
 			{"type":"GarageDoorOpener", 		"name":"myGarageDoor", 	"ref":710, 	"obstructionRef":711 },
-			{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"obstructionRef":716	}			
+			{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"openValue":255, 	"closedValue":0, 	"obstructionRef":716	},
+			{"type":"Thermostat", 			"name":"Living Room", 	"ref":29, 	"setPointRef":28, 	"controlRef":27, 	"stateRef":26, 	"humidityRef":32, 	"humidityTargetRef":33, 	"temperatureUnit":"F"},
+			{"type":"SecuritySystem",	... see Readme and wiki documents for parameter settings }	
 			]
 		},
 	     {
@@ -62,12 +65,8 @@
 
 			"accessories":
 			[
-			{"type":"Thermostat", 			"name":"Bedroom", 		... add other parameters here ...},
-			{"type":"GarageDoorOpener",     "name":"Garage Door",  	... add other parameters here ...},
-			{"type":"SecuritySystem",      	"name":"Security",  		... add other parameters here ...},
 			{"type":"Window",      			"name":"Front Window",  	... add other parameters here ...},
-			{"type":"WindowCovering",      	"name":"Shade",  		... add other parameters here ...},
-			{"type":"Battery",				"name":"Radio",  		... add other parameters here ...}		 
+			{"type":"Door",      			"name":"Front Door",  	... add other parameters here ...},
 			]
 		}		
 
