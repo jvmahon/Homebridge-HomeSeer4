@@ -52,7 +52,7 @@
 			{"type":"CarbonMonoxideSensor", 	"name":"Bedroom",  	"ref":690, 	"batteryRef":691, "batteryThreshold":30 },
 			{"type":"CarbonDioxideSensor",  	"name":"Attic"  	"ref":700, 	"batteryRef":701, "batteryThreshold":30 }, 
 			{"type":"GarageDoorOpener", 		"name":"myGarageDoor", 	"ref":710, 	"obstructionRef":711 },
-			{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"obstructionRef":716	}
+			{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"openValue":255, 	"closedValue":0, 	"obstructionRef":716	}
 			]
 		}
 
