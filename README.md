@@ -4,6 +4,9 @@
 
 The homebridge-homeseer-plugin-2018 is an open-source plugin for the homebridge environment. This plugin, when used with homebridge, acts as a bridge between Apple's HomeKit platform and HomeSeer home automation software. The homebridge-homeseer-plugin-2018 supports common Z-Wave device including lights, switches, sensors, locks, and garage door openers. 
 
+### Known Problems - Thermostats
+2018-03-21: I'm aware that the "Auto" mode does not work corrctly for thermostats and that the current implementation does not work correctly with thermostats using separate Heating and Cooling setpoints. I expect a fix in version 2.4. I expect this to be fixed within 4 weeks.
+
 ## A. New Installation and Setup Wiki Pages 
 Please see the Wiki pages for instructions on Installing HomeBridge on Windows 10 and Linux and for enabling the Instant Status feature.
 
@@ -11,12 +14,23 @@ If you have problems getting this to work, I will try to help, but please reveiw
 
 ## B. Overview of Recent Changes and Additions
 
-## B.1 **New in 2.3.6** - Security System Support
+## B.1 **New in 2.3.8** - Valves and Improved Error Checking
+Support for simple water valves has been added. To add a valve, put an entry of the following form in your config.json
+
+     {"type":"Valve", "ref":123, "openValve":255, "closeValve":0}
+
+where "ref" specifies the HomeSeer reference controlling the valve. The "openValve" and "closeValve" parameters are optional and do not need to be specified if your device uses the 'typical' values of 255 for open, 0 for closed.
+
+I have not yet implemented valve timers. That may come in the future.
+
+Additional config.json error checking has been added to catch some more common errors like incorrectly specified parameters and incorrectly identified HomeSeer references.
+
+## B.2 **New in 2.3.6** - Security System Support
 Security System support has been added. See sample configuration files in 'config' directory, and wiki pages for configuraiton parameter setings.
 
 Window Coverings can now accept an "openValue" and "closedValue" as well as a "binarySwitch" configuration parameter.See WindowCovering section, below.
 
-## B.2 **New in 2.3.5** - Thermostat and onValue Support
+## B.3 **New in 2.3.5** - Thermostat and onValue Support
 
 Support has been added for Z-Wave Thermostats. This is still somewhat "untested" so post an issue if have any problems. See Section G of the Wiki page "Seting Up Your Config.json file" for more information on configuring thermostats. https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.
 
@@ -26,7 +40,7 @@ where "ref" is the current temperature device; "setPointRef" is the target tempe
 
 This update also supports specification of an "onValue" parameter for lightbulb, outlet, fan, and switch accessories. This has been added to allow support of accessories which do not use the "default" Z-Wave value of 255 to turn on the accessory. For example, the Lutron plugin uses values 1-100 to turn on a Lutron bulb. May be also be used for Z-Wave dimmers to always turn the dimmer on to a set value when the accessory icon is tapped (e.g., "onValue":75 will always turn dimmer on to 75%). For Z-Wave, it is generally preferable to leave the onValue undefined which defaults to 255 (on-last-level). If specified for Z-Wave, onValue should be in the range 1-99 or 255.
 
-## B.3 **New in 2.3.1 ** - Window Coverings
+## B.4 **New in 2.3.1 ** - Window Coverings
 
 Control for simple window coverings has returned. To add a Window Covering, put a WindowCovering entry in the accessories section of your config.json file along the lines of:
 
@@ -36,20 +50,22 @@ The "binarySwitch" parameter is optional and used only if your widow covering is
             
 See additional information in "Window Coverings" section of the Wiki entry  [Setting Up Your Config.json file.](https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.)
 
-## B.4 **New in Version 2.3 ** - Battery Detection, Bug Fixes
+## B.5 **New in Version 2.3 ** - Battery Detection, Bug Fixes
 
 Automatically detects if a Z-Wave device has an associated battery and detects/corrects when a wrong battery reference is specified for a device in config.json. 
 
 Also bug fixes for Garage Door Opener.
 
-## B.5 *New in Version 2.2.5 * - Easier Lighting Configuration
-Since lightbulbs are one of the most common accessories, the plugin has been updated to make it easier to specify lightbulb accessories. You no longer need to individually specify each as an accessory. Instead, you can specify the HomeSeer references for lightbulbs (both dimmable and binary-switched) as a group using the lightbulb group entry identifyer "lightbulbs" in your config.json file like so:
+## B.6 *New in Version 2.2.5 * - Easier Lighting Configuration
+Since lightbulbs are one of the most common accessories, the plugin has been updated to make it easier to specify Z-Wave lightbulb accessories. You no longer need to individually specify each as an accessory. Instead, you can specify the HomeSeer references for lightbulbs (both dimmable and binary-switched) as a group using the lightbulb group entry identifyer "lightbulbs" in your config.json file like so:
     
     "lightbulbs": [308, 311, 314, 317, 400, 415],
-          
+
+NOTE: This only works for Lightbulbs that use the value "255" as the turn-on value ("Last" brihtness setting). If your lights are Z-Wave, then you should be O.K. as "255" is the standard "Last" brightness value for Z-Wave.
+
 See additional informatinon in "Lightbulbs Group" section of the Wiki entry  [Setting Up Your Config.json file.](https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.)
 
-## B.6. *New in Version 2.2 -* Garage Door Openers
+## B.7. *New in Version 2.2 -* Garage Door Openers
 Support for Garage Door Openers has returned. To add a garage door opener, put a GarageDoorOpener entry in the accessories section of your config.json file along the lines of:
 
     {"type":"GarageDoorOpener", "name":"myGarageDoor", "ref":648, "obstructionRef":649 },
@@ -57,15 +73,8 @@ Support for Garage Door Openers has returned. To add a garage door opener, put a
 See additional information in "Garage Door Openers" section of the Wiki entry  [Setting Up Your Config.json file.](https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.)
 
 
-## B.7. *New in Version 2.1 -* Instant Status Update Feature - Check it out!
-In addition to the new polling mechanism, described below, this version can also retrieve "Instant" status updates without polling. To enable this feature, you must enable HomeSeer's "Enable Control using ASCII commands" feature which can be accessed from the HomeSeer browers interface at [Tools menu] -> [Setup] -> [Network tab].  Its recommened that you leave the control port at the default setting of "11000".  The plugin will automatically attempt a connection to HomeSeer using the ASCII commands feature and, if that is not available, will then revert to using polling over the HTTP / JSON interface for status updates. Status messages displayed during startup will let you know if the Instant Status feature has been enabled.
-
-When Instant Status is enbled, dimmer devices supporting the Last-Level feature (most Z-Wave Dimmers) will turn on to the last level they were at prior to being turned off rather than always turning on at 100%. You can specify the "onValue" parameter to override this default behavior.
-
-If Instant Status is enabled, polling is also reduced to once per minute. This shouldn't really be needed at all, but an occasionall poll is done out of caution to ensure that HomeBridge / HomeSeer remain properly synchronized.
-
-## B.8 Version 2.0 - What's Changed - New Features beyond jrhubott / Version 1.x plugin
-Version 2.0 of this plugin introduced a new polling mechanism in which all HomeSeer devices are polled in a single HTTP call rather than individual HTTP calls. This reduces the polling stress on HomeSeer and allows for much more frequent polling. A poll time of 5-10 seconds is recommended.
+## B.8. *New in Version 2.1 -* Instant Status Update Feature - Check it out!
+Version 2.1 introduced an "Instant" status feature which provides near-instantaneous status updates from HomeSeer. To enable this feature, you must enable HomeSeer's "Enable Control using ASCII commands" feature. See Wiki entry: https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port) 
 
 ## C. Changes to config.json setup!
 For further infomration on setting up the config.json file, see Wiki page entry at: https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.
@@ -104,4 +113,4 @@ Extreme caution should be used when using this plugin with sensors and, in parti
 ## F. Credits
 This plugin is for use with [homebridge](https://github.com/nfarina/homebridge) Apple iOS Homekit support application to support integration with the [Homeseer V3](http://www.homeseer.com/home-control-software.html) software
 
-Based on and includes code from [hap-nodejs](https://github.com/KhaosT/HAP-NodeJS) and [homebridge-legacy-plugins](https://github.com/nfarina/homebridge-legacy-plugins) and [homebridge-homeseer-plugin](https://github.com/jrhubott/homebridge-homeseer) and others cited therei.
+Based on and includes code from [hap-nodejs](https://github.com/KhaosT/HAP-NodeJS) and [homebridge-legacy-plugins](https://github.com/nfarina/homebridge-legacy-plugins) and [homebridge-homeseer-plugin](https://github.com/jrhubott/homebridge-homeseer) and others cited therein.

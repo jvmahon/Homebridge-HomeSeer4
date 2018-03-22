@@ -270,6 +270,7 @@ HomeSeerPlatform.prototype =
 				for (var i in self.config.accessories)
 				{
 					var deviceBattery = findBattery(self.config.accessories[i].ref);
+					if (deviceBattery == (-1)) { continue };
 					if ((self.config.accessories[i].batteryRef == null) && (deviceBattery != (-1)))
 					{
 						console.log(chalk.magenta.bold("Device Reference #: " + self.config.accessories[i].ref 
@@ -295,77 +296,45 @@ HomeSeerPlatform.prototype =
 			}) // end then's function
 		.then (()=> 
 			{
-				
-				//////////////////  Identify all of the HomeSeer References of interest  /////////////////////////
-				var allHSRefs = [];
-					allHSRefs.pushUnique = function(item) { if (this.indexOf(item) == -1) this.push(item); }
+				//////////////////  Identify all of the HomeSeer References of interest  ////////////
+				// These are used to obtain status data from HomeSeer
 
+				var allHSRefs = [];
+					allHSRefs.pushUnique = function(item) //Pushes into onto stack if it isn't null. Can be chained!
+						{ 
+	
+							if (item === undefined) return this;
+							if (item == null) return this;
+							if (isNaN(item)) throw new SyntaxError("You specified: '" + item +"' as a HomeSeer references, but it is not a number. You need to fix it to continue");
+							if (!Number.isInteger(parseFloat(item))) throw new SyntaxError("You specified: '" + item +"' as a HomeSeer references, but it is not an Integer. You need to fix it to continue");
+							if (this.indexOf(item) == -1) this.push(parseInt(item)); 
+								return this
+						}
 			
 				for (var i in this.config.accessories) 
 				{
-					// console.log(chalk.bold.green("Returned Battery  Value" + findBattery(this.config, this.config.accessories[i].ref) ));
-
-					// refList.push(this.config.accessories[i].ref);
-					
-					allHSRefs.pushUnique(this.config.accessories[i].ref);
-					
-					_HSValues[this.config.accessories[i].ref] = parseFloat(0);
-					
-					if(_statusObjects[this.config.accessories[i].ref] === undefined)  _statusObjects[this.config.accessories[i].ref] = [];
-					
-					// Add extra references if the device had a battery
-					if(this.config.accessories[i].batteryRef) 
-					{
-						if(_statusObjects[this.config.accessories[i].batteryRef] === undefined) _statusObjects[this.config.accessories[i].batteryRef] = [];
-						allHSRefs.pushUnique(this.config.accessories[i].batteryRef);
-						_HSValues[this.config.accessories[i].batteryRef] = parseFloat(0);
-					}
-					// Add an extra references for Garage Door Openers
-					if(this.config.accessories[i].obstructionRef) 
-					{
-						if(_statusObjects[this.config.accessories[i].obstructionRef] === undefined) _statusObjects[this.config.accessories[i].obstructionRef] = [];
-						allHSRefs.pushUnique(this.config.accessories[i].obstructionRef);
-						_HSValues[this.config.accessories[i].obstructionRef] = parseFloat(0);
-					}
-					
-					// Add additional references used by Thermostats!
-					if(this.config.accessories[i].stateRef)
-					{
-						if(_statusObjects[this.config.accessories[i].stateRef] === undefined) _statusObjects[this.config.accessories[i].stateRef] = [];
-						allHSRefs.pushUnique(this.config.accessories[i].stateRef);
-						_HSValues[this.config.accessories[i].stateRef] = parseFloat(0);
-					}
-					// Thermostat
-					if(this.config.accessories[i].controlRef)
-					{
-						if(_statusObjects[this.config.accessories[i].controlRef] === undefined) _statusObjects[this.config.accessories[i].controlRef] = [];
-						allHSRefs.pushUnique(this.config.accessories[i].controlRef);
-						_HSValues[this.config.accessories[i].controlRef] = parseFloat(0);
-					}
-					// Thermostat 
-					if(this.config.accessories[i].setPointRef)
-					{
-						if(_statusObjects[this.config.accessories[i].setPointRef] === undefined) _statusObjects[this.config.accessories[i].setPointRef] = [];
-						allHSRefs.pushUnique(this.config.accessories[i].setPointRef);
-						_HSValues[this.config.accessories[i].setPointRef] = parseFloat(0);
-					}
-					if(this.config.accessories[i].humidityRef)
-					{
-						if(_statusObjects[this.config.accessories[i].humidityRef] === undefined) _statusObjects[this.config.accessories[i].humidityRef] = [];
-						allHSRefs.pushUnique(this.config.accessories[i].humidityRef);
-						_HSValues[this.config.accessories[i].humidityRef] = parseFloat(0);
-					}
-					if(this.config.accessories[i].humidityTargetRef)
-					{
-						if(_statusObjects[this.config.accessories[i].humidityTargetRef] === undefined) _statusObjects[this.config.accessories[i].humidityTargetRef] = [];
-						allHSRefs.pushUnique(this.config.accessories[i].humidityTargetRef);
-						_HSValues[this.config.accessories[i].humidityTargetRef] = parseFloat(0);
-					}					
-					
+					// Gather every reference that isn't undefined or null!
+					allHSRefs
+						.pushUnique(this.config.accessories[i].ref)
+						.pushUnique(this.config.accessories[i].batteryRef)
+						.pushUnique(this.config.accessories[i].obstructionRef)
+						.pushUnique(this.config.accessories[i].stateRef)
+						.pushUnique(this.config.accessories[i].controlRef)
+						.pushUnique(this.config.accessories[i].setPointRef)	
+						.pushUnique(this.config.accessories[i].humidityRef)
+						.pushUnique(this.config.accessories[i].humidityTargetRef)
 				} // end for
 				
-				//Sorted list of all HomeSeer References. Used to obtain status data from HomeSeer
-				allHSRefs.sort();
+				for (var j =0; j< allHSRefs.length; j++)
+				{
+					// console.log(chalk.cyan.bold("*Debug* - Checking allHSRefs has references: " + allHSRefs[j] + " at location: " + j ));
+					if(_statusObjects[allHSRefs[j]] === undefined) _statusObjects[allHSRefs[j]] = [];
+					_HSValues[allHSRefs[j]] = parseFloat(0);
+				}
+								
+				allHSRefs.sort( (a,b) => (a-b) ); // the internal function (a,b) => (a-b) causes a numeric order sort instead of alpha!
+				
+				// console.log(chalk.cyan.bold("*Debug* - All HomeSeer References Identified in config.json are: " + allHSRefs.concat()  ));
 
 				/////////////////////////////////////////////////////////////////////////////////
 
@@ -379,6 +348,12 @@ HomeSeerPlatform.prototype =
 				return promiseHTTP({ uri: allStatusUrl, json:true})	
 				
 			}) // End of gathering HomeSeer references
+		.catch((err) => 
+			{
+				console.log(chalk.magenta.bold("Error Gathering HomeSeer Device References: " + err));
+				err = chalk.red.bold(err + " Check if HomeSeer is running, then start homebridge again.");
+				throw err;
+			})
 		
 		// Next - For each device value retrieved from HomeSeer, store it in the _HSValues array 
 		// and  create HomeKit Accessories for each accessory in the config.json 'accessories' array!		
@@ -393,7 +368,20 @@ HomeSeerPlatform.prototype =
 				for (var i in this.config.accessories) {
 					let index = response.Devices.findIndex( (element, index, array)=> {return (element.ref == this.config.accessories[i].ref)} )
 					// Set up initial array of HS Response Values during startup
+				try 
+				{
 					var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[index]);
+				} catch(err) 
+					{
+						console.log(chalk.magenta.bold(
+						"\n\n** Error ** creating new HomeSeerAccessory in file index.js.\n" +
+						"This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. \n" +
+						"Check all reference numbers and be sure HomeSeer is running. Stopping operation\n" +
+						"Check Accessory No: " + (i+1) + ", of type: "+ this.config.accessories[i].type +", and which identifies a reference No.: " + this.config.accessories[i].ref + "\n"
+						)); 
+						console.log(chalk.red.bold(err));	
+						throw err
+					}			
 					foundAccessories.push(accessory);
 				} //endfor.
 				return response
@@ -601,9 +589,10 @@ HomeSeerAccessory.prototype = {
 
 	// setHSValue function should be bound by .bind() to a HomeKit Service Object Characteristic!
 	setHSValue: function (level, callback) {
+		
 		// Pass all the variables and functions used. There's probably a cleaner way to do this with module.exports but this works for now!
 		DataExchange.sendToHomeSeer(level, callback, HomeSeerHost, Characteristic, forceHSValue, getHSValue, instantStatusEnabled, this);
-    
+  
 		// Strange special case of extra poll needed for window coverings that are controlled by a binary switch.
 		// For odd reason, if poll isn't done, then the icon remains in a changing state until next poll!
 		if (this.UUID == Characteristic.CurrentPosition.UUID || this.UUID == Characteristic.TargetPosition.UUID)
@@ -618,7 +607,7 @@ HomeSeerAccessory.prototype = {
 					}
 				}, 500);
 		} 
-		
+
 	
 	},
 
@@ -752,44 +741,54 @@ module.exports.platform = HomeSeerPlatform;
 
 function findBattery(findRef)
 {
-	var returnValue = 9999;
-			
-	// first find the index of the HomeSeer device having the reference findRef
-	var deviceIndex = allHSDevices.findIndex( (element, index, array)=> {return (element.ref == findRef)} );
-	if (deviceIndex == -1) return (-1);
-	
-	var thisDevice = allHSDevices[deviceIndex]; // this is the HomeSeer data for the device being checked!
-	if ((thisDevice.associated_devices == null) || (thisDevice.associated_devices.length == 0)) return (-1);
-
-	
-	// The associated device should be a root device. Get it! ...
-	var rootDevice = allHSDevices[ allHSDevices.findIndex( (element, index, array)=> {return (element.ref == thisDevice.associated_devices)} )];
-	
-	if(rootDevice.device_type_string.indexOf("Battery") != (-1)) return (rootDevice.ref);
-	
-	if(rootDevice.device_type_string.indexOf("Root Device") != (-1)) // if true, we found the root device. Check all its elements for a battery
+	try
 	{
-		// console.log(chalk.green.bold("Found a Root Device with associated devices: " + rootDevice.associated_devices));
+		var returnValue = 9999;
+				
+		// first find the index of the HomeSeer device having the reference findRef
+		var deviceIndex = allHSDevices.findIndex( (element, index, array)=> {return (element.ref == findRef)} );
+		if (deviceIndex == -1) return (-1);
 		
-		// does the found device have associated devices?
-		if (rootDevice.associated_devices != null)
+		var thisDevice = allHSDevices[deviceIndex]; // this is the HomeSeer data for the device being checked!
+		if ((thisDevice.associated_devices == null) || (thisDevice.associated_devices.length == 0)) return (-1);
+
+		
+		// The associated device should be a root device. Get it! ...
+		var rootDevice = allHSDevices[ allHSDevices.findIndex( (element, index, array)=> {return (element.ref == thisDevice.associated_devices)} )];
+		
+		if(rootDevice.device_type_string.indexOf("Battery") != (-1)) return (rootDevice.ref);
+		
+		if(rootDevice.device_type_string.indexOf("Root Device") != (-1)) // if true, we found the root device. Check all its elements for a battery
 		{
-			for (var j in rootDevice.associated_devices)
+			// console.log(chalk.green.bold("Found a Root Device with associated devices: " + rootDevice.associated_devices));
+			
+			// does the found device have associated devices?
+			if (rootDevice.associated_devices != null)
 			{
-				var checkDeviceIndex = allHSDevices.findIndex( (element, index, array)=> {return (element.ref == rootDevice.associated_devices[j])} )
-				if (checkDeviceIndex != -1)
+				for (var j in rootDevice.associated_devices)
 				{
-					var candidateDevice = allHSDevices[checkDeviceIndex]
-					if (candidateDevice.device_type_string.indexOf("Battery") != -1)
+					var checkDeviceIndex = allHSDevices.findIndex( (element, index, array)=> {return (element.ref == rootDevice.associated_devices[j])} )
+					if (checkDeviceIndex != -1)
 					{
-						// console.log(chalk.bold.red("Found a Battery reference: " + candidateDevice.ref + " for device reference " + findRef));
-						return (candidateDevice.ref);
+						var candidateDevice = allHSDevices[checkDeviceIndex]
+						if (candidateDevice.device_type_string.indexOf("Battery") != -1)
+						{
+							// console.log(chalk.bold.red("Found a Battery reference: " + candidateDevice.ref + " for device reference " + findRef));
+							return (candidateDevice.ref);
+						}
 					}
 				}
 			}
-		}
-	}	
-	return (-1);
+		}	
+		return (-1);
+	}
+	catch(err)
+	{
+		console.log(chalk.yellow.bold("Warning - Error Executing Find Battery Function for device with HomeSeer reference: " + findRef));
+		console.log(chalk.yellow.bold("Find Battery function may not function for non-Z-Wave devices. Manually specify your battery! " ));
+		console.log(chalk.yellow.bold("Error: " + err));
+		return(-1);
+	}
 }
 
 

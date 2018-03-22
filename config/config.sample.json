@@ -42,6 +42,7 @@
 			{"type":"WindowCovering", 		"ref" 412, 	},				
 			{"type":"Thermostat", 			"ref":29, 	"setPointRef":28, 	"controlRef":27, 	"stateRef":26 }
 			{"type":"SecuritySystem",	... see Readme and wiki documents for parameter settings },
+			{"type":"Valve", "ref":123}
 			{"type":"Lightbulb", 			"name":"Lamp", 		"ref":582    	},
 			{"type":"Lock",      			"name":"Front Door",  	"ref":600, 	"batteryRef":601, "batteryThreshold":30 },
 			{"type":"Switch",      			"name":"Hallway",  	"ref":620	},
@@ -56,7 +57,8 @@
 			{"type":"GarageDoorOpener", 		"name":"myGarageDoor", 	"ref":710, 	"obstructionRef":711 },
 			{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"obstructionRef":716	},
 			{"type":"Thermostat", 			"name":"Living Room", 	"ref":29, 	"setPointRef":28, 	"controlRef":27, 	"stateRef":26, 	"humidityRef":32, 	"humidityTargetRef":33, 	"temperatureUnit":"F"},
-			{"type":"SecuritySystem",	... see Readme and wiki documents for parameter settings }
+			{"type":"SecuritySystem",	... see Readme and wiki documents for parameter settings },
+			{"type":"Valve", "ref":123, "openValve":255, "closeValve":0}
 			]
 		}
 
