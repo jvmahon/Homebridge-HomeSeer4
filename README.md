@@ -11,7 +11,7 @@ If you have problems getting this to work, I will try to help, but please reveiw
 
 ## B. Overview of Recent Changes and Additions
 
-## B.1 **New in 2.3.9** - Thermostat Fixes, Valves and Improved Error Checking
+## B.1 **New in 2.3.10** - Thermostat Fixes, Valves and Improved Error Checking
 
 The Thermostat type has been updates to support separate heating and cooling setpoints. You should no longer use a setPointRef, but instead, should set coolingSetpointRef to the HomeSeer device that controls temperature in cooling mode, and heatingSetpointRef to the HomeSeer device that controls the temperature in heating mode.
 
