@@ -4,9 +4,6 @@
 
 The homebridge-homeseer-plugin-2018 is an open-source plugin for the homebridge environment. This plugin, when used with homebridge, acts as a bridge between Apple's HomeKit platform and HomeSeer home automation software. The homebridge-homeseer-plugin-2018 supports common Z-Wave device including lights, switches, sensors, locks, and garage door openers. 
 
-### Known Problems - Thermostats
-2018-03-21: I'm aware that the "Auto" mode does not work corrctly for thermostats and that the current implementation does not work correctly with thermostats using separate Heating and Cooling setpoints. I expect a fix in version 2.4. I expect this to be fixed within 4 weeks.
-
 ## A. New Installation and Setup Wiki Pages 
 Please see the Wiki pages for instructions on Installing HomeBridge on Windows 10 and Linux and for enabling the Instant Status feature.
 
@@ -14,7 +11,10 @@ If you have problems getting this to work, I will try to help, but please reveiw
 
 ## B. Overview of Recent Changes and Additions
 
-## B.1 **New in 2.3.8** - Valves and Improved Error Checking
+## B.1 **New in 2.3.9** - Thermostat Fixes, Valves and Improved Error Checking
+
+The Thermostat type has been updates to support separate heating and cooling setpoints. You should no longer use a setPointRef, but instead, should set coolingSetpointRef to the HomeSeer device that controls temperature in cooling mode, and heatingSetpointRef to the HomeSeer device that controls the temperature in heating mode.
+
 Support for simple water valves has been added. To add a valve, put an entry of the following form in your config.json
 
      {"type":"Valve", "ref":123, "openValve":255, "closeValve":0}
