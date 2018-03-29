@@ -184,6 +184,8 @@ var _HSValues = [];
 // After HomeSeer is polled, each item in this array is analyzed by the updateAllFromHSData() function to determine 
 // if it needs to be updated.
 var _statusObjects = []; 
+
+// Currently the HomeSeer variable is used as a global to allow access to the log variable (function) 
 var HomeSeer = [];
 var HomeSeerHost = "";
 
@@ -329,7 +331,7 @@ HomeSeerPlatform.prototype =
 						.pushUnique(this.config.accessories[i].obstructionRef)
 						.pushUnique(this.config.accessories[i].stateRef)
 						.pushUnique(this.config.accessories[i].controlRef)
-						// .pushUnique(this.config.accessories[i].setPointRef)	
+						.pushUnique(this.config.accessories[i].doorSensorRef)	
 						.pushUnique(this.config.accessories[i].humidityRef)
 						.pushUnique(this.config.accessories[i].humidityTargetRef)
 						.pushUnique(this.config.accessories[i].coolingSetpointRef)
@@ -511,7 +513,7 @@ HomeSeerPlatform.prototype =
 
 				if(instantStatusEnabled)
 				{
-					this.config.platformPoll = 60;
+					this.config.platformPoll = 30;
 					this.log(green("Reducing HomeSeer polling rate to: ") + cyan(this.config.platformPoll) + green(" seconds."))
 
 				}
@@ -526,12 +528,12 @@ HomeSeerPlatform.prototype =
 							.then( function(json) 
 								{
 									_currentHSDeviceStatus = json.Devices;
-									that.log("Poll # " + cyan(pollingCount) + ": Retrieved values for " + cyan(_currentHSDeviceStatus.length) + " HomeSeer references.");
+									that.log(cyan("Poll # " + pollingCount) + ": Retrieved values for " + cyan(_currentHSDeviceStatus.length) + " HomeSeer devices.");
 									if(instantStatusEnabled == false && ((pollingCount % 5) == 0)) // only display once every 5 polls!
 									{
-										that.log(chalk.red.bold("* Warning * - Instant status not enabled. Operating in polling mode only which may degrade performance."));
-										that.log(chalk.red.bold('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
-										that.log(chalk.red.bold("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));											
+										that.log(red("* Warning * - Instant status not enabled. Operating in polling mode only which may degrade performance."));
+										that.log(red('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
+										that.log(red("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));											
 									}
 									for (var index in _currentHSDeviceStatus)
 									{
@@ -553,6 +555,32 @@ HomeSeerPlatform.prototype =
 
 				return true;
 			});
+			/*
+			.then( (data)=>
+			{
+				_HSValues.forEach( (element, index) => 
+				{
+					promiseHTTP({ uri: HomeSeerHost + "/JSON?request=getstatus&ref=" + index, json:true})
+					.then( (jsonData) => 
+						{
+							console.log("Testing Comunications with HomeSeer - retrieved data value: " + jsonData.Devices[0].value +", for reference: " +index)
+							
+							promiseHTTP({ uri: HomeSeerHost + "/JSON?request=controldevicebyvalue&ref=" + index + "&value=" + jsonData.Devices[0].value, json:false})
+							.catch((error) => 
+								{
+									console.log(red("Failed to Access HomeSeer device with reference: " + index ));
+									console.log(red(error));
+								});
+							return true;
+						})
+					.catch((error) => 
+						{
+						console.log(red("Failed Accessing HomeSeer Device with Reference: " + index))
+						});
+
+				})
+			});
+			*/
 	}
 }
 
@@ -605,10 +633,11 @@ HomeSeerAccessory.prototype = {
 		
 		// Pass all the variables and functions used. There's probably a cleaner way to do this with module.exports but this works for now!
 		this.log = HomeSeer.log;
-		DataExchange.sendToHomeSeer(level, callback, HomeSeerHost, Characteristic, Service, forceHSValue, getHSValue, instantStatusEnabled, this);
+		DataExchange.sendToHomeSeer(level, HomeSeerHost, Characteristic, Service, forceHSValue, getHSValue, instantStatusEnabled, this);
   
 		// Strange special case of extra poll needed for window coverings that are controlled by a binary switch.
-		// For odd reason, if poll isn't done, then the icon remains in a changing state until next poll!
+		// But which were adjused using the slider. If poll isn't done, then the icon remains in a changing state until next poll!
+		// If the slider set a target state that wasn't 0 or 100
 		if (this.UUID == Characteristic.CurrentPosition.UUID || this.UUID == Characteristic.TargetPosition.UUID)
 		{
 				setTimeout ( ()=>
@@ -621,6 +650,7 @@ HomeSeerAccessory.prototype = {
 					}
 				}, 500);
 		} 
+		callback(null);
 
 	},
 	
@@ -635,7 +665,7 @@ HomeSeerAccessory.prototype = {
 			.then( function(returnData) {
 				if(returnData.trim() == "error")
 				{
-					console.log(chalk.red.bold("transmitToHS Error sending: " + level +", to: " + ref ));
+					console.log(red("transmitToHS Error sending: " + level +", to: " + ref ));
 					return false
 				}
 				else 
@@ -645,7 +675,7 @@ HomeSeerAccessory.prototype = {
 			})
 			.catch(function(err)
 				{ 	
-				console.log(chalk.red.bold("transmitToHS function Failed with error: " + err ));
+				console.log(red("transmitToHS function Failed with error: " + err ));
 				return false;
 				}
 			);

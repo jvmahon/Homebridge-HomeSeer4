@@ -58,7 +58,7 @@
 			{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"obstructionRef":716	},
 			{"type":"Thermostat", "name":"Living Room", "ref":5, "heatingSetpointRef":6, "coolingSetpointRef":9, "controlRef":4, "stateRef":7, "temperatureUnit":"F"},
 			{"type":"SecuritySystem",	... see Readme and wiki documents for parameter settings },
-			{"type":"Valve", "ref":123, "openValve":255, "closeValve":0}
+			{"type":"Valve", "ref":123, "openValve":255, "closeValve":0, "useTimer":true, "minTime":30}
 			]
 		},
 	     {
