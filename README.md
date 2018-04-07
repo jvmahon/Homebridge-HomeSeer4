@@ -2,14 +2,33 @@
 
 # homebridge-homeseer-plugin-2018
 
+### For the most up-to-date information, see: https://github.com/jvmahon/homebridge-homeseer/
+
+Information on github and in the wiki section may be more up-to-date than in the README file downloaded from 'npm'. Its strongly recommended that you check the github.com information (both the README and the wiki section) for up-to-date information and assistance.
+
+## Overview
+
 The homebridge-homeseer-plugin-2018 is an open-source plugin for the homebridge environment. This plugin, when used with homebridge, acts as a bridge between Apple's HomeKit platform and HomeSeer home automation software. The homebridge-homeseer-plugin-2018 supports common Z-Wave device including lights, switches, sensors, locks, and garage door openers. 
 
 ## A. New Installation and Setup Wiki Pages 
 Please see the Wiki pages for instructions on Installing HomeBridge on Windows 10 and Linux and for enabling the Instant Status feature.
 
-If you have problems getting this to work, I will try to help, but please reveiw this entire ReadMe page and reveiw the Wiki pages concerning installation on Windows and Linux before asking for assistance and, if you get specific error messages, try a few google searches for the error messages to see if there are known solutionss. Also, problems may relate to HomeBridge itself, rather than this plugin, so you should also review information posted on the HomeBridge site at: https://github.com/nfarina/homebridge in its "issues" tab and its wiki. All assistance request should be raise in the "Issues" tab.
+The 'wiki' section has been updated with a list of all parameters for all types. See https://github.com/jvmahon/homebridge-homeseer/wiki/Config.json-Settings
+
+If you have problems getting the plutin to work, I will try to help, but please reveiw this entire ReadMe page and reveiw the Wiki pages concerning installation on Windows and Linux before asking for assistance and, if you get specific error messages, try a few google searches for the error messages to see if there are known solutions. Also, problems may relate to HomeBridge itself, rather than this plugin, so you should also review information posted on the HomeBridge site at: https://github.com/nfarina/homebridge in its "issues" tab and its wiki. All assistance request should be raise in the "Issues" tab.
 
 ## B. Overview of Recent Changes and Additions
+
+## *New in 2.3.12* - Stricter Type Checking, offValue
+
+There code now applies stricter checking to your config.json file. Invalid accessory property names are now checked on a per-type basis and will now throw an error.
+
+An "offValue" parameter setting is now allowed for Switches, Outlets, Fans and Lightbulbs.
+
+You may now specify a "tamperRef" for most sensor types. The "tamperRef" parameter should be set to the HomeSeerDevice that reports that a device has been tampered with.
+
+
+
 
 ## **New in 2.3.11** - Valve Timers & Types, Thermostat Fixes
 

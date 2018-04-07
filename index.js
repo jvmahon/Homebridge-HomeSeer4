@@ -1,5 +1,9 @@
 'use strict';
 
+var exports = module.exports;
+var globals = null;
+
+
 var net = require('net');
 var promiseHTTP = require("request-promise-native");
 var chalk = require("chalk");
@@ -12,118 +16,30 @@ var HSutilities = require("./lib/HomeSeerUtilities");
 var HKSetup = require("./lib/HomeKitDeviceSetup");
 var DataExchange = require("./lib/DataExchange");
 
-// Remember to add platform to config.json. 
-//
-// You can get HomeSeer Device References by clicking a HomeSeer device name, then 
-// choosing the Advanced Tab.
-//
-// The uuid_base parameter is valid for all events and accessories. 
-// If you set this parameter to some unique identifier, the HomeKit accessory ID will be based on uuid_base instead of the accessory name.
-// It is then easier to change the accessory name without messing the HomeKit database.
-// 
-//
-// Example:
-// "platforms": [
-//     {
-//         "platform": "HomeSeer",              // Required
-//         "name": "HomeSeer",                  // Required
-//         "host": "http://127.0.0.1",     		// Required - If you did setup HomeSeer authentication, use "http://user:password@ip_address:port"
-//
-//         "events":[                           // Optional - List of Events - Currently they are imported into HomeKit as switches
-//            {
-//               "eventGroup":"My Group",       // Required - The HomeSeer event group
-//               "eventName":"My On Event",     // Required - The HomeSeer event name
-//               "offEventGroup":"My Group",    // Optional - The HomeSeer event group for turn-off <event>
-//               "offEventName":"My Off Event", // Optional - The HomeSeer event name for turn-off <event>
-//               "name":"Test",                 // Optional - HomeSeer event name is the default
-//               "uuid_base":"SomeUniqueId"     // Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
-//            }
-//         ],
-//
-//         "accessories":[                      // Required - List of Accessories
-//            {
-//              "ref":8,                        // Required - HomeSeer Device Reference (To get it, select the HS Device - then Advanced Tab) 
-//              "type":"Lightbulb",             // Required - Lightbulb (currently not enforced, but may be in future)
-//              "name":"My Light",              // Optional - HomeSeer device name is the default
-//				"onValue":255					// Optional.  Don't include for Z-Wave devices. For non-Zwave, set to value used in HomeSeer to designate "on".
-//              "can_dim":true,                 // Optional - true is the default - false for a non dimmable lightbulb
-//              "uuid_base":"SomeUniqueId"     	// Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
-//            },
-//            {
-//              "ref":8,                        // Required - HomeSeer Device Reference (To get it, select the HS Device - then Advanced Tab) 
-//              "type":"Fan",             		// Required for a Fan
-//              "name":"My Fan",              	// Optional - HomeSeer device name is the default
-//				"onValue":255					// Optional.  Don't include for Z-Wave devices. For non-Zwave, set to value used in HomeSeer to designate "on".
-//              "can_dim":true,                 // Optional - true is the default - false for fixed speed fan.
-//              "uuid_base":"SomeUniqueId"     	// Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
-//            },
-//            {
-//              "ref":58,                       // This is a controllable outlet
-//              "type":"Outlet"
-//				"onValue":255					// Optional.  Don't include for Z-Wave devices. For non-Zwave, set to value used in HomeSeer to designate "on".
-//              "uuid_base":"SomeUniqueId"     	// Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
-//            },
-//              "ref":113,                      // Required - HomeSeer Device Reference of the Current Temperature Device
-//              "type":"Thermostat",            // Required for a Thermostat
-//              "name":"Living Room",     		// Optional - HomeSeer device name is the default
-//				"stateRef":164
-//              "controlRef":165,               // Required - HomeSeer device reference for your thermostat mode control (Off/Heating/Cooling/Auto)
-//				"stateRef":	166,				// Required - HomeSeer device reference for your thermostat mode control (Off/Heating/Cooling/Auto)
-//              "coolingSetpointRef":167,       // Required - HomeSeer device reference for your thermostat cooling target setpoint.
-//              "heatingSetpointRef":168,       // Required - HomeSeer device reference for your thermostat cooling target setpoint.
-//              "temperatureUnit":"C",          // Optional - Temperature Unit Used by HomeSeer. F for Fahrenheit, C for Celsius, F is the default
-//            },
-//            {
-//              "ref":111,                      // Required - HomeSeer Device Reference for your sensor
-//              "type":"TemperatureSensor",     // Required for a temperature sensor
-//              "temperatureUnit":"F",          // Optional - C is the default
-//              "name":"Bedroom temp",          // Optional - HomeSeer device name is the default
-//              "batteryRef":112,               // Optional - HomeSeer device reference for the sensor battery level
-//              "batteryThreshold":15           // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
-//              "uuid_base":"SomeUniqueId"     	// Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
-//            },
-//            {
-//              "ref":34,                       // Required - HomeSeer Device Reference for your sensor
-//              "type":"SmokeSensor",           // Required for a smoke sensor
-//              "name":"Kichen smoke detector", // Optional - HomeSeer device name is the default
-//              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
-//              "uuid_base":"SomeUniqueId"     	// Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
-//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
-//            },
-//            {
-//              "ref":34,                       // Required - HomeSeer Device Reference for your sensor (Here it's the same device as the SmokeSensor above)
-//              "type":"CarbonMonoxideSensor",  // Required for a carbon monoxide sensor
-//              "name":"Kitchen CO detector",   // Optional - HomeSeer device name is the default
-//              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
-//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
-//              "uuid_base":"SomeUniqueId"     	// Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
-//            },
-//            {
-//              "ref":210,                      // Required - HomeSeer Device Reference of a Lock
-//              "type":"Lock",                  // Required for a Lock
-//              "batteryRef":35,                // Optional - HomeSeer device reference for the sensor battery level
-//              "uuid_base":"SomeUniqueId"     	// Optional - HomeKit identifier will be derived from this parameter instead of the reference value.
-//              "batteryThreshold":15,          // Optional - If sensor battery level is below this value, the HomeKit LowBattery characteristic is set to 1. Default is 25
-//            }
-//         ]
-//     }
-// ],
-//
+//  - The config.json file information that used to be here was always out of date so it has been moved!
+//     https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.
 //
 // SUPORTED TYPES:
-// - Lightbulb              (can_dim  options)
-// - Fan              		(can_dim  options, here "can_dim" =' true is for a fan with rotation speed control)
-// - Switch                 
+// - CarbonDioxideSensor 
+// - CarbonMonoxideSensor 
+// - ContactSensor   
+// - Fan  
+// - GarageDoorOpener
+// - HumiditySensor          
+// - LeakSensor             
+// - Lightbulb   
+// - LightSensor       
+// - Lock  
+// - MotionSensor           
+// - OccupancySensor        
 // - Outlet                 
-// - TemperatureSensor      (temperatureUnit=C|F)
-// - ContactSensor          (batteryRef, batteryThreshold options)
-// - MotionSensor           (batteryRef, batteryThreshold options)
-// - LeakSensor             (batteryRef, batteryThreshold options)
-// - OccupancySensor        (batteryRef, batteryThreshold options)
-// - SmokeSensor            (batteryRef, batteryThreshold options)
-// - CarbonMonoxideSensor   (batteryRef, batteryThreshold options)
-// - CarbonDioxideSensor    (batteryRef, batteryThreshold options)
-// - Lock                   
+// - SecuritySystem           
+// - SmokeSensor            
+// - Switch     
+// - Thermostat            
+// - TemperatureSensor  
+// - Valve
+// - WindowCovering
 
 var Accessory, Service, Characteristic, UUIDGen;
 	
@@ -138,6 +54,8 @@ var pollingCount = 0;
 var _currentHSDeviceStatus = []; 
 var _everyHSDevice = [];
 var allHSDevices = [];
+
+
 // Note that the HomeSeer json date in _currentHSDeviceStatus is of the following form where _currentHSDeviceStatus is an array so
 // an index must be specified to access the properties, such as 
 //  _currentHSDeviceStatus[indexvalue] for a dimmer would be of the form...
@@ -244,7 +162,7 @@ HomeSeerPlatform.prototype =
 		var that = this;
 
 		// Check entries in the config.json file to make sure there are no obvious errors.		
-		HSutilities.checkConfig.call(this, this.config);
+		//HSutilities.checkConfig.call(this, this.config);
 
 		/////////////////////////////////////////////////////////////////////////////////		
 		// Make devices for each HomeSeer event in the config.json file
@@ -262,7 +180,7 @@ HomeSeerPlatform.prototype =
 		// If the config.json file contains a "lightbulbs =" group of references, push them onto the accessories array as "type":"Lightbulb"
 		if(this.config.lightbulbs)
 		{
-			if(this.config.accessories == null) this.config.accessories = []; // make sure there's an accessories array to push bulbs onto
+			if(this.config.accessories === undefined || this.config.accessories == null) this.config.accessories = []; // make sure there's an accessories array to push bulbs onto
 			for (var thisRef in this.config.lightbulbs)
 			{
 				var addLight = { "type":"Lightbulb", "ref":this.config.lightbulbs[thisRef] };
@@ -274,39 +192,28 @@ HomeSeerPlatform.prototype =
 		var allStatusUrl = "";
 			
 		promiseHTTP({ uri: this.config["host"] + "/JSON?request=getstatus", json:true})
-		.then( function(json) //  Find the Batteries!
+		.then( function(json)
 			{
 				allHSDevices = json.Devices;
-
-				for (var i in self.config.accessories)
-				{
-					var deviceBattery = findBattery(self.config.accessories[i].ref);
-					if (deviceBattery == (-1)) { continue };
-					if ((self.config.accessories[i].batteryRef == null) && (deviceBattery != (-1)))
-					{
-						console.log(chalk.magenta.bold("Device Reference #: " + self.config.accessories[i].ref 
-						+ " identifies as a battery operated device, but no battery was specified. Adding a battery reference: " + deviceBattery));
-						self.config.accessories[i].batteryRef = deviceBattery;
-					}
-					if ((deviceBattery != (-1)) && (self.config.accessories[i].batteryRef != deviceBattery)  )
-					{
-						console.log(chalk.red.bold("Wrong battery Specified for device Reference #: " + self.config.accessories[i].ref 
-						+ " You specified reference: " + self.config.accessories[i].batteryRef + " but correct device reference appears to be: " + deviceBattery +". Fixing error."));
-						self.config.accessories[i].batteryRef = deviceBattery;
-					}	
-
-					if ((deviceBattery == (-1)) && (self.config.accessories[i].batteryRef)  )
-					{
-						console.log(chalk.yellow.bold("You specified battery reference: "+ self.config.accessories[i].batteryRef + " for device Reference #: " + self.config.accessories[i].ref 
-						+ " but device does not seem to be battery operated. Check config.json file and fix if this is an error."));
-
-					}									
-				}
+				
+				exports.allHSDevices = allHSDevices;
+						
+				// Check entries in the config.json file to make sure there are no obvious errors.		
+				HSutilities.checkConfig.call(self, self.config, allHSDevices);
 
 				return (1);
 			}) // end then's function
+		.catch( (err) => 
+			{
+				if( err.message.includes("ECONNREFUSED") ) 
+					{
+						err = red( err + "\nCheck if HomeSeer is running, then start homebridge again.");
+					}
+				throw err;
+			} )
 		.then (()=> 
 			{
+				
 				//////////////////  Identify all of the HomeSeer References of interest  ////////////
 				// These are used to obtain status data from HomeSeer
 
@@ -336,18 +243,19 @@ HomeSeerPlatform.prototype =
 						.pushUnique(this.config.accessories[i].humidityTargetRef)
 						.pushUnique(this.config.accessories[i].coolingSetpointRef)
 						.pushUnique(this.config.accessories[i].heatingSetpointRef)
+						.pushUnique(this.config.accessories[i].tamperRef)
 				} // end for
 				
 				for (var j =0; j< allHSRefs.length; j++)
 				{
-					// console.log(chalk.cyan.bold("*Debug* - Checking allHSRefs has references: " + allHSRefs[j] + " at location: " + j ));
+					// console.log(cyan("*Debug* - Checking allHSRefs has references: " + allHSRefs[j] + " at location: " + j ));
 					if(_statusObjects[allHSRefs[j]] === undefined) _statusObjects[allHSRefs[j]] = [];
 					_HSValues[allHSRefs[j]] = parseFloat(0);
 				}
 								
 				allHSRefs.sort( (a,b) => (a-b) ); // the internal function (a,b) => (a-b) causes a numeric order sort instead of alpha!
 				
-				// console.log(chalk.cyan.bold("*Debug* - All HomeSeer References Identified in config.json are: " + allHSRefs.concat()  ));
+				// console.log(cyan("*Debug* - All HomeSeer References Identified in config.json are: " + allHSRefs.concat()  ));
 
 				/////////////////////////////////////////////////////////////////////////////////
 
@@ -363,8 +271,6 @@ HomeSeerPlatform.prototype =
 			}) // End of gathering HomeSeer references
 		.catch((err) => 
 			{
-				console.log(magenta("Error Gathering HomeSeer Device References: " + err));
-				err = red(err + " Check if HomeSeer is running, then start homebridge again.");
 				throw err;
 			})
 		
@@ -386,13 +292,19 @@ HomeSeerPlatform.prototype =
 					var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[index]);
 				} catch(err) 
 					{
-						console.log(chalk.magenta.bold(
-						"\n\n** Error ** creating new HomeSeerAccessory in file index.js.\n" +
-						"This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. \n" +
-						"Check all reference numbers and be sure HomeSeer is running. Stopping operation\n" +
-						"Check Accessory No: " + (i+1) + ", of type: "+ this.config.accessories[i].type +", and which identifies a reference No.: " + this.config.accessories[i].ref + "\n"
-						)); 
-						console.log(chalk.red.bold(err));	
+						console.log(
+							magenta( "\n\n** Error ** creating new HomeSeerAccessory in file index.js.\n" 
+							+ "This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. \n" 
+							+ "Check all reference numbers and be sure HomeSeer is running. Stopping operation\n" 
+							+ "Check Accessory No: ") 
+							+ cyan(i+1) 
+							+ magenta(", of type: ")
+							+ cyan(this.config.accessories[i].type) 
+							+ magenta(", and which identifies a reference No.: ") 
+							+ cyan(this.config.accessories[i].ref + "\n")
+						); 
+						
+						console.log(red(err));	
 						throw err
 					}			
 					foundAccessories.push(accessory);
@@ -401,8 +313,6 @@ HomeSeerPlatform.prototype =
 			}.bind(this))
 		.catch((err) => 
 			{
-				console.log("Error setting up Devices: " + err);
-				err = chalk.red.bold(err + " Check if HomeSeer is running, then start homebridge again.");
 				throw err;
 			})
 		// Next - if prior .then block was completed without errors, next step is to return all the values to HomeBridge
@@ -422,8 +332,8 @@ HomeSeerPlatform.prototype =
 					this.oldValue = array[3];
 				}
 				var ASCIIPort = "11000";
-					if(this.config["ASCIIPort"]) ASCIIPort = this.config["ASCIIPort"];
-
+				
+				if(this.config["ASCIIPort"]) ASCIIPort = this.config["ASCIIPort"];
 			
 				var uri = parseUri(this.config["host"]);
 				this.log("Host for ASCII Interface set to: " + uri.host + " at port " + ASCIIPort);
@@ -509,11 +419,11 @@ HomeSeerPlatform.prototype =
 				// This is the new Polling Mechanism to poll all at once.	
 				// If instantStatusEnabled is true, then poll less frequently (once per minute);
 				
-				// this.log(chalk.yellow.bold("Monitoring HomeSeer Device Status for references: " + allHSRefs.concat()));
+				// this.log(yellow("Monitoring HomeSeer Device Status for references: " + allHSRefs.concat()));
 
 				if(instantStatusEnabled)
 				{
-					this.config.platformPoll = 30;
+					this.config.platformPoll = 60;
 					this.log(green("Reducing HomeSeer polling rate to: ") + cyan(this.config.platformPoll) + green(" seconds."))
 
 				}
@@ -554,33 +464,13 @@ HomeSeerPlatform.prototype =
 					);	//end setInterval function for polling loop
 
 				return true;
-			});
-			/*
-			.then( (data)=>
+			})
+			.catch( (error) => 
 			{
-				_HSValues.forEach( (element, index) => 
-				{
-					promiseHTTP({ uri: HomeSeerHost + "/JSON?request=getstatus&ref=" + index, json:true})
-					.then( (jsonData) => 
-						{
-							console.log("Testing Comunications with HomeSeer - retrieved data value: " + jsonData.Devices[0].value +", for reference: " +index)
-							
-							promiseHTTP({ uri: HomeSeerHost + "/JSON?request=controldevicebyvalue&ref=" + index + "&value=" + jsonData.Devices[0].value, json:false})
-							.catch((error) => 
-								{
-									console.log(red("Failed to Access HomeSeer device with reference: " + index ));
-									console.log(red(error));
-								});
-							return true;
-						})
-					.catch((error) => 
-						{
-						console.log(red("Failed Accessing HomeSeer Device with Reference: " + index))
-						});
-
-				})
+				// If you get here without handling the error, then stop and report the error
+				this.log(error.message);
+				process.exit();
 			});
-			*/
 	}
 }
 
@@ -596,7 +486,7 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
 
     this.access_url = platformConfig["host"] + "/JSON?";
 	
-	// this.log(chalk.magenta.bold("ASCII Instant Status Port is: " + platformConfig["ASCIIPort"]));
+	// this.log(magenta("ASCII Instant Status Port is: " + platformConfig["ASCIIPort"]));
 	
 	this.HomeSeerHost = platformConfig["host"];
 	// _accessURL = this.access_url;
@@ -606,10 +496,6 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     if (this.config.name)
         this.name = this.config.name;
 
-	
-	// Force uuid_base to be "Ref" + HomeSeer Reference # if the uuid_base is otherwise undefined.
-    if (!this.config.uuid_base)
-		{this.config.uuid_base = "Ref" + this.config.ref};
     
 	this.uuid_base = this.config.uuid_base;
 	
@@ -629,20 +515,19 @@ HomeSeerAccessory.prototype = {
 	// setHSValue function should be bound by .bind() to a HomeKit Service Object Characteristic!
 	setHSValue: function (level, callback) {
 		
-		// console.log(chalk.magenta.bold("* Debug * - setHSValue called with level: " + level +", for item type: " + this.displayName));
+		// console.log(magenta("* Debug * - setHSValue called with level: " + level +", for item type: " + this.displayName));
 		
 		// Pass all the variables and functions used. There's probably a cleaner way to do this with module.exports but this works for now!
 		this.log = HomeSeer.log;
 		DataExchange.sendToHomeSeer(level, HomeSeerHost, Characteristic, Service, forceHSValue, getHSValue, instantStatusEnabled, this);
   
-		// Strange special case of extra poll needed for window coverings that are controlled by a binary switch.
-		// But which were adjused using the slider. If poll isn't done, then the icon remains in a changing state until next poll!
-		// If the slider set a target state that wasn't 0 or 100
+		// Need to poll  for window coverings that are controlled by a binary switch.
+		// But which were adjusted on the iOS Home app using the slider. If poll isn't done, then the icon remains in a changing state until next poll!
+		// when the slider set a target state that wasn't 0 or 100
 		if (this.UUID == Characteristic.CurrentPosition.UUID || this.UUID == Characteristic.TargetPosition.UUID)
 		{
 				setTimeout ( ()=>
 				{
-					// console.log(chalk.cyan.bold("Window Covering Extra Polling!"));
 					var statusObjectGroup = _statusObjects[this.HSRef];
 					for (var thisCharacteristic in statusObjectGroup)
 					{
@@ -788,7 +673,7 @@ function updateAllFromHSData()
 	for (var HSReference in _statusObjects)
 	{
 		var statusObjectGroup = _statusObjects[HSReference];
-		// console.log(chalk.magenta.bold("* Debug * - Updating for reference " + HSReference + " a group with length " + statusObjectGroup.length));
+		// console.log(magenta("* Debug * - Updating for reference " + HSReference + " a group with length " + statusObjectGroup.length));
 		for (var thisCharacteristic in statusObjectGroup)
 		{
 		updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic], HSReference);
@@ -808,7 +693,7 @@ module.exports.platform = HomeSeerPlatform;
 ////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
 
 // Testing Only!
-
+/*
 function findBattery(findRef)
 {
 	try
@@ -843,7 +728,7 @@ function findBattery(findRef)
 						var candidateDevice = allHSDevices[checkDeviceIndex]
 						if (candidateDevice.device_type_string.indexOf("Battery") != -1)
 						{
-							// console.log(chalk.bold.red("Found a Battery reference: " + candidateDevice.ref + " for device reference " + findRef));
+							// console.log(red("Found a Battery reference: " + candidateDevice.ref + " for device reference " + findRef));
 							return (candidateDevice.ref);
 						}
 					}
@@ -854,14 +739,14 @@ function findBattery(findRef)
 	}
 	catch(err)
 	{
-		console.log(chalk.yellow.bold("Warning - Error Executing Find Battery Function for device with HomeSeer reference: " + findRef));
-		console.log(chalk.yellow.bold("Find Battery function may not function for non-Z-Wave devices. Manually specify your battery! " ));
-		console.log(chalk.yellow.bold("Error: " + err));
+		console.log(yellow("Warning - Error Executing Find Battery Function for device with HomeSeer reference: " + findRef));
+		console.log(yellow("Find Battery function may not function for non-Z-Wave devices. Manually specify your battery! " ));
+		console.log(yellow("Error: " + err));
 		return(-1);
 	}
 }
 
-
+*/
 
 ////////////////////////   Code to Parse a URI and separate out Host and Port /////////////
 // parseUri 1.2.2

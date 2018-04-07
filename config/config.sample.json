@@ -1,3 +1,11 @@
+//
+//
+//	Delete all comments from your actual config.json file!
+//
+// The set of parameters identified in this file is incomplete. 
+// For more up-to-date information, See Wiki entry https://github.com/jvmahon/homebridge-homeseer/wiki/Config.json-Settings
+//
+
 {
 	"bridge": 
 	{
@@ -43,11 +51,11 @@
 			{"type":"Thermostat", "name":"Living Room", "ref":5, "heatingSetpointRef":6, "coolingSetpointRef":9, "controlRef":4, "stateRef":7, "temperatureUnit":"F"},
 			{"type":"SecuritySystem",	... see Readme and wiki documents for parameter settings },
 			{"type":"Valve", "ref":123}
-			{"type":"Lightbulb", 			"name":"Lamp", 		"ref":582    	},
-			{"type":"Lock",      			"name":"Front Door",  	"ref":600, 	"batteryRef":601, "batteryThreshold":30 },
-			{"type":"Switch",      			"name":"Hallway",  	"ref":620	},
-			{"type":"Outlet",      			"name":"Bedroom",  	"ref":630	},
-			{"type":"Fan",      			"name":"Attic",  	"ref":640	},
+			{"type":"Lightbulb", 			"name":"Lamp", 		"ref":582, 	"onValue":255, "offValue":0, "can_dim":true, "uses99Percent":true   	},
+			{"type":"Lock",      			"name":"Front Door",  	"ref":600, 	"doorSensorRef":601,	"batteryRef":602, "batteryThreshold":30 },
+			{"type":"Switch",      			"name":"Hallway",  	"ref":620, 	"onValue":255, "offValue":0	},
+			{"type":"Outlet",      			"name":"Bedroom",  	"ref":630, 	"onValue":255, "offValue":0	},
+			{"type":"Fan",      			"name":"Attic",  	"ref":640, 	"onValue":255, "offValue":0, "can_dim":true, "uses99Percent":true	},
 			{"type":"TemperatureSensor",		"name":"Front Door",  	"ref":650, 	"batteryRef":651, "batteryThreshold":30, "temperatureUnit":"F" },
 			{"type":"ContactSensor", 		"name":"C02", 		"ref":660, 	"batteryRef":661, "batteryThreshold":30	},
 			{"type":"MotionSensor",      		"name":"Garage",  	"ref":670, 	"batteryRef":671, "batteryThreshold":30 },
@@ -55,10 +63,10 @@
 			{"type":"CarbonMonoxideSensor", 	"name":"Bedroom",  	"ref":690, 	"batteryRef":691, "batteryThreshold":30 },
 			{"type":"CarbonDioxideSensor",  	"name":"Attic"  	"ref":700, 	"batteryRef":701, "batteryThreshold":30 }, 
 			{"type":"GarageDoorOpener", 		"name":"myGarageDoor", 	"ref":710, 	"obstructionRef":711 },
-			{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"obstructionRef":716	},
+			{"type":"WindowCovering", 		"ref" 715, 	"binarySwitch":true, 	"obstructionRef":716, "openValue":255, "closedValue":0, "binarySwitch":true	},
 			{"type":"Thermostat", "name":"Living Room", "ref":5, "heatingSetpointRef":6, "coolingSetpointRef":9, "controlRef":4, "stateRef":7, "temperatureUnit":"F"},
 			{"type":"SecuritySystem",	... see Readme and wiki documents for parameter settings },
-			{"type":"Valve", "ref":123, "openValve":255, "closeValve":0, "useTimer":true, "minTime":30}
+			{"type":"Valve", "ref":123, "openValve":255, "closeValve":0, "useTimer":true, "minTime":30, "valveType":0}
 			]
 		}
 
