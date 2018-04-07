@@ -25,8 +25,9 @@ There code now applies stricter checking to your config.json file. Invalid acces
 
 An "offValue" parameter setting is now allowed for Switches, Outlets, Fans and Lightbulbs.
 
-You may now specify a "tamperRef" for most sensor types. The "tamperRef" parameter should be set to the HomeSeerDevice that reports that a device has been tampered with.
+An "offValues" array can now be set for binary switch types using an off value other than 0. This is for 'odd' use cases and generally does not need to be set by the user!
 
+You may now specify a "tamperRef" for most sensor types. The "tamperRef" parameter should be set to the HomeSeerDevice that reports that a device has been tampered with. If set, the Home app will indicate on a device's "details" page if it has been tampered with.
 
 
 
