@@ -663,13 +663,16 @@ HomeSeerEvent.prototype = {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function updateCharacteristicFromHSData(characteristicObject, HSReference)
-{
+{	//console.debug("DEBUG - Executing updateCharacteristicFromHSData(obj, obj)");
+    //console.debug("   characteristicObject: " + JSON.stringify(characteristicObject));
+    //console.debug("   HSReference: " + JSON.stringify(HSReference));
 	// This performs the update to the HomeKit value from data received from HomeSeer
 	DataExchange.processDataFromHomeSeer(characteristicObject, HSReference, this, Characteristic, Service, getHSValue);
 }
 
 function updateAllFromHSData()
 {
+    //console.debug("DEBUG -  Executing updateAllFromHSData()");
 	for (var HSReference in _statusObjects)
 	{
 		var statusObjectGroup = _statusObjects[HSReference];
