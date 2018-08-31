@@ -17,6 +17,10 @@ If you have problems getting the plugin to work, I will try to help, but please 
 
 ## B. Overview of Recent Changes and Additions
 
+## *New in 2.3.14* - "Windows" Type Support
+Support has been added for a "Window" type. This is for a window that opens and closes. If you are  controlling a shade or blind, use the WindowCovering type instead.
+
+
 ## *New in 2.3.12* - Stricter Type Checking, offValue
 
 There code now applies stricter checking to your config.json file. Invalid accessory property names are now checked on a per-type basis and will now throw an error.

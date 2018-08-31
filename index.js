@@ -39,6 +39,7 @@ var DataExchange = require("./lib/DataExchange");
 // - Thermostat            
 // - TemperatureSensor  
 // - Valve
+// - Window
 // - WindowCovering
 
 var Accessory, Service, Characteristic, UUIDGen;
