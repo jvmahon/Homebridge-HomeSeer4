@@ -1,0 +1,26 @@
+{
+	"bridge": {
+		"name": "Test-Homebridge",
+		"username": "CD:22:3D:E3:CE:31",
+		"port": 51826,
+		"pin": "777-77-777"
+		},
+
+	"description": "Change this line to any description you want.",
+
+	"platforms": [
+			{
+				"platform": "Homeseer",
+				"name": "Homeseer",
+				"host": "http://192.168.1.19:9090",
+				"ASCIIport": 11000,
+				
+				"lightbulbs": [ 5 ],
+				
+				"accessories": [
+									{"type":"Lightbulb", 			"ref":632    	}									
+								]
+								
+			}
+		]
+}
