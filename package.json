@@ -1,6 +1,6 @@
 {
   "name": "homebridge-homeseer-plugin-2018",
-  "version": "2.3.20",
+  "version": "2.3.21",
   "description": "Homeseer Plugin for homebridge: https://github.com/jvmahon/homebridge-homeseer",
   "license": "ISC",
   "keywords": [
@@ -21,9 +21,9 @@
     "homebridge": ">=0.4.0"
   },
   "dependencies": {
-    "request" : ">=2.83.0",
+    "request" : ">=2.88.0",
     "request-promise-native" : ">=1.0.0",
     "chalk": ">=1.1.1",
-    "hap-nodejs": ">=0.4.0"
+    "hap-nodejs": ">=0.4.53"
   }
 }
