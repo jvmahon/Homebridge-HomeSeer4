@@ -57,7 +57,6 @@ var _everyHSDevice = [];
 var allHSDevices = [];
 allHSDevices.controlPairs = [];
 
-
 // Note that the HomeSeer json date in _currentHSDeviceStatus is of the following form where _currentHSDeviceStatus is an array so
 // an index must be specified to access the properties, such as 
 //  _currentHSDeviceStatus[indexvalue] for a dimmer would be of the form...
@@ -213,84 +212,24 @@ function forceHSValue(ref, level)
 
 function HomeSeerPlatform(log, config, api) {
     // HomeSeer.log = log;
+	if(config == null) return;
 	this.log = log;
     this.config = config;
-
-}
-
-
-HomeSeerPlatform.prototype = 
-{
+	this.api = api;
+	this.allHSRefs = [];
+	this.allStatusUrl = [];
 	
-    accessories: async function (callback) 
-	{
-        var foundAccessories = [];
-		var that = this;
-
-		// Check entries in the config.json file to make sure there are no obvious errors.		
-		//HSutilities.checkConfig.call(this, this.config);
-
-		/////////////////////////////////////////////////////////////////////////////////		
-		// Make devices for each HomeSeer event in the config.json file
-
-		// Make Devices for each 'Event' entry in the config.json file.
-		if (this.config.events) 
+	// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
+		if(config.lightbulbs) 
 		{
-			for (var i in this.config.events) 
-			{
-				var event = new HomeSeerEvent(that.log, that.config, that.config.events[i]);
-				foundAccessories.push(event);
-			}
+			config.accessories = config.accessories
+			.concat(config.lightbulbs.map( (HSreference)=> { return( { "type":"Lightbulb", "ref":HSreference} );}) );
 		}
-	
-		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
-		if(this.config.lightbulbs) 
-		{
-			this.config.accessories = this.config.accessories.concat(
-					this.config.lightbulbs.map( (HSreference)=> { return( { "type":"Lightbulb", "ref":HSreference} );})
-					);
-		}
-		// Done with Map
 
-
-
-
-
-
-
-
-
-
-		let self = this;	// Assign this to self so you can access its values inside the promise.
-		var allStatusUrl = "";
-		self.log(green("this is the value of self: \n" + Object.getOwnPropertyNames(self)));
-			
-		var getStatusInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getstatus", json:true})
-		.then( function(HSDevices)
-			{
-
-				allHSDevices.HSdeviceStatusInfo = HSDevices.Devices; 
-	
-				exports.allHSDevices = allHSDevices;
-						
-				// Check entries in the config.json file to make sure there are no obvious errors.		
-				HSutilities.checkConfig.call(self, self.config, allHSDevices);
-
-				return (1);
-			}) // end then's function
-			.catch( (err) => 
-			{
-				if( err.message.includes("ECONNREFUSED") ) 
-					{
-						err = red( err + "\nError getting device status info. Check if HomeSeer is running, then start homebridge again.");
-					}
-				throw err;
-			} )
-		
-		var getControlInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getcontrol", json:true})
+		this.getControlInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getcontrol", json:true})
 			.then( function(HSControls)
 			{
-
+				log(yellow("Success! " + Object.getOwnPropertyNames(HSControls) ));
 				allHSDevices.controlPairs = HSControls;
 				return(true);
 		
@@ -303,27 +242,47 @@ HomeSeerPlatform.prototype =
 					}
 				throw err;
 			} )
-			
-		Promise.all([getStatusInfo, getControlInfo]).then(()=> 
-			{
-				//////////////////  Identify all of the HomeSeer References of interest  ////////////
-				// These are used to obtain status data from HomeSeer
-
-				var allHSRefs = [];
-					allHSRefs.pushUnique = function(item) //Pushes item onto stack if it isn't null. Can be chained!
-						{ 
 	
-							if (item === undefined) return this;
-							if (item == null) return this;
-							if (isNaN(item) || (!Number.isInteger(parseFloat(item)))) throw new SyntaxError("You specified: '" + item +"' as a HomeSeer references, but it is not a number. You need to fix it to continue");
-							if (this.indexOf(item) == -1) this.push(parseInt(item)); 
-							return this
-						}
-			
+		this.getStatusInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getstatus", json:true})
+		.then( function(HSDevices)
+			{
+				// log(cyan("Success! " + Object.getOwnPropertyNames(HSDevices)));
+
+				allHSDevices.HSdeviceStatusInfo = HSDevices.Devices; 
+						
+				// Check entries in the config.json file to make sure there are no obvious errors.		
+
+
+				return (true);
+			}) // end then's function
+			.catch( (err) => 
+			{
+				if( err.message.includes("ECONNREFUSED") ) 
+					{
+						err = red( err + "\nError getting device status info. Check if HomeSeer is running, then start homebridge again.");
+					}
+				throw err;
+			} )
+			.then( ()=> {
+				log(yellow("Checking Configuration"));
+				exports.allHSDevices = allHSDevices;
+				// Check entries in the config.json file to make sure there are no obvious errors.
+				HSutilities.checkConfig(config, allHSDevices);
+								
+
+				this.allHSRefs.pushUnique = function(item) //Pushes item onto stack if it isn't null. Can be chained!
+					{ 
+
+						if (item === undefined) return this;
+						if (item == null) return this;
+						if (isNaN(item) || (!Number.isInteger(parseFloat(item)))) throw new SyntaxError("You specified: '" + item +"' as a HomeSeer references, but it is not a number. You need to fix it to continue");
+						if (this.indexOf(item) == -1) this.push(parseInt(item)); 
+						return this
+					}
 				for (var i in this.config.accessories) 
 				{
 					// Gather every reference that isn't undefined or null!
-					allHSRefs
+					this.allHSRefs
 						.pushUnique(this.config.accessories[i].ref)
 						.pushUnique(this.config.accessories[i].batteryRef)
 						.pushUnique(this.config.accessories[i].obstructionRef)
@@ -336,28 +295,67 @@ HomeSeerPlatform.prototype =
 						.pushUnique(this.config.accessories[i].heatingSetpointRef)
 						.pushUnique(this.config.accessories[i].tamperRef)
 				} // end for
+				this.allHSRefs.sort( (a,b) => (a-b) ); // the internal function (a,b) => (a-b) causes a numeric order sort instead of alpha!
+				console.log(cyan("All HomeSeer References Gathered from config.json are: " + this.allHSRefs));
 				
-				for (var j =0; j< allHSRefs.length; j++)
+				// Now Prep an array to hold status Objects and initialize to 0 at indices corresponding to HomeSeer references where we'll then store a corresponding HomeKit status Object.
+				for (var j =0; j< this.allHSRefs.length; j++)
 				{
-					// console.log(cyan("*Debug* - Checking allHSRefs has references: " + allHSRefs[j] + " at location: " + j ));
-					if(_statusObjects[allHSRefs[j]] === undefined) _statusObjects[allHSRefs[j]] = [];
-					_HSValues[allHSRefs[j]] = parseFloat(0);
+					if(_statusObjects[this.allHSRefs[j]] === undefined) _statusObjects[this.allHSRefs[j]] = [];
+					_HSValues[this.allHSRefs[j]] = parseFloat(0);
 				}
+				
+				// URL to get status on everything.
+				this.allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + this.allHSRefs.concat();
+				
+			});
+			
+			
+			
+			
+}
+
+
+HomeSeerPlatform.prototype = 
+{
+	
+    accessories: async function (callback) 
+	{
+		let self = this;	// Assign this to self so you can access its values inside the promise.
+		self.log(green("this is the value of self: \n" + Object.getOwnPropertyNames(self)));
+		
+        var foundAccessories = [];
+
+		// Make Devices for each 'Event' entry in the config.json file.
+		if (this.config.events) 
+		{
+			for (var i in this.config.events) 
+			{
+				var event = new HomeSeerEvent(this.log, this.config, this.config.events[i]);
+				foundAccessories.push(event);
+			}
+		}
+
+		// Now start creating devices after you've gotten back the status and control info. from HomeSeer	
+		Promise.all([this.getStatusInfo, this.getControlInfo]).then(()=> 
+			{
+				this.log("Creating HomeKit Accessories for Your HomeSeer Devices.");
+				//////////////////  Identify all of the HomeSeer References of interest  ////////////
+				// These are used to obtain status data from HomeSeer
+				
+
 								
-				allHSRefs.sort( (a,b) => (a-b) ); // the internal function (a,b) => (a-b) causes a numeric order sort instead of alpha!
+
 				
 				// console.log(cyan("*Debug* - All HomeSeer References Identified in config.json are: " + allHSRefs.concat()  ));
 
 				/////////////////////////////////////////////////////////////////////////////////
 
-				// Then make a HomeKit device for each "regular" HomeSeer device.
-				this.log("Fetching HomeSeer devices.");
 
-				// URL to get status on everything.
-				allStatusUrl = this.config["host"] + "/JSON?request=getstatus&ref=" + allHSRefs.concat();
+
 
 				// now get the data from HomeSeer and pass it as the 'response' to the .then stage.
-				return promiseHTTP({ uri: allStatusUrl, json:true})	
+				return promiseHTTP({ uri: this.allStatusUrl, json:true})	
 				
 			}) // End of gathering HomeSeer references
 		.catch((err) => 
@@ -380,7 +378,7 @@ HomeSeerPlatform.prototype =
 					// Set up initial array of HS Response Values during startup
 				try 
 				{
-					var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[index]);
+					var accessory = new HomeSeerAccessory(this.log, this.config, this.config.accessories[i], response.Devices[index]);
 				} catch(err) 
 					{
 						console.log(
@@ -527,16 +525,16 @@ HomeSeerPlatform.prototype =
 					setInterval( function () 
 					{
 						// Now do the poll
-						promiseHTTP({ uri: allStatusUrl, json:true})
+						promiseHTTP({ uri: self.allStatusUrl, json:true})
 							.then( function(json) 
 								{
 									_currentHSDeviceStatus = json.Devices;
-									that.log(cyan("Poll # " + pollingCount) + ": Retrieved values for " + cyan(_currentHSDeviceStatus.length) + " HomeSeer devices.");
+									console.log(cyan("Poll # " + pollingCount) + ": Retrieved values for " + cyan(_currentHSDeviceStatus.length) + " HomeSeer devices.");
 									if(instantStatusEnabled == false && ((pollingCount % 5) == 0)) // only display once every 5 polls!
 									{
-										that.log(red("* Warning * - Instant status not enabled. Operating in polling mode only which may degrade performance."));
-										that.log(red('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
-										that.log(red("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));											
+										console.log(red("* Warning * - Instant status not enabled. Operating in polling mode only which may degrade performance."));
+										console.log(red('To enable ASCII Port / Instant Status, see WIKI "Instant Status" entry at:'));
+										console.log(red("https://github.com/jvmahon/homebridge-homeseer/wiki/Enable-Instant-Status-(HomeSeer-ASCII-Port)"));											
 									}
 									for (var index in _currentHSDeviceStatus)
 									{
@@ -549,11 +547,11 @@ HomeSeerPlatform.prototype =
 								) // end then
 							.catch(function(err)
 								{
-									that.log("HomeSeer poll attempt failed with error %s", err);
+									console.log("HomeSeer poll attempt failed with error %s", err);
 								} // end catch's function
 								);//end catch
 
-					}, 60000 // end SetInterval's function
+					}, 6000 // end SetInterval's function
 					);	//end setInterval function for polling loop
 
 				return true;
@@ -561,7 +559,7 @@ HomeSeerPlatform.prototype =
 			.catch( (error) => 
 			{
 				// If you get here without handling the error, then stop and report the error
-				this.log(error.message);
+				console.log(error.message);
 				process.exit();
 			});
 	}
@@ -788,7 +786,6 @@ module.exports.platform = HomeSeerPlatform;
 
 ////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
 
-
 ////////////////////////   Code to Parse a URI and separate out Host and Port /////////////
 // parseUri 1.2.2
 // (c) Steven Levithan <stevenlevithan.com>
@@ -822,4 +819,6 @@ parseUri.options = {
 		loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
 	}
 };
+
+
 
