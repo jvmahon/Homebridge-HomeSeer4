@@ -7,17 +7,19 @@ globals.allHSDevices.controlPairs = [];
 exports.globals = globals;
 
 
-// The next array variable (_HSValues) stores just the value of the associated HomeSeer reference. 
+
+
+// The array globals.HSValues) stores just the value of the associated HomeSeer reference. 
 // This is a sparse array with most index values null.
 // The array index corresponds to the HomeSeer reference so _HSValues[211] would be the HomeSeer value for device 211.
-var _HSValues = []; 
+globals.HSValues = [];
 
-// The next array variable holds a list of all of the HomeKit HAP Characteristic objects
+// globals.statusObjects holds a list of all of the HomeKit HAP Characteristic objects
 // that can be affected by changes occurring at HomeSeer. 
 // The array is populated during by the getServices function when a HomeKit device is created.
 // After HomeSeer is polled, each item in this array is analyzed by the updateAllFromHSData() function to determine 
 // if it needs to be updated.
-var _statusObjects = []; 
+globals.statusObjects = [];
 
 
 
@@ -113,7 +115,7 @@ module.exports = function (homebridge) {
 }
 
 function getHSValue(ref) {
-	return _HSValues[ref];
+	return globals.HSValues[ref];
 }
 globals.getHSValue = getHSValue;
 
@@ -203,10 +205,10 @@ function forceHSValue(ref, level)
 		// This function is used to temporarily 'fake' a HomeSeer poll update.
 		// Used when, e.g., you set a new value of an accessory in HomeKit - this provides a fast update to the
 		// Retrieved HomeSeer device values which will then be "corrected / confirmed" on the next poll.
-		 _HSValues[ref] = parseFloat(level);
+		 globals.HSValues[ref] = parseFloat(level);
 		
 		// Debugging
-		// console.log("** DEBUG ** - called forceHSValue with reference: %s,  level: %s, resulting in new value: %s", ref, level, _HSValues[ref]);
+		// console.log("** DEBUG ** - called forceHSValue with reference: %s,  level: %s, resulting in new value: %s", ref, level, globals.HSValues[ref]);
 }
  globals.forceHSValue = forceHSValue;
 
@@ -344,8 +346,8 @@ HomeSeerPlatform.prototype =
 				for (var j =0; j< allHSRefs.length; j++)
 				{
 					// console.log(cyan("*Debug* - Checking allHSRefs has references: " + allHSRefs[j] + " at location: " + j ));
-					if(_statusObjects[allHSRefs[j]] === undefined) _statusObjects[allHSRefs[j]] = [];
-					_HSValues[allHSRefs[j]] = parseFloat(0);
+					if(globals.statusObjects[allHSRefs[j]] === undefined) globals.statusObjects[allHSRefs[j]] = [];
+					globals.HSValues[allHSRefs[j]] = parseFloat(0);
 				}
 								
 				allHSRefs.sort( (a,b) => (a-b) ); // the internal function (a,b) => (a-b) causes a numeric order sort instead of alpha!
@@ -369,13 +371,13 @@ HomeSeerPlatform.prototype =
 				throw err;
 			})
 		
-		// Next - For each device value retrieved from HomeSeer, store it in the _HSValues array 
+		// Next - For each device value retrieved from HomeSeer, store it in the globals.HSValues array 
 		// and  create HomeKit Accessories for each accessory in the config.json 'accessories' array!		
 		.then( function(response) 
 			{  
 				for(var i in response.Devices)
 				{
-					_HSValues[response.Devices[i].ref] = parseFloat(response.Devices[i].value);
+					globals.HSValues[response.Devices[i].ref] = parseFloat(response.Devices[i].value);
 				}
 				
 				this.log('HomeSeer status function succeeded!');
@@ -456,13 +458,13 @@ HomeSeerPlatform.prototype =
 							var myData = new HSData(data.toString().slice(0, -2).split(","));
 							
 							//Only need to do an update if there is HomeKit data associated with it!
-							// Which occurs if the _statusObjects array has a non-zero length for the reference reported.
-							if( _statusObjects[myData.ref])
+							// Which occurs if the globals.statusObjects array has a non-zero length for the reference reported.
+							if( globals.statusObjects[myData.ref])
 							{
 								this.log("Received HomeSeer status update data for HomeSeer device: " + cyan(myData.ref) +", new value: " + cyan(myData.newValue) + ", old value: " + cyan(myData.oldValue));
-								_HSValues[myData.ref] = 	parseFloat(myData.newValue);	
+								globals.HSValues[myData.ref] = 	parseFloat(myData.newValue);	
 
-								var statusObjectGroup = _statusObjects[myData.ref];
+								var statusObjectGroup = globals.statusObjects[myData.ref];
 								for (var thisCharacteristic in statusObjectGroup)
 								{
 									updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic], myData.ref, this.config);
@@ -544,7 +546,7 @@ HomeSeerPlatform.prototype =
 									}
 									for (var index in _currentHSDeviceStatus)
 									{
-										_HSValues[_currentHSDeviceStatus[index].ref] = parseFloat(_currentHSDeviceStatus[index].value);
+										globals.HSValues[_currentHSDeviceStatus[index].ref] = parseFloat(_currentHSDeviceStatus[index].value);
 									} //endfor
 
 										updateAllFromHSData();
@@ -615,7 +617,7 @@ HomeSeerAccessory.prototype = {
 		{
 				setTimeout ( ()=>
 				{
-					var statusObjectGroup = _statusObjects[this.HSRef];
+					var statusObjectGroup = globals.statusObjects[this.HSRef];
 					for (var thisCharacteristic in statusObjectGroup)
 					{
 						updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic], this.HSRef);
@@ -659,9 +661,9 @@ HomeSeerAccessory.prototype = {
         var services = [];
 
 		// The following function gets all the services for a device and returns them in the array 'services' 
-		// and also populates the '_statusObjects' array with the Characteristics that need to be updated
+		// and also populates the 'globals.statusObjects' array with the Characteristics that need to be updated
 		// when polling HomeSeer
-		HKSetup.setupServices(this, services, _statusObjects);
+		HKSetup.setupServices(this, services);
 	
         return services;
     }
@@ -763,9 +765,9 @@ function updateCharacteristicFromHSData(characteristicObject, HSReference, )
 function updateAllFromHSData()
 {
     //console.debug("DEBUG -  Executing updateAllFromHSData()");
-	for (var HSReference in _statusObjects)
+	for (var HSReference in globals.statusObjects)
 	{
-		var statusObjectGroup = _statusObjects[HSReference];
+		var statusObjectGroup = globals.statusObjects[HSReference];
 		// console.log(magenta("* Debug * - Updating for reference " + HSReference + " a group with length " + statusObjectGroup.length));
 		for (var thisCharacteristic in statusObjectGroup)
 		{
