@@ -33,6 +33,7 @@ var magenta = chalk.magenta.bold;
 var HSutilities = require("./lib/HomeSeerUtilities");
 var HKSetup = require("./lib/HomeKitDeviceSetup");
 var DataExchange = require("./lib/DataExchange");
+var setupHomeSeerTelnetPort = require("./lib/DataExchange");
 
 var Accessory, Service, Characteristic, UUIDGen;
 	
@@ -104,6 +105,8 @@ module.exports = function (homebridge) {
     // For platform plugin to be considered as dynamic platform plugin,
     // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
     homebridge.registerPlatform("homebridge-HomeSeerPlatform", "HomeSeer", HomeSeerPlatform, true);
+	
+	console.log(red("This line is called after registering the platform"));
 }
 
 function getHSValue(ref) {
@@ -215,12 +218,14 @@ function HomeSeerPlatform(log, config, api) {
 		globals.platformConfig = config; // Platform variables from config.json:  platform, name, host, temperatureScale, lightbulbs, thermostats, events, accessories
 		globals.api = api; // _accessories, _platforms, _configurableAccessories, _dynamicPlatforms, version, serverVersion, user, hap, hapLegacyTypes,platformAccessory,_events, _eventsCount
 		
+		/*
 		globals.log(yellow(	"\nContent of globals variable is: " + Object.getOwnPropertyNames(globals)
 						+	"\nContent of globals.api variable is: " + Object.getOwnPropertyNames(globals.api)
 						+	"\nContents of globals.platformConfig variable is: " + Object.getOwnPropertyNames(globals.platformConfig)
 						+	"\nContents of globals.config.platform variable is: " + globals.platformConfig.platform
 
 						));
+						*/
 
 }
 
@@ -255,13 +260,6 @@ HomeSeerPlatform.prototype =
 					);
 		}
 		// Done with Map
-
-
-
-
-
-
-
 
 
 
@@ -413,7 +411,7 @@ HomeSeerPlatform.prototype =
 		.then((response)=> 
 			{
 				callback(foundAccessories);
-				console.log(magenta("Config is: " + this.config.temperatureScale));
+				// console.log(magenta("Config is: " + this.config.temperatureScale));
 				updateAllFromHSData();
 				return response
 			})
@@ -428,10 +426,10 @@ HomeSeerPlatform.prototype =
 				}
 				var ASCIIPort = "11000";
 				
-				if(this.config["ASCIIPort"]) ASCIIPort = this.config["ASCIIPort"];
+				if(globals.platformConfig["ASCIIPort"]) ASCIIPort = globals.platformConfig["ASCIIPort"];
 			
-				var uri = parseUri(this.config["host"]);
-				this.log("Host for ASCII Interface set to: " + uri.host + " at port " + ASCIIPort);
+				var uri = parseUri(globals.platformConfig["host"]);
+				globals.log("Host for ASCII Interface set to: " + uri.host + " at port " + ASCIIPort);
 			
 				return new Promise((resolve, reject) => 
 				{
@@ -441,7 +439,7 @@ HomeSeerPlatform.prototype =
 				var numAttempts = 0;	
 				client.on('connect', () =>
 					{
-						this.log(green("Successfully connected to ASCII Control Interface of HomeSeer. Instant Status Enabled."));
+						globals.log(green("Successfully connected to ASCII Control Interface of HomeSeer. Instant Status Enabled."));
 						numAttempts = 1
 						instantStatusEnabled = true;
 						// resolve(true);
@@ -472,7 +470,7 @@ HomeSeerPlatform.prototype =
 					// If the status port closes, print a warning and then try to re-open it in 30 seconds.
 					client.on('close', () => 
 						{
-							this.log(red("* Warning * - ASCII Port closed - Critical Failure!. Restart system if failure continues."));
+							globals.log(red("* Warning * - ASCII Port closed - Critical Failure!. Restart system if failure continues."));
 							
 							// Try to re-connect every 30 seconds If there is a failure, another error will be generated
 							// which will cause this code to run again.
@@ -481,12 +479,12 @@ HomeSeerPlatform.prototype =
 								numAttempts = numAttempts +1;
 								try
 								{
-									this.log(red("Attempting to re-start ASCII Port Interface, Attempt: " + numAttempts));
+									globals.log(red("Attempting to re-start ASCII Port Interface, Attempt: " + numAttempts));
 									// client = net.createConnection({port:ASCIIPort, host:uri.host});
 									client.connect({port:ASCIIPort, host:uri.host});
 								} catch(err)
 								{
-									this.log(red("Attempt not successful with error: "));
+									globals.log(red("Attempt not successful with error: "));
 								}
 							}, 30000); // Try to connect every 30 seconds
 						
@@ -497,12 +495,12 @@ HomeSeerPlatform.prototype =
 					// if that fails.
 					client.on('error', (data) => 
 						{
-							this.log(red("* Warning * - Unable to connect to HomeSeer ASCII Port: " + ASCIIPort + ". Fatal error"));
+							globals.log(red("* Warning * - Unable to connect to HomeSeer ASCII Port: " + ASCIIPort + ". Fatal error"));
 							if (ASCIIPort != 11000) 
 							{
-							this.log(red("ASCIIPort configuration value of: " + ASCIIPort + " is unusual. Typical value is 11000. Check setting."));
+							globals.log(red("ASCIIPort configuration value of: " + ASCIIPort + " is unusual. Typical value is 11000. Check setting."));
 							}
-							this.log(yellow('To enable ASCII Port, see WIKI "Enable the HomeSeer ASCII Commands Interface Port" entry'));
+							globals.log(yellow('To enable ASCII Port, see WIKI "Enable the HomeSeer ASCII Commands Interface Port" entry'));
 							resolve(false)
 						});
 					// resolve (true);
