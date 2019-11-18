@@ -33,7 +33,8 @@ var magenta = chalk.magenta.bold;
 var HSutilities = require("./lib/HomeSeerUtilities");
 var HKSetup = require("./lib/HomeKitDeviceSetup");
 var DataExchange = require("./lib/DataExchange");
-var setupHomeSeerTelnetPort = require("./lib/DataExchange");
+var Listen = require("./lib/Setup Listener");
+
 
 var Accessory, Service, Characteristic, UUIDGen;
 	
@@ -107,6 +108,8 @@ module.exports = function (homebridge) {
     homebridge.registerPlatform("homebridge-HomeSeerPlatform", "HomeSeer", HomeSeerPlatform, true);
 	
 	console.log(red("This line is called after registering the platform"));
+
+
 }
 
 function getHSValue(ref) {
@@ -556,6 +559,8 @@ HomeSeerPlatform.prototype =
 
 					}, 60000 // end SetInterval's function
 					);	//end setInterval function for polling loop
+					
+						Listen.setupHomeSeerTelnetPort()
 
 				return true;
 			})
