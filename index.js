@@ -7,6 +7,21 @@ globals.allHSDevices.controlPairs = [];
 exports.globals = globals;
 
 
+// The next array variable (_HSValues) stores just the value of the associated HomeSeer reference. 
+// This is a sparse array with most index values null.
+// The array index corresponds to the HomeSeer reference so _HSValues[211] would be the HomeSeer value for device 211.
+var _HSValues = []; 
+
+// The next array variable holds a list of all of the HomeKit HAP Characteristic objects
+// that can be affected by changes occurring at HomeSeer. 
+// The array is populated during by the getServices function when a HomeKit device is created.
+// After HomeSeer is polled, each item in this array is analyzed by the updateAllFromHSData() function to determine 
+// if it needs to be updated.
+var _statusObjects = []; 
+
+
+
+
 var net = require('net');
 var promiseHTTP = require("request-promise-native");
 var chalk = require("chalk");
@@ -18,32 +33,6 @@ var magenta = chalk.magenta.bold;
 var HSutilities = require("./lib/HomeSeerUtilities");
 var HKSetup = require("./lib/HomeKitDeviceSetup");
 var DataExchange = require("./lib/DataExchange");
-
-//  - The config.json file information that used to be here was always out of date so it has been moved!
-//     https://github.com/jvmahon/homebridge-homeseer/wiki/Setting-Up-Your-Config.json-file.
-//
-// SUPORTED TYPES:
-// - CarbonDioxideSensor 
-// - CarbonMonoxideSensor 
-// - ContactSensor   
-// - Fan  
-// - GarageDoorOpener
-// - HumiditySensor          
-// - LeakSensor             
-// - Lightbulb   
-// - LightSensor       
-// - Lock  
-// - MotionSensor           
-// - OccupancySensor        
-// - Outlet                 
-// - SecuritySystem           
-// - SmokeSensor            
-// - Switch     
-// - Thermostat            
-// - TemperatureSensor  
-// - Valve
-// - Window
-// - WindowCovering
 
 var Accessory, Service, Characteristic, UUIDGen;
 	
@@ -94,25 +83,9 @@ var _everyHSDevice = [];
 */	
 
 
-
-
-// The next array variable (_HSValues) stores just the value of the associated HomeSeer reference. 
-// This is a sparse array with most index values null.
-// The array index corresponds to the HomeSeer reference so _HSValues[211] would be the HomeSeer value for device 211.
-var _HSValues = []; 
-
-// The next array variable holds a list of all of the HomeKit HAP Characteristic objects
-// that can be affected by changes occurring at HomeSeer. 
-// The array is populated during by the getServices function when a HomeKit device is created.
-// After HomeSeer is polled, each item in this array is analyzed by the updateAllFromHSData() function to determine 
-// if it needs to be updated.
-var _statusObjects = []; 
-
 // Currently the HomeSeer variable is used as a global to allow access to the log variable (function) 
 var HomeSeer = [];
-var HomeSeerHost = "";
-// HomeSeer.log = [];
-// HomeSeer.log = this.console.log;
+
 
 
 var instantStatusEnabled = false;
@@ -136,15 +109,12 @@ module.exports = function (homebridge) {
 function getHSValue(ref) {
 	return _HSValues[ref];
 }
+globals.getHSValue = getHSValue;
 
-function getHSControlValue(ref, command)
+function findControlPairByCommand(ref, command)
 {
-	/*
-	// Search through the control pair retrieved from HomeSeer to find the appropriate control value.
-	var index = globals.allHSDevices.controlPairs.Devices.findIndex( (element) => {return(element.ref == ref)})
-	var controls = globals.allHSDevices.controlPairs.Devices[index].ControlPairs
-	var thisControlIndex;
-	let validCommands = [ 
+	
+		let validCommands = [ 
 		{label: "NotSpecified", 	controlValue: 0},
 		{label: "On", 				controlValue: 1},
 		{label: "Off", 				controlValue: 2},
@@ -180,29 +150,47 @@ function getHSControlValue(ref, command)
         {label: "Previous", 		controlValue: 32},
         {label: "Volume", 			controlValue: 33}
 			]
+		
+			/* globals.log(cyan(	"\nContent of globals variable is: " + Object.getOwnPropertyNames(globals)
+						+	"\nContent of globals.api variable is: " + Object.getOwnPropertyNames(globals.api)
+						+	"\nContents of globals.platformConfig variable is: " + Object.getOwnPropertyNames(globals.platformConfig)
+						+	"\nContents of globals.config.platform variable is: " + globals.platformConfig.platform
+						+ "\nStructure of globals.allHSDevices variable is: " + Object.getOwnPropertyNames(globals.allHSDevices)
+
+						));
+						*/
+		var index;
+		if (isNaN(command))
+		{
+			index = validCommands.findIndex( (element) => { return ( element.label.toLowerCase() == command.toLowerCase() )});
+			command = validCommands[index].controlValue;
+		}
+						
+	// Next line searches for the HomeSeer Device by its reference.					
+	index = globals.allHSDevices.controlPairs.findIndex( (element) => {return(element.ref == ref)})
+	if (index != -1) globals.log(yellow("*Debug* - Found Device for reference: " + ref + " at index " + index));
 	
-	if(isNaN(command))
-	{
-		thisControlIndex = controls.findIndex((element) => { return(element.Label == command)});
-		
-		// if(thisControlIndex == -1) throw new SyntaxError(red("Invalid command " + command + "for Device reference: " +ref));
-		
-			console.log(cyan( "labeled command: " + command + " has a control value: " + controls[thisControlIndex].ControlValue));
-	} else
-	{
-		thisControlIndex = controls.findIndex((element) => { return(element.ControlUse == command)});
-		// if(thisControlIndex == -1) throw new SyntaxError(red("Invalid command Value: " + command + "for Device reference: " +ref));
-		console.log(cyan( "Numeric Command: " + command + " has a control value: " + controls[thisControlIndex].ControlValue));
+	//Then get its set of ControlPairs
+	var allThisDevicesControls = globals.allHSDevices.controlPairs[index].ControlPairs;
+	// globals.log(yellow("Control pairs are: " + JSON.stringify(allThisDevicesControls)));
+	
+	//Then check if the ControlPairs has a pair matching the specified command.
+	var thisCommandControl = allThisDevicesControls.findIndex( (element) => {return ( element.ControlUse == command)});
+	// globals.log(cyan("This command's controls are: " + JSON.stringify(thisCommandControl)));
 
-	}
+	
+		if (thisCommandControl != -1) {
+					globals.log(yellow("*Debug* - Found Matching Control Pairs for reference:  " + ref + ", command: " + command));
+					return (allThisDevicesControls[thisCommandControl]);
+		}
+		if (thisCommandControl == -1) { 
+					globals.log(yellow("*Debug* - No matching control pair for reference:  " + ref + ", command: " + command));
+					return(null);
+			};
 
-
-
-	return (controls[thisControlIndex].ControlValue)
-	*/
-
-	return(1);
 }
+globals.findControlPairByCommand = findControlPairByCommand;
+
 
 function forceHSValue(ref, level)
 {
@@ -214,10 +202,10 @@ function forceHSValue(ref, level)
 		// Debugging
 		// console.log("** DEBUG ** - called forceHSValue with reference: %s,  level: %s, resulting in new value: %s", ref, level, _HSValues[ref]);
 }
-
+ globals.forceHSValue = forceHSValue;
 
 function HomeSeerPlatform(log, config, api) {
-    // HomeSeer.log = log;
+
 	if(!config) return([]);
 
 	this.log = log;
@@ -306,7 +294,7 @@ HomeSeerPlatform.prototype =
 			.then( function(HSControls)
 			{
 
-				globals.allHSDevices.controlPairs = HSControls;
+				globals.allHSDevices.controlPairs = HSControls.Devices;
 				return(true);
 		
 			})
@@ -586,7 +574,7 @@ HomeSeerPlatform.prototype =
 
 
 function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
-    HomeSeer.log = this.log = log;
+	this.log = log;
     this.config = accessoryConfig;
     this.ref = status.ref;
     this.name = this.config.name || status.name
@@ -615,8 +603,7 @@ HomeSeerAccessory.prototype = {
 		// console.log(magenta("* Debug * - setHSValue called with level: " + level +", for item type: " + this.displayName));
 		
 		// Pass all the variables and functions used. There's probably a cleaner way to do this with module.exports but this works for now!
-		this.log = HomeSeer.log;
-		DataExchange.sendToHomeSeer(level, Characteristic, Service, forceHSValue, getHSValue, getHSControlValue, this);
+		DataExchange.sendToHomeSeer(level, this);
   
 		// Need to poll  for window coverings that are controlled by a binary switch.
 		// But which were adjusted on the iOS Home app using the slider. If poll isn't done, then the icon remains in a changing state until next poll!
@@ -671,7 +658,7 @@ HomeSeerAccessory.prototype = {
 		// The following function gets all the services for a device and returns them in the array 'services' 
 		// and also populates the '_statusObjects' array with the Characteristics that need to be updated
 		// when polling HomeSeer
-		HKSetup.setupServices(this, services, _statusObjects, Characteristic, Service, getHSValue);
+		HKSetup.setupServices(this, services, _statusObjects);
 	
         return services;
     }
@@ -767,7 +754,7 @@ HomeSeerEvent.prototype = {
 function updateCharacteristicFromHSData(characteristicObject, HSReference, )
 {	
 	// This performs the update to the HomeKit value from data received from HomeSeer
-	DataExchange.processDataFromHomeSeer(characteristicObject, HSReference, this, Characteristic, Service, getHSValue);
+	DataExchange.processDataFromHomeSeer(characteristicObject, HSReference, this, Characteristic, Service);
 }
 
 function updateAllFromHSData()
