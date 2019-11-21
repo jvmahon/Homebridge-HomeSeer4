@@ -22,7 +22,19 @@ globals.allHSRefs = [];
 				if (this.indexOf(item) == -1) this.push(parseInt(item)); 
 				return this
 			}
-
+/*			
+		globals.allHSRefs.pushUnique = function(...items) //Pushes item onto stack if it isn't null. Can be chained!
+			{ 
+				if ((items === undefined) || (items == null)) return this;
+				for var(item of items)
+				{
+					if (isNaN(item) || (!Number.isInteger(parseFloat(item)))) throw new SyntaxError("You specified: '" + item +"' as a HomeSeer references, but it is not a number. You need to fix it to continue");
+					HSutilities.deviceInHomeSeer(item);
+					if (this.indexOf(item) == -1) this.push(parseInt(item)); 
+				}
+				return this
+			}			
+*/
 
 // The array globals.HSValues) stores just the device value of the associated HomeSeer reference. 
 // This is a sparse array with most index values null.
@@ -145,7 +157,7 @@ HomeSeerPlatform.prototype =
 		{
 			for (var i in this.config.events) 
 			{
-				var event = new HomeSeerEvent(that.log, that.config, that.config.events[i]);
+				var event = new HomeSeerEvent(that.config.events[i]);
 				foundAccessories.push(event);
 			}
 		}
@@ -242,7 +254,7 @@ HomeSeerPlatform.prototype =
 				/////////////////////////////////////////////////////////////////////////////////
 
 				// Then make a HomeKit device for each "regular" HomeSeer device.
-				this.log("Fetching HomeSeer devices.");
+				globals.log("Fetching HomeSeer devices.");
 
 				// URL to get status on everything.
 				allStatusUrl = globals.platformConfig["host"] + "/JSON?request=getstatus&ref=" + globals.allHSRefs.concat();
@@ -265,7 +277,7 @@ HomeSeerPlatform.prototype =
 					globals.HSValues[response.Devices[i].ref] = parseFloat(response.Devices[i].value);
 				}
 				
-				this.log('HomeSeer status function succeeded!');
+				globals.log('HomeSeer status function succeeded!');
 				for (var i in this.config.accessories) {
 					let index = response.Devices.findIndex( (element, index, array)=> {return (element.ref == this.config.accessories[i].ref)} )
 					// Set up initial array of HS Response Values during startup
@@ -315,7 +327,6 @@ HomeSeerPlatform.prototype =
 
 
 function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
-	this.log = log;
     this.config = accessoryConfig;
     this.ref = status.ref;
     this.name = this.config.name || status.name
@@ -367,7 +378,7 @@ HomeSeerAccessory.prototype = {
 	// blindly transmit a particular value to HomeSeer
 	transmitToHS: function(level, ref)
 	{
-		this.log("Transmitting to HomeSeer device: " + cyan(ref) +", a new value: " + cyan(level));
+		globals.log("Transmitting to HomeSeer device: " + cyan(ref) +", a new value: " + cyan(level));
 		var url = globals.platformConfig["host"] + "/JSON?request=controldevicebyvalue&ref=" 
 					+ ref + "&value=" + level;
 
@@ -412,24 +423,19 @@ HomeSeerAccessory.prototype = {
 ////////////////////////////////////////////////////////////////////////////////
 //    The following code creates devices which can trigger HomeSeer Events   ///
 ////////////////////////////////////////////////////////////////////////////////
-function HomeSeerEvent(log, platformConfig, eventConfig) {
-    this.log = log;
+function HomeSeerEvent(eventConfig) {
     this.config = eventConfig;
     this.name = eventConfig.eventName
     this.model = "HomeSeer Event";
 
-    this.access_url = globals.platformConfig["host"] + "/JSON?";
-    this.on_url = this.access_url + "request=runevent&group=" + encodeURIComponent(this.config.eventGroup) + "&name=" + encodeURIComponent(this.config.eventName);
+    this.on_url = globals.platformConfig["host"] + "/JSON?request=runevent&group=" + encodeURIComponent(eventConfig.eventGroup) + "&name=" + encodeURIComponent(eventConfig.eventName);
 
-    if (this.config.offEventGroup && this.config.offEventName) {
-        this.off_url = this.access_url + "request=runevent&group=" + encodeURIComponent(this.config.offEventGroup) + "&name=" + encodeURIComponent(this.config.offEventName);
+    if (eventConfig.offEventGroup && eventConfig.offEventName) {
+        this.off_url = globals.platformConfig["host"] + "/JSON?request=runevent&group=" + encodeURIComponent(eventConfig.offEventGroup) + "&name=" + encodeURIComponent(eventConfig.offEventName);
     }
 
-    if (this.config.name)
-        this.name = this.config.name;
-
-    if (this.config.uuid_base)
-        this.uuid_base = this.config.uuid_base;
+    if (eventConfig.uuid_base)
+        this.uuid_base = eventConfig.uuid_base;
 }
 
 HomeSeerEvent.prototype = {
@@ -439,7 +445,7 @@ HomeSeerEvent.prototype = {
     },
 
     launchEvent: function (value, callback) {
-        this.log("Setting event value to %s", value);
+        globals.log("Setting event value to %s", value);
 
         var url = this.on_url;
         if (value == 0 && this.off_url) {
@@ -454,7 +460,7 @@ HomeSeerEvent.prototype = {
 			if(this.off_url==null && value != 0)
             {
                 setTimeout(function() {
-                    this.log(this.name + ': Momentary switch reseting to 0');
+                    globals.log(this.name + ': Momentary switch reseting to 0');
                     this.switchService.getCharacteristic(Characteristic.On).setValue(0);
                 }.bind(this),2000);
             }
