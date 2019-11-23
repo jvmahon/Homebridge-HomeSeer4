@@ -24,6 +24,8 @@ globals.allHSRefs = [];
 				if (this.indexOf(item) == -1) this.push(parseInt(item)); 
 				return this
 			}
+
+		
 /*			
 		globals.allHSRefs.pushUnique = function(...items) //Pushes item onto stack if it isn't null. Can be chained!
 			{ 
@@ -509,14 +511,14 @@ globals.updateCharacteristicFromHSData = updateCharacteristicFromHSData;
 
 function updateAllFromHSData(pollingCount)
 {
-    //globals.log("DEBUG -  Executing updateAllFromHSData()");
+
 	for (var HSReference in globals.statusObjects)
 	{
 		var statusObjectGroup = globals.statusObjects[HSReference];
-		// globals.log(magenta("* Debug * - Updating for reference " + HSReference + " a group with length " + statusObjectGroup.length));
+
 		for (var thisCharacteristic in statusObjectGroup)
 		{
-		updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic], HSReference);
+		DataExchange.processDataFromHomeSeer(statusObjectGroup[thisCharacteristic], HSReference);
 		}
 	} // end for aindex
 	
