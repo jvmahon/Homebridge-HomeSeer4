@@ -65,7 +65,6 @@ globals.statusObjects = [];
 
 var HSutilities = require("./lib/HomeSeerUtilities");
 var HKSetup = require("./lib/HomeKitDeviceSetup");
-var DataExchange = require("./lib/DataExchange");
 var Listen = require("./lib/Setup Listener");
 
 
@@ -353,60 +352,6 @@ HomeSeerAccessory.prototype = {
         callback();
     },
 
-	// setHSValue function should be bound by .bind() to a HomeKit Service Object Characteristic!
-	setHSValue: function (level, callback) {
-		
-		// globals.log(magenta("* Debug * - setHSValue called with level: " + level +", for item type: " + this.displayName));
-		
-		// Pass all the variables and functions used. There's probably a cleaner way to do this with module.exports but this works for now!
-		DataExchange.sendToHomeSeer(level, this);
-  
-		// Need to poll  for window coverings that are controlled by a binary switch.
-		// But which were adjusted on the iOS Home app using the slider. If poll isn't done, then the icon remains in a changing state until next poll!
-		// when the slider set a target state that wasn't 0 or 100
-		if (this.UUID == Characteristic.CurrentPosition.UUID || this.UUID == Characteristic.TargetPosition.UUID)
-		{
-				setTimeout ( ()=>
-				{
-					var statusObjectGroup = globals.statusObjects[this.HSRef];
-					for (var thisCharacteristic in statusObjectGroup)
-					{
-						updateCharacteristicFromHSData(statusObjectGroup[thisCharacteristic], this.HSRef);
-					}
-				}, 500);
-		} 
-		callback(null);
-
-	},
-	
-	// blindly transmit a particular value to HomeSeer
-	transmitToHS: function(level, ref)
-	{
-		globals.log("Transmitting to HomeSeer device: " + cyan(ref) +", a new value: " + cyan(level));
-		var url = globals.platformConfig["host"] + "/JSON?request=controldevicebyvalue&ref=" 
-					+ ref + "&value=" + level;
-
-		promiseHTTP(url)
-			.then( function(returnData) {
-				if(returnData.trim() == "error")
-				{
-					globals.log(red("transmitToHS Error sending: " + level +", to: " + ref ));
-					return false
-				}
-				else 
-				{
-					return true;
-				}
-			})
-			.catch(function(err)
-				{ 	
-				globals.log(red("transmitToHS function Failed with error: " + err ));
-				return false;
-				}
-			);
-	},
-	
-
     getServices: function () {
 				
         var services = [];
@@ -418,8 +363,6 @@ HomeSeerAccessory.prototype = {
 	
         return services;
     }
-
-
 }
 
 
@@ -502,23 +445,26 @@ HomeSeerEvent.prototype = {
 //    The following code is associated with polling HomeSeer and updating HomeKit Devices from Returned data   //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function updateCharacteristicFromHSData(characteristicObject, HSReference, )
-{	
-	// This performs the update to the HomeKit value from data received from HomeSeer
-	DataExchange.processDataFromHomeSeer(characteristicObject, HSReference);
-}
-globals.updateCharacteristicFromHSData = updateCharacteristicFromHSData;
 
 function updateAllFromHSData(pollingCount)
 {
 
 	for (var HSReference in globals.statusObjects)
 	{
-		var statusObjectGroup = globals.statusObjects[HSReference];
+					globals.log(chalk.yellow("HSReference is: " + HSReference));
 
-		for (var thisCharacteristic in statusObjectGroup)
+		var statusObjectGroup = globals.statusObjects[HSReference];
+		
+		for (var homekitObject of statusObjectGroup)
 		{
-		DataExchange.processDataFromHomeSeer(statusObjectGroup[thisCharacteristic], HSReference);
+					globals.log(chalk.red("thisCharacteristic is: " + Object.getOwnPropertyNames(homekitObject)));
+
+			
+			let newValue = globals.HSValues[homekitObject.HSRef];
+			globals.log(chalk.blue("Emitting for object with new value: " + newValue));
+
+			homekitObject.emit('HSvalueChanged',newValue, homekitObject)
+		// DataExchange.processDataFromHomeSeer(statusObjectGroup[thisCharacteristic], HSReference);
 		}
 	} // end for aindex
 	
