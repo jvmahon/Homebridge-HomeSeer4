@@ -25,20 +25,7 @@ globals.allHSRefs = [];
 				return this
 			}
 
-		
-/*			
-		globals.allHSRefs.pushUnique = function(...items) //Pushes item onto stack if it isn't null. Can be chained!
-			{ 
-				if ((items === undefined) || (items == null)) return this;
-				for var(item of items)
-				{
-					if (isNaN(item) || (!Number.isInteger(parseFloat(item)))) throw new SyntaxError("You specified: '" + item +"' as a HomeSeer references, but it is not a number. You need to fix it to continue");
-					HSutilities.deviceInHomeSeer(item);
-					if (this.indexOf(item) == -1) this.push(parseInt(item)); 
-				}
-				return this
-			}			
-*/
+
 
 // The array globals.HSValues) stores just the device value of the associated HomeSeer reference. 
 // This is a sparse array with most index values null.
@@ -174,21 +161,15 @@ HomeSeerPlatform.prototype =
 		}
 		// Done with Map
 
-
-
-		// let self = this;	// Assign this to self so you can access its values inside the promise.
 		var allStatusUrl = "";
 		//globals.log(green("this is the value of self: \n" + JSON.stringify(self)));
 			
 		var getStatusInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getstatus", json:true})
 		.then( function(HSDevices)
 			{
-
 				globals.allHSDevices.HSdeviceStatusInfo = HSDevices.Devices; 
-	
-					
+
 				// Check entries in the config.json file to make sure there are no obvious errors.		
-				// HSutilities.checkConfig.call(self, globals.platformConfig);
 				HSutilities.checkConfig(globals.platformConfig);
 
 				return (1);
@@ -221,46 +202,9 @@ HomeSeerPlatform.prototype =
 			
 		Promise.all([getStatusInfo, getControlInfo]).then(()=> 
 			{
-				//////////////////  Identify all of the HomeSeer References of interest  ////////////
-				// These are used to obtain status data from HomeSeer
 
-
-			
-				for (var i in this.config.accessories) 
-				{
-					// Gather every reference that isn't undefined or null!
-					globals.allHSRefs
-						.pushUnique(this.config.accessories[i].ref)
-						.pushUnique(this.config.accessories[i].batteryRef)
-						.pushUnique(this.config.accessories[i].obstructionRef)
-						.pushUnique(this.config.accessories[i].stateRef)
-						.pushUnique(this.config.accessories[i].controlRef)
-						.pushUnique(this.config.accessories[i].doorSensorRef)	
-						.pushUnique(this.config.accessories[i].humidityRef)
-						.pushUnique(this.config.accessories[i].humidityTargetRef)
-						.pushUnique(this.config.accessories[i].coolingSetpointRef)
-						.pushUnique(this.config.accessories[i].heatingSetpointRef)
-						.pushUnique(this.config.accessories[i].tamperRef)
-				} // end for
-				
-				for (var j =0; j< globals.allHSRefs.length; j++)
-				{
-					// globals.log(cyan("*Debug* - Checking globals.allHSRefs has references: " + globals.allHSRefs[j] + " at location: " + j ));
-					if(globals.statusObjects[globals.allHSRefs[j]] === undefined) globals.statusObjects[globals.allHSRefs[j]] = [];
-					globals.HSValues[globals.allHSRefs[j]] = parseFloat(0);
-				}
-								
-				globals.allHSRefs.sort( (a,b) => (a-b) ); // the internal function (a,b) => (a-b) causes a numeric order sort instead of alpha!
-				
-				// globals.log(cyan("*Debug* - All HomeSeer References Identified in config.json are: " + globals.allHSRefs.concat()  ));
-
-				/////////////////////////////////////////////////////////////////////////////////
-
-				// Then make a HomeKit device for each "regular" HomeSeer device.
 				globals.log("Fetching HomeSeer devices.");
-
-				// URL to get status on everything.
-				allStatusUrl = globals.platformConfig["host"] + "/JSON?request=getstatus&ref=" + globals.allHSRefs.concat();
+				allStatusUrl = globals.platformConfig["host"] + "/JSON?request=getstatus"
 
 				// now get the data from HomeSeer and pass it as the 'response' to the .then stage.
 				return promiseHTTP({ uri: allStatusUrl, json:true})	
@@ -282,28 +226,32 @@ HomeSeerPlatform.prototype =
 				
 				globals.log('HomeSeer status function succeeded!');
 				for (var i in this.config.accessories) {
-					let index = response.Devices.findIndex( (element, index, array)=> {return (element.ref == this.config.accessories[i].ref)} )
+					// Find the index into the array of all of the HomeSeer devices
+					let index = response.Devices.findIndex( (element, index, array)=> 
+						{
+							return (element.ref == this.config.accessories[i].ref)
+						} )
 					// Set up initial array of HS Response Values during startup
-				try 
-				{
-					var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[index]);
-				} catch(err) 
-					{
-						globals.log(
-							magenta( "\n\n** Error ** creating new HomeSeerAccessory in file index.js.\n" 
-							+ "This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. \n" 
-							+ "Check all reference numbers and be sure HomeSeer is running. Stopping operation\n" 
-							+ "Check Accessory No: ") 
-							+ cyan(i+1) 
-							+ magenta(", of type: ")
-							+ cyan(this.config.accessories[i].type) 
-							+ magenta(", and which identifies a reference No.: ") 
-							+ cyan(this.config.accessories[i].ref + "\n")
-						); 
-						
-						globals.log(red(err));	
-						throw err
-					}			
+						try 
+						{
+							var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[index]);
+						} catch(err) 
+							{
+							globals.log(
+								magenta( "\n\n** Error ** creating new HomeSeerAccessory in file index.js.\n" 
+								+ "This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. \n" 
+								+ "Check all reference numbers and be sure HomeSeer is running. Stopping operation\n" 
+								+ "Check Accessory No: ") 
+								+ cyan(i+1) 
+								+ magenta(", of type: ")
+								+ cyan(this.config.accessories[i].type) 
+								+ magenta(", and which identifies a reference No.: ") 
+								+ cyan(this.config.accessories[i].ref + "\n")
+							); 
+							
+							globals.log(red(err));	
+							throw err
+						}			
 					foundAccessories.push(accessory);
 				} //endfor.
 				return response
@@ -316,9 +264,9 @@ HomeSeerPlatform.prototype =
 		.then((response)=> 
 			{
 				callback(foundAccessories);
-				// globals.log(magenta("Config is: " + this.config.temperatureScale));
-				updateAllFromHSData();
 				Listen.setupHomeSeerTelnetPort()
+				updateAllFromHSData();
+
 				return response
 			})
 
@@ -451,13 +399,13 @@ function updateAllFromHSData(pollingCount)
 
 	for (var HSReference in globals.statusObjects)
 	{
-					globals.log(chalk.yellow("HSReference is: " + HSReference));
+		globals.log(chalk.yellow("HSReference is: " + HSReference));
 
 		var statusObjectGroup = globals.statusObjects[HSReference];
 		
 		for (var homekitObject of statusObjectGroup)
 		{
-					globals.log(chalk.red("thisCharacteristic is: " + Object.getOwnPropertyNames(homekitObject)));
+					globals.log(chalk.red("HomeKit Object is: " + homekitObject.displayName +"\n" + Object.getOwnPropertyNames(homekitObject)));
 
 			
 			let newValue = globals.HSValues[homekitObject.HSRef];
@@ -479,37 +427,3 @@ module.exports.platform = HomeSeerPlatform;
 ////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
 
 
-////////////////////////   Code to Parse a URI and separate out Host and Port /////////////
-// parseUri 1.2.2
-// (c) Steven Levithan <stevenlevithan.com>
-// MIT License
-/*
-function parseUri (str) {
-	var	o   = parseUri.options,
-		m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
-		uri = {},
-		i   = 14;
-
-	while (i--) uri[o.key[i]] = m[i] || "";
-
-	uri[o.q.name] = {};
-	uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
-		if ($1) uri[o.q.name][$1] = $2;
-	});
-
-	return uri;
-};
-
-parseUri.options = {
-	strictMode: false,
-	key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
-	q:   {
-		name:   "queryKey",
-		parser: /(?:^|&)([^&=]*)=?([^&]*)/g
-	},
-	parser: {
-		strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
-		loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
-	}
-};
-*/
