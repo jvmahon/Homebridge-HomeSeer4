@@ -7,6 +7,7 @@ var red = chalk.red.bold;
 var yellow = chalk.yellow.bold;
 var cyan = chalk.cyan.bold;
 var magenta = chalk.magenta.bold;
+var assert = require('assert');
 
 var exports = module.exports;
 var globals = [];
@@ -32,11 +33,10 @@ globals.allHSRefs = [];
 // The array index corresponds to the HomeSeer reference so HSValues[211] would be the HomeSeer value for device 211.
 globals.HSValues = [];
 globals.getHSValue = function(ref) { return globals.HSValues[ref] }
+globals.setHSValue = function(ref, value) { globals.HSValues[ref] = parseFloat(value); }
+globals.forceHSValue = globals.setHSValue; // Alias for setHSValue function
 
-// globals.forceHSValue function is used to temporarily 'fake' a HomeSeer poll update.
-// Used when, e.g., you set a new value of an accessory in HomeKit - this provides a fast update to the
-// Retrieved HomeSeer device values which will then be "corrected / confirmed" on the next poll.
- globals.forceHSValue = function(ref, level) {globals.HSValues[ref] = parseFloat(level);};
+
  
  
 // globals.statusObjects holds a list of all of the HomeKit HAP Characteristic objects
@@ -397,26 +397,20 @@ HomeSeerEvent.prototype = {
 function updateAllFromHSData(pollingCount)
 {
 
-	for (var HSReference in globals.statusObjects)
+	for (let HSReference in globals.statusObjects)
 	{
-		globals.log(chalk.yellow("HSReference is: " + HSReference));
-
-		var statusObjectGroup = globals.statusObjects[HSReference];
+		let statusObjectGroup = globals.statusObjects[HSReference];
 		
-		for (var homekitObject of statusObjectGroup)
+		for (let homekitObject of statusObjectGroup)
 		{
-					globals.log(chalk.red("HomeKit Object is: " + homekitObject.displayName +"\n" + Object.getOwnPropertyNames(homekitObject)));
-
-			
-			let newValue = globals.HSValues[homekitObject.HSRef];
-			globals.log(chalk.blue("Emitting for object with new value: " + newValue));
+			assert( (homekitObject.HSRef == null) || (HSReference == homekitObject.HSRef), "Assertion failed for HSReference: " + HSReference + " and  homekitObject.HSRef: " + homekitObject.HSRef);
+			const newValue = globals.getHSValue(HSReference);
+			globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
 
 			homekitObject.emit('HSvalueChanged',newValue, homekitObject)
-		// DataExchange.processDataFromHomeSeer(statusObjectGroup[thisCharacteristic], HSReference);
 		}
-	} // end for aindex
-	
-} // end function
+	}
+}
 
 globals.updateAllFromHSData = updateAllFromHSData;
 
