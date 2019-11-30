@@ -8,7 +8,6 @@ var yellow = chalk.yellow.bold;
 var cyan = chalk.cyan.bold;
 var magenta = chalk.magenta.bold;
 var assert = require('assert');
-var identifyThermostatData = require("./lib/IdentifyThermostats.js").identifyThermostatData;
 			
 
 var exports = module.exports;
@@ -145,46 +144,16 @@ HomeSeerPlatform.prototype =
 	{
         var foundAccessories = [];
 		var that = this;
-
-		/////////////////////////////////////////////////////////////////////////////////		
-		// Make devices for each HomeSeer event in the config.json file
-
-		// Make Devices for each 'Event' entry in the config.json file.
-		if (this.config.events) 
-		{
-			for (var currentEvent of this.config.events) 
-			{
-				var createdEvent = new HomeSeerEvent(currentEvent);
-				foundAccessories.push(createdEvent);
-			}
-		}
-	
-		if (this.config.accessories === undefined) this.config.accessories = [];
-		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
-		if(this.config.lightbulbs) 
-		{
-			this.config.accessories = this.config.accessories.concat(
-					this.config.lightbulbs.map( (HSreference)=> { return( { "type":"Lightbulb", "ref":HSreference} );})
-					);
-		}
 		
-		if(this.config.thermostats) 
-		{
-			for( var thermostatRoot of this.config.thermostats)
-			{
-				var FindConfiguration = identifyThermostatData(thermostatRoot, this.config.accessories);
-			}
-			
-		}
-		// Done with Map
-
-		var allStatusUrl = "";
-		//globals.log(green("this is the value of self: \n" + JSON.stringify(self)));
-			
-		var getStatusInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getstatus", json:true})
+		var getStatusInfo = promiseHTTP({ uri: globals.platformConfig["host"] + "/JSON?request=getstatus", json:true})
 		.then( function(HSDevices)
 			{
 				globals.allHSDevices.HSdeviceStatusInfo = HSDevices.Devices; 
+				
+				for(var currentDevice of HSDevices.Devices)
+				{
+					globals.HSValues[currentDevice.ref] = parseFloat(currentDevice.value);
+				}
 
 				// Check entries in the config.json file to make sure there are no obvious errors.		
 				HSutilities.checkConfig(globals.platformConfig);
@@ -217,14 +186,54 @@ HomeSeerPlatform.prototype =
 				throw err;
 			} )
 			
+			
+			
+
+		/////////////////////////////////////////////////////////////////////////////////		
+		// Make devices for each HomeSeer event in the config.json file
+
+		// Make Devices for each 'Event' entry in the config.json file.
+		if (globals.platformConfig.events) 
+		{
+			for (var currentEvent of globals.platformConfig.events) 
+			{
+				var createdEvent = new HomeSeerEvent(currentEvent);
+				foundAccessories.push(createdEvent);
+			}
+		}
+	
+		if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
+		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
+		if(globals.platformConfig.lightbulbs) 
+		{
+			globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
+					globals.platformConfig.lightbulbs.map( (HSreference)=> { return( { "type":"Lightbulb", "ref":HSreference} );})
+					);
+		}
+		
+		/*
+		if(globals.platformConfig.thermostats) 
+		{
+			for( var thermostatRoot of globals.platformConfig.thermostats)
+			{
+				var FindConfiguration = identifyThermostatData(thermostatRoot, globals.platformConfig.accessories);
+			}
+			
+		}
+		*/
+		// Done with Map
+
+
+			
+
+			
 		Promise.all([getStatusInfo, getControlInfo]).then(()=> 
 			{
 
 				globals.log("Fetching HomeSeer devices.");
-				allStatusUrl = globals.platformConfig["host"] + "/JSON?request=getstatus"
 
 				// now get the data from HomeSeer and pass it as the 'response' to the .then stage.
-				return promiseHTTP({ uri: allStatusUrl, json:true})	
+				return promiseHTTP({ uri: globals.platformConfig["host"] + "/JSON?request=getstatus", json:true})	
 				
 			}) // End of gathering HomeSeer references
 		.catch((err) => 
@@ -236,15 +245,12 @@ HomeSeerPlatform.prototype =
 		// and  create HomeKit Accessories for each accessory in the config.json 'accessories' array!		
 		.then( function(response) 
 			{  
-				for(var currentDevice of response.Devices)
-				{
-					globals.HSValues[currentDevice.ref] = parseFloat(currentDevice.value);
-				}
+
 				
 				globals.log('HomeSeer status function succeeded!');
-				for (var currentAccessory of this.config.accessories) {
+				for (var currentAccessory of globals.platformConfig.accessories) {
 					// Find the index into the array of all of the HomeSeer devices
-					let thisDevice = response.Devices.find( (element, index, array)=> 
+					let thisDevice = globals.allHSDevices.HSdeviceStatusInfo.find( (element, index, array)=> 
 						{
 							return (element.ref == currentAccessory.ref)
 						} )
@@ -266,7 +272,7 @@ HomeSeerPlatform.prototype =
 					foundAccessories.push(accessory);
 				} //endfor.
 				return response
-			}.bind(this))
+			})
 		.catch((err) => 
 			{
 				throw err;
@@ -416,7 +422,7 @@ function updateAllFromHSData(pollingCount)
 		{
 			assert( (homekitObject.HSRef == null) || (HSReference == homekitObject.HSRef), "Assertion failed for HSReference: " + HSReference + " and  homekitObject.HSRef: " + homekitObject.HSRef);
 			const newValue = globals.getHSValue(HSReference);
-			globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
+			// globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
 
 			homekitObject.emit('HSvalueChanged',newValue, homekitObject)
 		}
