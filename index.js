@@ -235,9 +235,9 @@ HomeSeerPlatform.prototype =
 		// and  create HomeKit Accessories for each accessory in the config.json 'accessories' array!		
 		.then( function(response) 
 			{  
-				for(var i in response.Devices)
+				for(var currentDevice of response.Devices)
 				{
-					globals.HSValues[response.Devices[i].ref] = parseFloat(response.Devices[i].value);
+					globals.HSValues[currentDevice.ref] = parseFloat(currentDevice.value);
 				}
 				
 				globals.log('HomeSeer status function succeeded!');
