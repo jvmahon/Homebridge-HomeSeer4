@@ -144,6 +144,50 @@ HomeSeerPlatform.prototype =
 	{
         var foundAccessories = [];
 		var that = this;
+		
+		var getStatusInfo = promiseHTTP({ uri: globals.platformConfig["host"] + "/JSON?request=getstatus", json:true})
+		.then( function(HSDevices)
+			{
+				globals.allHSDevices.HSdeviceStatusInfo = HSDevices.Devices; 
+				
+				for(var currentDevice of HSDevices.Devices)
+				{
+					globals.HSValues[currentDevice.ref] = parseFloat(currentDevice.value);
+				}
+
+				// Check entries in the config.json file to make sure there are no obvious errors.		
+				HSutilities.checkConfig(globals.platformConfig);
+
+				return (1);
+			}) // end then's function
+			.catch( (err) => 
+			{
+				if( err.message.includes("ECONNREFUSED") ) 
+					{
+						err = red( err + "\nError getting device status info. Check if HomeSeer is running, then start homebridge again.");
+					}
+				throw err;
+			} )
+		
+		var getControlInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getcontrol", json:true})
+			.then( function(HSControls)
+			{
+
+				globals.allHSDevices.controlPairs = HSControls.Devices;
+				return(true);
+		
+			})
+		.catch( (err) => 
+			{
+				if( err.message.includes("ECONNREFUSED") ) 
+					{
+						err = red( err + "\nError getting device control info. Check if HomeSeer is running, then start homebridge again.");
+					}
+				throw err;
+			} )
+			
+			
+			
 
 		/////////////////////////////////////////////////////////////////////////////////		
 		// Make devices for each HomeSeer event in the config.json file
@@ -179,53 +223,17 @@ HomeSeerPlatform.prototype =
 		*/
 		// Done with Map
 
-		var allStatusUrl = "";
-		//globals.log(green("this is the value of self: \n" + JSON.stringify(self)));
+
 			
-		var getStatusInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getstatus", json:true})
-		.then( function(HSDevices)
-			{
-				globals.allHSDevices.HSdeviceStatusInfo = HSDevices.Devices; 
 
-				// Check entries in the config.json file to make sure there are no obvious errors.		
-				HSutilities.checkConfig(globals.platformConfig);
-
-				return (1);
-			}) // end then's function
-			.catch( (err) => 
-			{
-				if( err.message.includes("ECONNREFUSED") ) 
-					{
-						err = red( err + "\nError getting device status info. Check if HomeSeer is running, then start homebridge again.");
-					}
-				throw err;
-			} )
-		
-		var getControlInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getcontrol", json:true})
-			.then( function(HSControls)
-			{
-
-				globals.allHSDevices.controlPairs = HSControls.Devices;
-				return(true);
-		
-			})
-		.catch( (err) => 
-			{
-				if( err.message.includes("ECONNREFUSED") ) 
-					{
-						err = red( err + "\nError getting device control info. Check if HomeSeer is running, then start homebridge again.");
-					}
-				throw err;
-			} )
 			
 		Promise.all([getStatusInfo, getControlInfo]).then(()=> 
 			{
 
 				globals.log("Fetching HomeSeer devices.");
-				allStatusUrl = globals.platformConfig["host"] + "/JSON?request=getstatus"
 
 				// now get the data from HomeSeer and pass it as the 'response' to the .then stage.
-				return promiseHTTP({ uri: allStatusUrl, json:true})	
+				return promiseHTTP({ uri: globals.platformConfig["host"] + "/JSON?request=getstatus", json:true})	
 				
 			}) // End of gathering HomeSeer references
 		.catch((err) => 
@@ -237,15 +245,12 @@ HomeSeerPlatform.prototype =
 		// and  create HomeKit Accessories for each accessory in the config.json 'accessories' array!		
 		.then( function(response) 
 			{  
-				for(var currentDevice of response.Devices)
-				{
-					globals.HSValues[currentDevice.ref] = parseFloat(currentDevice.value);
-				}
+
 				
 				globals.log('HomeSeer status function succeeded!');
 				for (var currentAccessory of globals.platformConfig.accessories) {
 					// Find the index into the array of all of the HomeSeer devices
-					let thisDevice = response.Devices.find( (element, index, array)=> 
+					let thisDevice = globals.allHSDevices.HSdeviceStatusInfo.find( (element, index, array)=> 
 						{
 							return (element.ref == currentAccessory.ref)
 						} )
@@ -267,7 +272,7 @@ HomeSeerPlatform.prototype =
 					foundAccessories.push(accessory);
 				} //endfor.
 				return response
-			}.bind(this))
+			})
 		.catch((err) => 
 			{
 				throw err;
@@ -417,7 +422,7 @@ function updateAllFromHSData(pollingCount)
 		{
 			assert( (homekitObject.HSRef == null) || (HSReference == homekitObject.HSRef), "Assertion failed for HSReference: " + HSReference + " and  homekitObject.HSRef: " + homekitObject.HSRef);
 			const newValue = globals.getHSValue(HSReference);
-			globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
+			// globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
 
 			homekitObject.emit('HSvalueChanged',newValue, homekitObject)
 		}
