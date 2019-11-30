@@ -8,7 +8,6 @@ var yellow = chalk.yellow.bold;
 var cyan = chalk.cyan.bold;
 var magenta = chalk.magenta.bold;
 var assert = require('assert');
-var identifyThermostatData = require("./lib/IdentifyThermostats.js").identifyThermostatData;
 			
 
 var exports = module.exports;
@@ -150,32 +149,34 @@ HomeSeerPlatform.prototype =
 		// Make devices for each HomeSeer event in the config.json file
 
 		// Make Devices for each 'Event' entry in the config.json file.
-		if (this.config.events) 
+		if (globals.platformConfig.events) 
 		{
-			for (var currentEvent of this.config.events) 
+			for (var currentEvent of globals.platformConfig.events) 
 			{
 				var createdEvent = new HomeSeerEvent(currentEvent);
 				foundAccessories.push(createdEvent);
 			}
 		}
 	
-		if (this.config.accessories === undefined) this.config.accessories = [];
+		if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
 		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
-		if(this.config.lightbulbs) 
+		if(globals.platformConfig.lightbulbs) 
 		{
-			this.config.accessories = this.config.accessories.concat(
-					this.config.lightbulbs.map( (HSreference)=> { return( { "type":"Lightbulb", "ref":HSreference} );})
+			globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
+					globals.platformConfig.lightbulbs.map( (HSreference)=> { return( { "type":"Lightbulb", "ref":HSreference} );})
 					);
 		}
 		
-		if(this.config.thermostats) 
+		/*
+		if(globals.platformConfig.thermostats) 
 		{
-			for( var thermostatRoot of this.config.thermostats)
+			for( var thermostatRoot of globals.platformConfig.thermostats)
 			{
-				var FindConfiguration = identifyThermostatData(thermostatRoot, this.config.accessories);
+				var FindConfiguration = identifyThermostatData(thermostatRoot, globals.platformConfig.accessories);
 			}
 			
 		}
+		*/
 		// Done with Map
 
 		var allStatusUrl = "";
@@ -242,7 +243,7 @@ HomeSeerPlatform.prototype =
 				}
 				
 				globals.log('HomeSeer status function succeeded!');
-				for (var currentAccessory of this.config.accessories) {
+				for (var currentAccessory of globals.platformConfig.accessories) {
 					// Find the index into the array of all of the HomeSeer devices
 					let thisDevice = response.Devices.find( (element, index, array)=> 
 						{
