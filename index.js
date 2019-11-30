@@ -159,6 +159,7 @@ HomeSeerPlatform.prototype =
 			}
 		}
 	
+		if (this.config.accessories === undefined) this.config.accessories = [];
 		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
 		if(this.config.lightbulbs) 
 		{
@@ -241,28 +242,22 @@ HomeSeerPlatform.prototype =
 				}
 				
 				globals.log('HomeSeer status function succeeded!');
-				for (var i in this.config.accessories) {
+				for (var currentAccessory of this.config.accessories) {
 					// Find the index into the array of all of the HomeSeer devices
-					let index = response.Devices.findIndex( (element, index, array)=> 
+					let thisDevice = response.Devices.find( (element, index, array)=> 
 						{
-							return (element.ref == this.config.accessories[i].ref)
+							return (element.ref == currentAccessory.ref)
 						} )
 					// Set up initial array of HS Response Values during startup
 						try 
 						{
-							var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[index]);
+							var accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
 						} catch(err) 
 							{
 							globals.log(
 								magenta( "\n\n** Error ** creating new HomeSeerAccessory in file index.js.\n" 
 								+ "This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. \n" 
-								+ "Check all reference numbers and be sure HomeSeer is running. Stopping operation\n" 
-								+ "Check Accessory No: ") 
-								+ cyan(i+1) 
-								+ magenta(", of type: ")
-								+ cyan(this.config.accessories[i].type) 
-								+ magenta(", and which identifies a reference No.: ") 
-								+ cyan(this.config.accessories[i].ref + "\n")
+								+ "Check all reference numbers and be sure HomeSeer is running. Stopping operation\n")
 							); 
 							
 							globals.log(red(err));	
