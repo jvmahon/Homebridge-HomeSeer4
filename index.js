@@ -8,45 +8,48 @@ var yellow = chalk.yellow.bold;
 var cyan = chalk.cyan.bold;
 var magenta = chalk.magenta.bold;
 var assert = require('assert');
+var identifyThermostatData = require("./lib/IdentifyThermostats.js").identifyThermostatData;
+			
 
 var exports = module.exports;
-var globals = [];
-globals.allHSDevices = [];
-globals.telnetClient = [];
-globals.telnetAuthorized = false;
-globals.allHSDevices.controlPairs = [];
-exports.globals = globals;
-globals.allHSRefs = [];
-		globals.allHSRefs.pushUnique = function(item) //Pushes item onto stack if it isn't null. Can be chained!
-			{ 
-				if ((item === undefined) || (item == null)) return this;
-				if (isNaN(item) || (!Number.isInteger(parseFloat(item)))) throw new SyntaxError("You specified: '" + item +"' as a HomeSeer references, but it is not a number. You need to fix it to continue");
-				HSutilities.deviceInHomeSeer(item);
-				if (this.indexOf(item) == -1) this.push(parseInt(item)); 
-				return this
-			}
+var globals = new function()
+		{
+				this.allHSDevices = [];
+				this.telnetClient = [];
+				this.telnetAuthorized = false;
+				this.allHSDevices.controlPairs = [];
+
+				this.allHSRefs = [];
+						this.allHSRefs.pushUnique = function(item) //Pushes item onto stack if it isn't null. Can be chained!
+							{ 
+								if ((item === undefined) || (item == null)) return this;
+								if (isNaN(item) || (!Number.isInteger(parseFloat(item)))) throw new SyntaxError("You specified: '" + item +"' as a HomeSeer references, but it is not a number. You need to fix it to continue");
+								HSutilities.deviceInHomeSeer(item);
+								if (this.indexOf(item) == -1) this.push(parseInt(item)); 
+								return this
+							}
 
 
 
-// The array globals.HSValues) stores just the device value of the associated HomeSeer reference. 
-// This is a sparse array with most index values null.
-// The array index corresponds to the HomeSeer reference so HSValues[211] would be the HomeSeer value for device 211.
-globals.HSValues = [];
-globals.getHSValue = function(ref) { return globals.HSValues[ref] }
-globals.setHSValue = function(ref, value) { globals.HSValues[ref] = parseFloat(value); }
-globals.forceHSValue = globals.setHSValue; // Alias for setHSValue function
+				// The array globals.HSValues) stores just the device value of the associated HomeSeer reference. 
+				// This is a sparse array with most index values null.
+				// The array index corresponds to the HomeSeer reference so HSValues[211] would be the HomeSeer value for device 211.
+				this.HSValues = [];
+				this.getHSValue = function(ref) { return this.HSValues[ref] }
+				this.setHSValue = function(ref, value) { this.HSValues[ref] = parseFloat(value); }
+				this.forceHSValue = this.setHSValue; // Alias for setHSValue function
 
 
- 
- 
-// globals.statusObjects holds a list of all of the HomeKit HAP Characteristic objects
-// that can be affected by changes occurring at HomeSeer. 
-// The array is populated during by the getServices function when a HomeKit device is created.
-// After HomeSeer is polled, each item in this array is analyzed by the updateAllFromHSData() function to determine 
-// if it needs to be updated.
-globals.statusObjects = [];
-
-
+				 
+				 
+				// globals.statusObjects holds a list of all of the HomeKit HAP Characteristic objects
+				// that can be affected by changes occurring at HomeSeer. 
+				// The array is populated during by the getServices function when a HomeKit device is created.
+				// After HomeSeer is polled, each item in this array is analyzed by the updateAllFromHSData() function to determine 
+				// if it needs to be updated.
+				this.statusObjects = [];
+		}																																		
+module.exports.globals = globals;
 
 
 
@@ -101,6 +104,7 @@ globals.currentHSDeviceStatus = [];
 // var HomeSeer = [];
 
 
+
 module.exports = function (homebridge) {
     console.log("homebridge API version: " + homebridge.version);
 
@@ -111,6 +115,8 @@ module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     UUIDGen = homebridge.hap.uuid;
+
+
 
     // For platform plugin to be considered as dynamic platform plugin,
     // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
@@ -129,6 +135,7 @@ function HomeSeerPlatform(log, config, api) {
 		globals.log = log; 
 		globals.platformConfig = config; // Platform variables from config.json:  platform, name, host, temperatureScale, lightbulbs, thermostats, events, accessories
 		globals.api = api; // _accessories, _platforms, _configurableAccessories, _dynamicPlatforms, version, serverVersion, user, hap, hapLegacyTypes,platformAccessory,_events, _eventsCount
+		// var MyPrototypes = require('./lib/AddPrototype.js').addPrototypes(api);
 }
 
 
@@ -145,19 +152,29 @@ HomeSeerPlatform.prototype =
 		// Make Devices for each 'Event' entry in the config.json file.
 		if (this.config.events) 
 		{
-			for (var i in this.config.events) 
+			for (var currentEvent of this.config.events) 
 			{
-				var event = new HomeSeerEvent(that.config.events[i]);
-				foundAccessories.push(event);
+				var createdEvent = new HomeSeerEvent(currentEvent);
+				foundAccessories.push(createdEvent);
 			}
 		}
 	
+		if (this.config.accessories === undefined) this.config.accessories = [];
 		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
 		if(this.config.lightbulbs) 
 		{
 			this.config.accessories = this.config.accessories.concat(
 					this.config.lightbulbs.map( (HSreference)=> { return( { "type":"Lightbulb", "ref":HSreference} );})
 					);
+		}
+		
+		if(this.config.thermostats) 
+		{
+			for( var thermostatRoot of this.config.thermostats)
+			{
+				var FindConfiguration = identifyThermostatData(thermostatRoot, this.config.accessories);
+			}
+			
 		}
 		// Done with Map
 
@@ -219,34 +236,28 @@ HomeSeerPlatform.prototype =
 		// and  create HomeKit Accessories for each accessory in the config.json 'accessories' array!		
 		.then( function(response) 
 			{  
-				for(var i in response.Devices)
+				for(var currentDevice of response.Devices)
 				{
-					globals.HSValues[response.Devices[i].ref] = parseFloat(response.Devices[i].value);
+					globals.HSValues[currentDevice.ref] = parseFloat(currentDevice.value);
 				}
 				
 				globals.log('HomeSeer status function succeeded!');
-				for (var i in this.config.accessories) {
+				for (var currentAccessory of this.config.accessories) {
 					// Find the index into the array of all of the HomeSeer devices
-					let index = response.Devices.findIndex( (element, index, array)=> 
+					let thisDevice = response.Devices.find( (element, index, array)=> 
 						{
-							return (element.ref == this.config.accessories[i].ref)
+							return (element.ref == currentAccessory.ref)
 						} )
 					// Set up initial array of HS Response Values during startup
 						try 
 						{
-							var accessory = new HomeSeerAccessory(that.log, that.config, this.config.accessories[i], response.Devices[index]);
+							var accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
 						} catch(err) 
 							{
 							globals.log(
 								magenta( "\n\n** Error ** creating new HomeSeerAccessory in file index.js.\n" 
 								+ "This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. \n" 
-								+ "Check all reference numbers and be sure HomeSeer is running. Stopping operation\n" 
-								+ "Check Accessory No: ") 
-								+ cyan(i+1) 
-								+ magenta(", of type: ")
-								+ cyan(this.config.accessories[i].type) 
-								+ magenta(", and which identifies a reference No.: ") 
-								+ cyan(this.config.accessories[i].ref + "\n")
+								+ "Check all reference numbers and be sure HomeSeer is running. Stopping operation\n")
 							); 
 							
 							globals.log(red(err));	
