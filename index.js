@@ -420,7 +420,7 @@ function updateAllFromHSData(pollingCount)
 		
 		for (let homekitObject of statusObjectGroup)
 		{
-			assert( (homekitObject.HSRef == null) || (HSReference == homekitObject.HSRef), "Assertion failed for HSReference: " + HSReference + " and  homekitObject.HSRef: " + homekitObject.HSRef);
+			
 			const newValue = globals.getHSValue(HSReference);
 			// globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
 

@@ -1,6 +1,6 @@
 {
   "name": "homebridge-homeseer4",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Homeseer Plugin for homebridge: https://github.com/jvmahon/homebridge-homeseer",
   "license": "ISC",
   "keywords": [
@@ -8,21 +8,19 @@
     "homebridge-homeseer",
     "homebridge-homeseer4"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:jvmahon/homebridge-homeseer4.git"
-  },
+  "repository": "github:jvmahon/homebridge-homeseer4",
+  
   "bugs": {
     "url": "https://github.com/jvmahon/homebridge-homeseer4/issues"
   },
   "engines": {
     "node": ">=12.0.0",
-    "homebridge": ">=0.4.0"
+    "homebridge": ">=0.4.50"
   },
   "dependencies": {
     "request" : ">=2.88.0",
     "request-promise-native" : ">=1.0.8",
     "chalk": ">=3.0.0",
-    "hap-nodejs": ">=0.4.53"
+    "hap-nodejs": ">=0.5.3"
   }
 }

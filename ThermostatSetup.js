@@ -131,19 +131,23 @@ exports.setupThermostat = function (that, services)
 	
 	var thermostatService = new Service.Thermostat();
 	thermostatService.displayName = "Service.Thermostat";
-
-	// thermostatService.thermostatType 0 = Invalid; 1 = Cooling Only;  2 = Heating Only; 3 = Heating and Cooling with Auto Changeover!
+	
 	thermostatService.thermostatType = 0;
-		if ( (deviceConfig.heatingSetpointRef !== undefined) && (deviceConfig.heatingSetpointRef != 0)) 	
-			{
-				thermostatService.thermostatType = thermostatService.thermostatType + 1;
-			};
-		if ( (deviceConfig.coolingSetpointRef !== undefined) && (deviceConfig.coolingSetpointRef != 0)) 	
-			{
-				thermostatService.thermostatType = thermostatService.thermostatType + 2;
-			};
+		if (deviceConfig.heatingSetpointRef && (deviceConfig.heatingSetpointRef != 0)) 	
+					{
+							thermostatService.thermostatType = thermostatService.thermostatType + 1;
+							};
+		if (deviceConfig.coolingSetpointRef && (deviceConfig.coolingSetpointRef != 0)) 	
+					{
+						thermostatService.thermostatType = thermostatService.thermostatType + 2;
+						};
+
+		// thermostatService.thermostatType 0 = Invalid; 1 = Cooling Only;  2 = Heating Only; 3 = Heating and Cooling with Auto Changeover!
+
+		
 
 
+	
 	// If either cooling or heating setpoint changes, or the mode, send entire service block for analysis and update!
 	thermostatService
 		.setConfigValues(deviceConfig)
@@ -153,41 +157,51 @@ exports.setupThermostat = function (that, services)
 		.updateUsingHSReference (deviceConfig.stateRef)
 		thermostatService.HSRef = null; //there is no one defined HSRef for this object, so set it to null as  a way of tracing errors if any code tries to rely on HSREf !
 		
-		globals.log(cyan("Adding thermostat of type: " + thermostatService.thermostatType));
-		switch(thermostatService.thermostatType)
-		{ 
+					globals.log(cyan("Adding thermostat of type: " + thermostatService.thermostatType));
+					switch(thermostatService.thermostatType)
+					{ 
 
-			case 1: // Thermostat Supports Heating
-			case 2: // Thermostat Supports Cooling
-			{
-				thermostatService.getCharacteristic(Characteristic.TargetTemperature)
-					.setDisplayName("Characteristic.TargetTemperature")
-					.setConfigValues(deviceConfig);
-				break;
-			}
-			case 3: // Thermostat Has An Auto Mode
-			{
-				thermostatService.getCharacteristic(Characteristic.TargetTemperature)
-					.setDisplayName("Characteristic.TargetTemperature")
-					.setConfigValues(deviceConfig);
+						case 1: // Thermostat Supports Heating
+						case 2: // Thermostat Supports Cooling
+						{
+							thermostatService.getCharacteristic(Characteristic.TargetTemperature)
+								.setProps({minValue:14.4, maxValue: 37.3})
+								.setProps({ minStep:.01})
+								.displayName = "Characteristic.TargetTemperature";
+							thermostatService.getCharacteristic(Characteristic.TargetTemperature).setConfigValues(deviceConfig);
+							break;
+						}
+						case 3: // Thermostat Has An Auto Mode
+						{
+							thermostatService.getCharacteristic(Characteristic.TargetTemperature)
+								.setProps({minValue:14.4, maxValue: 37.3})
+								.setProps({ minStep:.01})
+								.displayName = "Characteristic.TargetTemperature";
 
-				thermostatService.getCharacteristic(Characteristic.HeatingThresholdTemperature)
-					.setDisplayName("Characteristic.HeatingThresholdTemperature")
-					.setConfigValues(deviceConfig);
-					
-				thermostatService.getCharacteristic(Characteristic.CoolingThresholdTemperature)
-					.setDisplayName("Characteristic.CoolingThresholdTemperature")
-					.setConfigValues(deviceConfig);
-					
-				break;
-			}
-			case 0: // invalid Thermostat Type
-			default: // This One is for Errors
-			{
-				throw new SyntaxError(red("Error - Invalid Thermostat Type. This may be result of failure to specify heating and cooling reference devices in your config.json file. Type should be 1-3. Type is: " + thermostatService.thermostatType));
-				break;
-			}
-		}		
+							
+							thermostatService.getCharacteristic(Characteristic.HeatingThresholdTemperature)
+								.setProps({minValue:14.4, maxValue: 37.3})
+								.setProps({ minStep:.01})
+								.displayName = "Characteristic.HeatingThresholdTemperature";
+								
+							thermostatService.getCharacteristic(Characteristic.CoolingThresholdTemperature)
+								.setProps({minValue:14.4, maxValue: 37.3})
+								.setProps({ minStep:.01})
+								.displayName = "Characteristic.CoolingThresholdTemperature";	
+							
+							thermostatService.getCharacteristic(Characteristic.TargetTemperature).setConfigValues(deviceConfig);							
+							thermostatService.getCharacteristic(Characteristic.HeatingThresholdTemperature).setConfigValues(deviceConfig);
+							thermostatService.getCharacteristic(Characteristic.CoolingThresholdTemperature).setConfigValues(deviceConfig);
+								
+							break;
+						}
+						case 0: // invalid Thermostat Type
+						default: // This One is for Errors
+						{
+							throw new SyntaxError("Error - Invalid Thermostat Type of: " + thermostatService.thermostatType)
+							break;
+						}
+					}		
 
 		
 		thermostatService
@@ -217,8 +231,7 @@ exports.setupThermostat = function (that, services)
 					{ 
 						case 0: // Off
 						{
-							globals.log(yellow("Set to Off Mode"));
-							HomeKitObject.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(0);	
+							globals.log(yellow("Off"));
 							break;
 						}
 						case 1: // Thermostat Only Supports Heating
@@ -230,7 +243,6 @@ exports.setupThermostat = function (that, services)
 								// Convert Fahrenheit to Celsius
 								heatingTemp = ((heatingTemp - 32 )* (5/9));
 							}
-							HomeKitObject.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(1);	
 							HomeKitObject.getCharacteristic(Characteristic.TargetTemperature).updateValue(heatingTemp)
 
 							break;
@@ -244,7 +256,6 @@ exports.setupThermostat = function (that, services)
 								// Convert Fahrenheit to Celsius
 								coolingTemp = ((coolingTemp - 32 )* (5/9));
 							}
-							HomeKitObject.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(2);	
 							HomeKitObject.getCharacteristic(Characteristic.TargetTemperature).updateValue(coolingTemp)
 
 							break;
@@ -261,7 +272,6 @@ exports.setupThermostat = function (that, services)
 								heatingTemp = ((heatingTemp - 32 )* (5/9));
 								coolingTemp = ((coolingTemp - 32 )* (5/9));
 							}
-								HomeKitObject.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(3);	
 								HomeKitObject.getCharacteristic(Characteristic.HeatingThresholdTemperature).updateValue(heatingTemp)
 								HomeKitObject.getCharacteristic(Characteristic.CoolingThresholdTemperature).updateValue(coolingTemp)							
 							break;
@@ -274,13 +284,15 @@ exports.setupThermostat = function (that, services)
 					}
 
 					// Does HomeSeer say the mode is Off, Heat, Cool, or Auto
-		
-					globals.log(chalk.cyanBright("Updating Service.Thermostat, Current target Heating / cooling Mode is: " + currentControlMode + ", with new heating Temp: " + heatingTemp +	", new cooling Temp: " + coolingTemp + " in degrees: " + HomeKitObject.config.temperatureUnit));
+					let currentThermostatMode = globals.getHSValue(HomeKitObject.config.controlRef)
+					
+					globals.log(chalk.cyanBright("Updating Service.Thermostat, Current target Heating / cooling Mode is: " + currentThermostatMode + ", with new heating Temp: " + heatingTemp +	", new cooling Temp: " + coolingTemp + " in degrees: " + HomeKitObject.config.temperatureUnit));
 										
 					// Set that mode into iOS
-				
+					HomeKitObject.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(currentThermostatMode);					
 					// Do nothing if turned off!
-					if (currentControlMode == 0) return;
+					if (currentThermostatMode == 0) return;
+
 
 			})	
 
@@ -290,7 +302,7 @@ exports.setupThermostat = function (that, services)
 		thermostatService.getCharacteristic(Characteristic.CoolingThresholdTemperature)
 			.on('set', function(value, callback, context)
 			{
-				globals.log(yellow("* Debug * - Characteristic.CoolingThresholdTemperature - Received temperature change from iOS to Cooling Threshold Temperature"));
+				globals.log(yellow("212 - Received temperature change from iOS to Cooling Threshold Temperature"));
 				var temperature = parseFloat(value);
 				if (deviceConfig.temperatureUnit == "F")
 				{
@@ -298,14 +310,11 @@ exports.setupThermostat = function (that, services)
 				}
 				globals.log(cyan("317 - Received temperature change from iOS to CoolingThresholdTemperature of value: " + temperature));
 
-
-				/*
 				if(globals.getHSValue(deviceConfig.coolingSetpointRef) != temperature)
 				{
 					globals.sendHS(deviceConfig.coolingSetpointRef, temperature)
+					globals.setHSValue(deviceConfig.coolingSetpointRef, temperature)
 				}
-				*/
-				globals.sendHS(deviceConfig.coolingSetpointRef, temperature);
 				
 				callback(null);
 			} )
@@ -318,19 +327,13 @@ exports.setupThermostat = function (that, services)
 				{
 					temperature = (temperature * (9/5)) + 32;
 				}
-				globals.log(red("*Debug* - HeatingThresholdTemperature - Received temperature change from iOS to HeatingThresholdTemperature of value: " + temperature));
+				globals.log(red("331 - Received temperature change from iOS to HeatingThresholdTemperature of value: " + temperature));
 
-
-
-				
-				/*
 				if(globals.getHSValue(deviceConfig.heatingSetpointRef) != temperature)
 				{
 					globals.sendHS(deviceConfig.heatingSetpointRef, temperature)
+					globals.setHSValue(deviceConfig.heatingSetpointRef, temperature)
 				}
-				*/
-				globals.sendHS(deviceConfig.heatingSetpointRef, temperature);
-				
 				callback(null);
 			} )			
 			
@@ -352,29 +355,27 @@ exports.setupThermostat = function (that, services)
 			{
 				case 1: // heating
 				{
-			globals.log(cyan("* Debug * - Characteristic.TargetTemperature - SET Event called with value: " + value + ", which is transmitted as: " + temperature +" in HVAC mode No.: " + currentThermostatMode));	
+			globals.log(cyan("257 - Characteristic.TargetTemperature SET Event called with value: " + value + ", which is transmitted as: " + temperature +" in HVAC mode No.: " + currentThermostatMode));	
 
-					/*
 					if(globals.getHSValue(deviceConfig.heatingSetpointRef) != temperature)
 					{
 						globals.sendHS(deviceConfig.heatingSetpointRef, temperature)
+						globals.setHSValue(deviceConfig.heatingSetpointRef, temperature)
 					}
-					*/
-					
-					globals.sendHS(deviceConfig.heatingSetpointRef, temperature)					
 				
+
+
 					break;
 				}
 				case 2: // cooling
 				{
-			globals.log(cyan("*Debug* - Characteristic.TargetTemperature SET Event called with value: " + value + ", which is transmitted as: " + temperature +" in HVAC mode No.: " + currentThermostatMode));					
-					/*
+			globals.log(cyan("263 - Characteristic.TargetTemperature SET Event called with value: " + value + ", which is transmitted as: " + temperature +" in HVAC mode No.: " + currentThermostatMode));					
 					if(globals.getHSValue(deviceConfig.coolingSetpointRef) != temperature)
 					{
 						globals.sendHS(deviceConfig.coolingSetpointRef, temperature)
+						globals.setHSValue(deviceConfig.coolingSetpointRef, temperature)
 					}
-					*/
-					globals.sendHS(deviceConfig.coolingSetpointRef, temperature)
+
 					break;
 				}
 			}
@@ -390,7 +391,7 @@ exports.setupThermostat = function (that, services)
 	thermostatService.getCharacteristic(Characteristic.TargetHeatingCoolingState)
 		.on('set', function(value, callback, context)
 		{
-				globals.log(cyan("*Debug* - TargetHeatingCoolingState 'set' event from iOS with value: " + value))
+				globals.log(cyan("* Debug 282 * - TargetHeatingCoolingState 'set' event from iOS with value: " + value))
 
 				globals.sendHS(deviceConfig.controlRef, value);
 
@@ -471,6 +472,8 @@ exports.setupThermostat = function (that, services)
 				HomeKitObject.updateValue(newTemp);
 		})		
 
+		
 
 	services.push(thermostatService);
+	services.push(informationService);
 }
