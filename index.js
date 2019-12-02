@@ -202,6 +202,13 @@ HomeSeerPlatform.prototype =
 			}
 		}
 	
+
+
+			
+
+			
+		Promise.all([getStatusInfo, getControlInfo]).then(()=> 
+			{
 		if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
 		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
 		if(globals.platformConfig.lightbulbs) 
@@ -211,24 +218,21 @@ HomeSeerPlatform.prototype =
 					);
 		}
 		
-		/*
+		var identifyThermostatData = require("./lib/ThermostatSetup.js").identifyThermostatData;
 		if(globals.platformConfig.thermostats) 
 		{
 			for( var thermostatRoot of globals.platformConfig.thermostats)
 			{
-				var FindConfiguration = identifyThermostatData(thermostatRoot, globals.platformConfig.accessories);
+				var FindThermostatConfiguration = identifyThermostatData(thermostatRoot, globals.platformConfig.accessories);
+				globals.log(green("Found the following Thermostat data: " + JSON.stringify(FindThermostatConfiguration)));
+				globals.platformConfig.accessories = globals.platformConfig.accessories.concat( FindThermostatConfiguration )
 			}
+			console.log(yellow("*Debig* - Accessories now includes: " + JSON.stringify(globals.platformConfig.accessories)));
 			
 		}
-		*/
+		
 		// Done with Map
 
-
-			
-
-			
-		Promise.all([getStatusInfo, getControlInfo]).then(()=> 
-			{
 
 				globals.log("Fetching HomeSeer devices.");
 
