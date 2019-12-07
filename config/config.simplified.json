@@ -1,0 +1,43 @@
+{
+    "bridge": 
+	{
+        "name": "HomeBridge-Testing",
+        "username": "CD:22:3D:E3:CE:41",
+        "port": 51830,
+        "pin": "123-45-678"
+    },
+    
+    "description": "Home Miscellaneous",
+
+    "platforms": [
+	  	
+    {
+		"platform": "HomeSeer",              
+		"name": "HomeSeer",                 
+		"host": "http://192.168.1.1:80",
+		"temperatureScale": "F",
+		"login":"default",
+		"password":"default",
+
+		"thermostats": [448, 1099],
+		"lightbulbs": [ 210, 213],
+		"locks": [],
+		"switches": [],
+		"outlets": [],
+		"fans": [],
+		"garagedooropeners":[],
+		"windows":[],
+		"windowcoverings":[],
+		
+
+		"accessories": 
+		[
+		{"type":"Lock" , "ref":640}
+		]
+
+    }
+  ]
+}
+
+
+

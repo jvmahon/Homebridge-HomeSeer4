@@ -202,28 +202,32 @@ HomeSeerPlatform.prototype =
 			}
 		}
 	
+	// if the user has pecified devices in the config.json file using device categories, expand each device into a separate "accessories" array entry.
 		if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
 		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
-		if(globals.platformConfig.lightbulbs) 
+		var deviceCategories = [
+			{category: "fans"				, typeLabel:"Fans"},
+			{category: "garagedooropeners"	, typeLabel:"GarageDoorOpener"},	
+			{category: "lightbulbs"			, typeLabel:"Lightbulb"},				
+			{category: "locks"				, typeLabel:"Lock"},			
+			{category: "thermostats"		, typeLabel:"ThermostatRoot"},
+			{category: "outlets"			, typeLabel:"Outlet"},
+			{category: "switches"			, typeLabel:"Switch"},			
+			{category: "windows"			, typeLabel:"Window"},			
+			{category: "windowcoverings"	, typeLabel:"WindowCovering"}			
+			]
+		for (let thisCategory of deviceCategories)
 		{
 			globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
-					globals.platformConfig.lightbulbs.map( (HSreference)=> { return( { "type":"Lightbulb", "ref":HSreference} );})
+						globals.platformConfig[thisCategory.category].map( (HSreference)=> 
+							{ 
+								globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
+								
+								return( { "type":thisCategory.typeLabel, "ref":HSreference} );
+							})
 					);
 		}
-		
-		/*
-		if(globals.platformConfig.thermostats) 
-		{
-			for( var thermostatRoot of globals.platformConfig.thermostats)
-			{
-				var FindConfiguration = identifyThermostatData(thermostatRoot, globals.platformConfig.accessories);
-			}
-			
-		}
-		*/
-		// Done with Map
-
-
+	// end of expanding devices into accessories arrays!	
 			
 
 			
