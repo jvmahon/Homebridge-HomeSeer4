@@ -27,7 +27,14 @@ var globals = new function()
 								if (this.indexOf(item) == -1) this.push(parseInt(item)); 
 								return this
 							}
-
+							
+				this.getDeviceName = function(reference)
+				{
+					if (reference == undefined) return null;
+					let name = globals.allHSDevices.HSdeviceStatusInfo.find( (element) => { return (element.ref == reference) }).name
+					// console.log(red("Found a device name: " + name));
+					
+				}
 
 
 				// The array globals.HSValues) stores just the device value of the associated HomeSeer reference. 
@@ -206,26 +213,44 @@ HomeSeerPlatform.prototype =
 		if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
 		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
 		var deviceCategories = [
-			{category: "fans"				, typeLabel:"Fans"},
-			{category: "garagedooropeners"	, typeLabel:"GarageDoorOpener"},	
-			{category: "lightbulbs"			, typeLabel:"Lightbulb"},				
-			{category: "locks"				, typeLabel:"Lock"},			
-			{category: "thermostats"		, typeLabel:"ThermostatRoot"},
-			{category: "outlets"			, typeLabel:"Outlet"},
-			{category: "switches"			, typeLabel:"Switch"},			
-			{category: "windows"			, typeLabel:"Window"},			
-			{category: "windowcoverings"	, typeLabel:"WindowCovering"}			
+			{category: "Fans", 						typeLabel:"Fans"},
+			{category: "GaragedDoorOpeners",		typeLabel:"GarageDoorOpener"},	
+			{category: "Lightbulbs",				typeLabel:"Lightbulb"},	
+			{category: "lightbulbs",				typeLabel:"Lightbulb"},				
+			{category: "Locks",						typeLabel:"Lock"},			
+			{category: "Thermostats",				typeLabel:"ThermostatRoot"},
+			{category: "Outlets",					typeLabel:"Outlet"},
+			{category: "Switches",					typeLabel:"Switch"},			
+			{category: "Windows",					typeLabel:"Window"},			
+			{category: "WindowCoverings",			typeLabel:"WindowCovering"},			
+			{category: "CarbonDioxideSensors",		typeLabel:"CarbonDioxideSensor"},		
+			{category: "CarbonMonoxideSensors",		typeLabel:"CarbonMonoxideSensor"},			
+			{category: "ContactSensors",			typeLabel:"ContactSensor"},			
+			{category: "HumiditySensors",			typeLabel:"HumiditySensor"},			
+			{category: "LeakSensors",				typeLabel:"LeakSensor"},			
+			{category: "LightSensors",				typeLabel:"LightSensor"},			
+			{category: "MotionSensors",				typeLabel:"MotionSensor"},			
+			{category: "OccupancySensors",			typeLabel:"OccupancySensor"},			
+			{category: "SmokeSensors",				typeLabel:"SmokeSensor"},			
+			{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},			
+			{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
+
+			
 			]
 		for (let thisCategory of deviceCategories)
 		{
-			globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
-						globals.platformConfig[thisCategory.category].map( (HSreference)=> 
-							{ 
-								globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
-								
-								return( { "type":thisCategory.typeLabel, "ref":HSreference} );
-							})
-					);
+			if( globals.platformConfig[thisCategory.category] !== undefined)
+			{
+				globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
+
+					globals.platformConfig[thisCategory.category].map( (HSreference)=> 
+						{ 
+							globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
+							
+							return( { "type":thisCategory.typeLabel, "ref":HSreference} );
+						})
+				);
+			}
 		}
 	// end of expanding devices into accessories arrays!	
 			
@@ -302,7 +327,7 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     this.config = accessoryConfig;
     this.ref = status.ref;
     this.name = this.config.name || status.name
-    this.model = status.device_type_string;
+    this.model = status.device_type_string || "Not Specified";
     this.access_url = globals.platformConfig["host"] + "/JSON?";
 
     
@@ -376,7 +401,7 @@ HomeSeerEvent.prototype = {
 			if(this.off_url==null && value != 0)
             {
                 setTimeout(function() {
-                    globals.log(this.name + ': Momentary switch reseting to 0');
+                    // globals.log(this.name + ': Momentary switch reseting to 0');
                     this.switchService.getCharacteristic(Characteristic.On).setValue(0);
                 }.bind(this),2000);
             }
