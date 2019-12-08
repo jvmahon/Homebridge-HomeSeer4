@@ -213,7 +213,7 @@ HomeSeerPlatform.prototype =
 		if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
 		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
 		var deviceCategories = [
-			{category: "Fans", 						typeLabel:"Fans"},
+			{category: "Fans", 						typeLabel:"Fan"},
 			{category: "GaragedDoorOpeners",		typeLabel:"GarageDoorOpener"},	
 			{category: "Lightbulbs",				typeLabel:"Lightbulb"},	
 			{category: "lightbulbs",				typeLabel:"Lightbulb"},				
