@@ -245,7 +245,7 @@ HomeSeerPlatform.prototype =
 
 					globals.platformConfig[thisCategory.category].map( (HSreference)=> 
 						{ 
-							globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
+							// globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
 							
 							return( { "type":thisCategory.typeLabel, "ref":HSreference} );
 						})
