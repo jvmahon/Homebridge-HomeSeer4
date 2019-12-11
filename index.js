@@ -152,7 +152,20 @@ HomeSeerPlatform.prototype =
         var foundAccessories = [];
 		var that = this;
 		
-		var getStatusInfo = promiseHTTP({ uri: globals.platformConfig["host"] + "/JSON?request=getstatus", json:true})
+		if((globals.platformConfig["login"] == null) || (globals.platformConfig["password"] == null ))
+			{
+				globals.log(red("*Warning* - You failed to define a login and password in your config.json file. Will attempt login using default HomeSeer login and password of default:default"));
+			}
+			
+				const 	retrieveURL = new URL(globals.platformConfig["host"]);
+						retrieveURL.password = globals.platformConfig["password"] || "default";
+						retrieveURL.username = globals.platformConfig["login"] || "default";
+						retrieveURL.pathname = "JSON"
+						retrieveURL.search = "request=getstatus"
+						
+						globals.log(red("Status URL is: " + retrieveURL.href));
+			
+		var getStatusInfo = promiseHTTP({ uri:retrieveURL, json:true})
 		.then( function(HSDevices)
 			{
 				globals.allHSDevices.HSdeviceStatusInfo = HSDevices.Devices; 
@@ -169,14 +182,31 @@ HomeSeerPlatform.prototype =
 			}) // end then's function
 			.catch( (err) => 
 			{
-				if( err.message.includes("ECONNREFUSED") ) 
+
+					switch(err.statusCode)
 					{
-						err = red( err + "\nError getting device status info. Check if HomeSeer is running, then start homebridge again.");
+						case 401:
+						{
+							err = red("*HTTP Error 401 * - Improper login and password specified in your config.json setup file. Correct and try again.");
+							break;
+						}
+						default:
+						{
+							if( err.message.includes("ECONNREFUSED") ) 
+							{
+								err = red( err + "\nError getting device status info. Check if HomeSeer is running, then start homebridge again. Status code: " + err.statusCode);
+							}
+						}
 					}
+
 				throw err;
 			} )
-		
-		var getControlInfo = promiseHTTP({ uri: this.config["host"] + "/JSON?request=getcontrol", json:true})
+			
+			
+		retrieveURL.search = "request=getcontrol"	
+			
+		globals.log(red("Get Control URL is: " + retrieveURL.href));
+		var getControlInfo = promiseHTTP({ uri: retrieveURL, json:true})
 			.then( function(HSControls)
 			{
 
@@ -186,9 +216,20 @@ HomeSeerPlatform.prototype =
 			})
 		.catch( (err) => 
 			{
-				if( err.message.includes("ECONNREFUSED") ) 
+					switch(err.statusCode)
 					{
-						err = red( err + "\nError getting device control info. Check if HomeSeer is running, then start homebridge again.");
+						case 401:
+						{
+							err = red("*HTTP Error 401 * - Improper login and password specified in your config.json setup file. Correct and try again.");
+							break;
+						}
+						default:
+						{
+							if( err.message.includes("ECONNREFUSED") ) 
+							{
+								err = red( err + "\nError getting device status info. Check if HomeSeer is running, then start homebridge again. Status code: " + err.statusCode);
+							}
+						}
 					}
 				throw err;
 			} )
@@ -245,7 +286,7 @@ HomeSeerPlatform.prototype =
 
 					globals.platformConfig[thisCategory.category].map( (HSreference)=> 
 						{ 
-							globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
+							// globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
 							
 							return( { "type":thisCategory.typeLabel, "ref":HSreference} );
 						})
