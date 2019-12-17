@@ -160,8 +160,9 @@ HomeSeerPlatform.prototype =
 				const 	retrieveURL = new URL(globals.platformConfig["host"]);
 						retrieveURL.password = globals.platformConfig["password"] || "default";
 						retrieveURL.username = globals.platformConfig["login"] || "default";
-						retrieveURL.pathname = "JSON"
-						retrieveURL.search = "request=getstatus"
+						retrieveURL.pathname = "JSON";
+						retrieveURL.search = "request=getstatus";
+
 						
 						globals.log(red("Status URL is: " + retrieveURL.href));
 			
