@@ -27,7 +27,6 @@
 	"uuid_base": 0,
 	"batteryRef": 0,
 	"batteryThreshold": 25,
-	"temperatureUnit":"F",		// Optional. Temperature Unit used by HomeSeer. Choices are "F" or "C".
 	"tamperRef":0				// Optional. Set to the tamper alarm device, if any.
 },
 
@@ -157,7 +156,6 @@
 	"batteryRef": 0,
 	"batteryThreshold": 25,
 	"can_dim": true,			
-	"uses99Percent":true,  	   	
 	"onValue": 255,
 	"offValue": 0
 },
@@ -170,7 +168,6 @@
 	"batteryRef": 0,
 	"batteryThreshold": 25,
 	"can_dim": true,   			// Code in HomeSeerUtilities.js will set this if it is undefined in config.json.
-	"uses99Percent":true,    	// Code in HomeSeerUtilities.js will set this if it is undefined in config.json. Z-Wave uses a scale of 1-99 % for dimming. Setting this flag to "true" causes the 99% value to be displayed as 100% in HomeKit (so user doesn't question why lights don't turn on fully!).
 	"onValue": 255,				// Leave at 255 ("On" for non-dimmers; "Last-Value" for dimmers) if using Z-Wave.
 	"offValue": 0				// Rarely ever changed!
 },
@@ -201,7 +198,6 @@
 	"batteryThreshold": 25,
 	"openValue": 99,		// Value to open window covering fully.
 	"closedValue": 0,		// Value to close window covering fully.
-	"uses99Percent":true,    	// Code in HomeSeerUtilities.js will set this if it is undefined in config.json. Z-Wave uses a scale of 1-99% for percentages. Setting this flag to "true" causes the 99% value to be displayed as 100% in HomeKit.
 	"binarySwitch":false,   // Code in HomeSeerUtilities.js will set this if it is undefined.
 	"obstructionRef":0,		// Optional. Set if the WindowCovering has a sensor to detect if it is obstructed.
 	"obstructionClearValues":[0] // Array of values indicating WindowCovering is not obstructed.
@@ -217,7 +213,6 @@
 	"openValue": 255,		// Value to open window covering fully.
 	"closedValue": 0,		// Value to close window covering fully.
 	"binarySwitch":false,   // Code in HomeSeerUtilities.js will set this if it is undefined.
-	"uses99Percent":true,    	// Code in HomeSeerUtilities.js will set this if it is undefined in config.json. Z-Wave uses a scale of 1-99 % for dimming. Setting this flag to "true" causes the 99% value to be displayed as 100% in HomeKit.
 	"obstructionRef":0,		// Optional. Set if the WindowCovering has a sensor to detect if it is obstructed.
 	"obstructionClearValues":[0] // Array of values indicating WindowCovering is not obstructed.
 },
@@ -229,7 +224,6 @@
 	"uuid_base": 0,
 	"batteryRef": 0,
 	"batteryThreshold": 25,
-	"temperatureUnit":"F",	
 	"controlRef": 0,			// Set to HomeSeer device by which you select the Off / Heat / Cool / Auto state.
 	"stateRef": 0,				// Set to HomeSeer device reporting the actually running state (Off / Heat / Cool). Sometimes this is the same as controlRef!
 	"heatingSetpointRef": 0,	// Either "heatingSetpointRef" or "coolingSetpointRef" must be set (usually both are!)
