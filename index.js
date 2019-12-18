@@ -188,15 +188,13 @@ HomeSeerPlatform.prototype =
 					{
 						case 401:
 						{
-							err = red("*HTTP Error 401 * - Improper login and password specified in your config.json setup file. Correct and try again.");
+							globals.log(red("Line 191 - Error is: " + err));
+							globals.log(red("*HTTP Error 401 - line 192 * - Improper login and password specified in your config.json setup file. Correct and try again."));
 							break;
 						}
 						default:
 						{
-							if( err.message.includes("ECONNREFUSED") ) 
-							{
-								err = red( err + "\nError getting device status info. Check if HomeSeer is running, then start homebridge again. Status code: " + err.statusCode);
-							}
+							globals.log(red( err + " : Error getting device status info. Check if HomeSeer is running, then start homebridge again. Status code: " + err.statusCode));
 						}
 					}
 
@@ -221,15 +219,13 @@ HomeSeerPlatform.prototype =
 					{
 						case 401:
 						{
-							err = red("*HTTP Error 401 * - Improper login and password specified in your config.json setup file. Correct and try again.");
+							globals.log(red("Line 191 - Error is: " + err));
+							globals.log(red("*HTTP Error 401 - line 192 * - Improper login and password specified in your config.json setup file. Correct and try again."));
 							break;
 						}
 						default:
 						{
-							if( err.message.includes("ECONNREFUSED") ) 
-							{
-								err = red( err + "\nError getting device status info. Check if HomeSeer is running, then start homebridge again. Status code: " + err.statusCode);
-							}
+							globals.log(red( err + " : Error getting device status info. Check if HomeSeer is running, then start homebridge again. Status code: " + err.statusCode));
 						}
 					}
 				throw err;
