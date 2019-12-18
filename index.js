@@ -194,7 +194,7 @@ HomeSeerPlatform.prototype =
 						}
 						default:
 						{
-							globals.log(red( err + " : Error getting device status info. Check if HomeSeer is running, then start homebridge again. Status code: " + err.statusCode));
+							globals.log(red( err + " : Error line 197 - error getting device status info. Check if HomeSeer is running and that JSON interface is enabled, then start homebridge again. Status code: " + err.statusCode));
 						}
 					}
 
@@ -225,7 +225,7 @@ HomeSeerPlatform.prototype =
 						}
 						default:
 						{
-							globals.log(red( err + " : Error getting device status info. Check if HomeSeer is running, then start homebridge again. Status code: " + err.statusCode));
+							globals.log(red( err + " : Error line 228 - error getting device Control info. Check if HomeSeer is running and that JSON interface is enabled, then start homebridge again. Status code: " + err.statusCode));
 						}
 					}
 				throw err;
@@ -489,9 +489,9 @@ function updateAllFromHSData(pollingCount)
 		{
 			
 			const newValue = globals.getHSValue(HSReference);
-			// globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
+			globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
 
-			homekitObject.emit('HSvalueChanged',newValue, homekitObject)
+			homekitObject.emit('HSvalueChanged', newValue, homekitObject)
 		}
 	}
 }
