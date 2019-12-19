@@ -157,19 +157,20 @@ HomeSeerPlatform.prototype =
 				globals.log(red("*Warning* - You failed to define a login and password in your config.json file. Will attempt login using default HomeSeer login and password of default:default"));
 			}
 			
-				const 	retrieveURL = new URL(globals.platformConfig["host"]);
-						retrieveURL.password = globals.platformConfig["password"] || "default";
-						retrieveURL.username = globals.platformConfig["login"] || "default";
-						retrieveURL.pathname = "JSON";
-						retrieveURL.search = "request=getstatus";
+				const 	statusURL = new URL(globals.platformConfig["host"]);
+						statusURL.password = globals.platformConfig["password"] || "default";
+						statusURL.username = globals.platformConfig["login"] || "default";
+						statusURL.pathname = "JSON";
+						statusURL.search = "request=getstatus";
 
 						
-						globals.log(red("Status URL is: " + retrieveURL.href));
+						globals.log(red("Status URL is: " + statusURL.href));
 			
-		var getStatusInfo = promiseHTTP({ uri:retrieveURL, json:true})
+		var getStatusInfo = promiseHTTP({ uri:statusURL.href, json:true})
 		.then( function(HSDevices)
 			{
 				globals.allHSDevices.HSdeviceStatusInfo = HSDevices.Devices; 
+				globals.log(yellow("*Debug * - Number of status devices retrieved is: " + HSDevices.Devices.length));
 				
 				for(var currentDevice of HSDevices.Devices)
 				{
@@ -188,28 +189,35 @@ HomeSeerPlatform.prototype =
 					{
 						case 401:
 						{
-							globals.log(red("Line 191 - Error is: " + err));
-							globals.log(red("*HTTP Error 401 - line 192 * - Improper login and password specified in your config.json setup file. Correct and try again."));
+							globals.log(red("Line 192 - Error is: " + err));
+							globals.log(red("*HTTP Error 401 - line 193 * - Improper login and password specified in your config.json setup file. Correct and try again."));
+							globals.log(red("URL Is: " + retrieveURL));
 							break;
 						}
 						default:
 						{
-							globals.log(red( err + " : Error line 197 - error getting device status info. Check if HomeSeer is running and that JSON interface is enabled, then start homebridge again. Status code: " + err.statusCode));
+							globals.log(red( err + " : Error line 198 - error getting device status info. Check if HomeSeer is running and that JSON interface is enabled, then start homebridge again. Status code: " + err.statusCode));
 						}
 					}
 
 				throw err;
 			} )
 			
+				const 	controlURL = new URL(globals.platformConfig["host"]);
+						controlURL.password = globals.platformConfig["password"] || "default";
+						controlURL.username = globals.platformConfig["login"] || "default";
+						controlURL.pathname = "JSON";
+						controlURL.search = "request=getcontrol";
+	
 			
-		retrieveURL.search = "request=getcontrol"	
-			
-		globals.log(red("Get Control URL is: " + retrieveURL.href));
-		var getControlInfo = promiseHTTP({ uri: retrieveURL, json:true})
+		globals.log(red("Get Control URL is: " + controlURL.href));
+		var getControlInfo = promiseHTTP({ uri:controlURL.href, json:true})
 			.then( function(HSControls)
 			{
 
 				globals.allHSDevices.controlPairs = HSControls.Devices;
+				globals.log(cyan("*Debug * - Number of devices with Control Pairs retrieved is: " + HSControls.Devices.length));
+
 				return(true);
 		
 			})
@@ -300,7 +308,8 @@ HomeSeerPlatform.prototype =
 				globals.log("Fetching HomeSeer devices.");
 
 				// now get the data from HomeSeer and pass it as the 'response' to the .then stage.
-				return promiseHTTP({ uri: globals.platformConfig["host"] + "/JSON?request=getstatus", json:true})	
+				// return promiseHTTP({ uri: statusURL.href, json:true})	
+				
 				
 			}) // End of gathering HomeSeer references
 		.catch((err) => 
@@ -489,7 +498,7 @@ function updateAllFromHSData(pollingCount)
 		{
 			
 			const newValue = globals.getHSValue(HSReference);
-			globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
+			// globals.log(chalk.blue("Emitting Update for object with Homeseer Reference: " + HSReference + " and a new value: " + newValue));
 
 			homekitObject.emit('HSvalueChanged', newValue, homekitObject)
 		}
