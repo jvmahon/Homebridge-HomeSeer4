@@ -24,6 +24,14 @@ This plugin depends on you properly setting up a "config.json" file which identi
 
 If you are updating from the HomeSeer 3 version of this plugin ("HomeBridge-HomeSeer-Plugin-2018"), there have been several changes that you will need to make to your config.json file. Most importantly, you will need to add your HomeSeer login and password information to the config.json file. Also note the changes made for setting up Thermostats -- you can now simply identify them by their "root" device and the plugin will query HomeSeer to find the other parameters needed for setup.
 
+A number of configuration settings are no longer used (the plugin has been updated to automatically detect the proper parameters). Please remove the following configuration parameters from your config.json file (if you used them):
+`````
+"temperatureUnit"
+"uses99Percent"
+"can_dim"
+`````
+
+
 ##  C. Installation
 
 If you used a prior HomeSeer plugin, you must remove it before installing this plugin using, e.g.,:
