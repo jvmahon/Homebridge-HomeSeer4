@@ -375,8 +375,6 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     this.ref = status.ref;
     this.name = this.config.name || status.name
     this.model = status.device_type_string || "Not Specified";
-    this.access_url = globals.platformConfig["host"] + "/JSON?";
-
     
 	this.uuid_base = this.config.uuid_base;
 	
@@ -413,13 +411,26 @@ HomeSeerAccessory.prototype = {
 ////////////////////////////////////////////////////////////////////////////////
 function HomeSeerEvent(eventConfig) {
     this.config = eventConfig;
-    this.name = eventConfig.eventName
+    this.name = eventConfig.name || eventConfig.eventName
     this.model = "HomeSeer Event";
+	
+	const 	onURL = new URL(globals.platformConfig["host"]);
+		onURL.password = globals.platformConfig["password"] || "default";
+		onURL.username = globals.platformConfig["login"] || "default";
+		onURL.pathname = "JSON";
+		onURL.search = "request=runevent&group=" + encodeURIComponent(eventConfig.eventGroup) + "&name=" + encodeURIComponent(eventConfig.eventName)
 
-    this.on_url = globals.platformConfig["host"] + "/JSON?request=runevent&group=" + encodeURIComponent(eventConfig.eventGroup) + "&name=" + encodeURIComponent(eventConfig.eventName);
+    this.on_url = onURL.href;
 
     if (eventConfig.offEventGroup && eventConfig.offEventName) {
-        this.off_url = globals.platformConfig["host"] + "/JSON?request=runevent&group=" + encodeURIComponent(eventConfig.offEventGroup) + "&name=" + encodeURIComponent(eventConfig.offEventName);
+		
+	const 	offURL = new URL(globals.platformConfig["host"]);
+		offURL.password = globals.platformConfig["password"] || "default";
+		offURL.username = globals.platformConfig["login"] || "default";
+		offURL.pathname = "JSON";
+		offURL.search = "request=runevent&group=" + encodeURIComponent(eventConfig.offEventGroup) + "&name=" + encodeURIComponent(eventConfig.offEventName)
+		
+        this.off_url = offURL.href;
     }
 
     if (eventConfig.uuid_base)
@@ -477,6 +488,8 @@ HomeSeerEvent.prototype = {
             .getCharacteristic(Characteristic.On)
             .on('set', this.launchEvent.bind(this));
         services.push(this.switchService);
+		
+		this.switchService.name = this.config.name;
 
         return services;
     }
