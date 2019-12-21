@@ -164,13 +164,13 @@ HomeSeerPlatform.prototype =
 						statusURL.search = "request=getstatus";
 
 						
-						globals.log(red("Status URL is: " + statusURL.href));
+						// globals.log(red("Status URL is: " + statusURL.href));
 			
-		var getStatusInfo = promiseHTTP({ uri:statusURL.href, json:true})
+		var getStatusInfo = promiseHTTP({ uri:statusURL.href, json:true, strictSSL:false})
 		.then( function(HSDevices)
 			{
 				globals.allHSDevices.HSdeviceStatusInfo = HSDevices.Devices; 
-				globals.log(yellow("*Debug * - Number of status devices retrieved is: " + HSDevices.Devices.length));
+				// globals.log(yellow("*Debug * - Number of status devices retrieved is: " + HSDevices.Devices.length));
 				
 				for(var currentDevice of HSDevices.Devices)
 				{
@@ -210,13 +210,13 @@ HomeSeerPlatform.prototype =
 						controlURL.search = "request=getcontrol";
 	
 			
-		globals.log(red("Get Control URL is: " + controlURL.href));
-		var getControlInfo = promiseHTTP({ uri:controlURL.href, json:true})
+		// globals.log(red("Get Control URL is: " + controlURL.href));
+		var getControlInfo = promiseHTTP({ uri:controlURL.href, json:true, strictSSL:false})
 			.then( function(HSControls)
 			{
 
 				globals.allHSDevices.controlPairs = HSControls.Devices;
-				globals.log(cyan("*Debug * - Number of devices with Control Pairs retrieved is: " + HSControls.Devices.length));
+				// globals.log(cyan("*Debug * - Number of devices with Control Pairs retrieved is: " + HSControls.Devices.length));
 
 				return(true);
 		
@@ -433,8 +433,8 @@ function HomeSeerEvent(eventConfig) {
         this.off_url = offURL.href;
     }
 
-    if (eventConfig.uuid_base)
-        this.uuid_base = eventConfig.uuid_base;
+
+        this.uuid_base = eventConfig.uuid_base || (this.name) ;
 }
 
 HomeSeerEvent.prototype = {
@@ -451,7 +451,7 @@ HomeSeerEvent.prototype = {
             url = this.off_url;
         }
 			
-		promiseHTTP(url)
+		promiseHTTP({uri:url, strictSSL:false})
 			.then( function(htmlString) {
 					globals.log(this.name + ': launchEvent function succeeded!');
 					callback(null);
