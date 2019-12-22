@@ -190,8 +190,8 @@ HomeSeerPlatform.prototype =
 						case 401:
 						{
 							globals.log(red("Line 192 - Error is: " + err));
-							globals.log(red("*HTTP Error 401 - line 193 * - Improper login and password specified in your config.json setup file. Correct and try again."));
-							globals.log(red("URL Is: " + retrieveURL));
+							globals.log(red("*HTTP Error 401 - line 193 * - May be due to Improper login and password specified in your config.json setup file. Correct and try again."));
+							globals.log(red("URL Is: " + statusURL.href));
 							break;
 						}
 						default:
