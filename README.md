@@ -36,6 +36,9 @@ A number of configuration settings are no longer used (the plugin has been updat
 "temperatureUnit"
 "uses99Percent"
 "can_dim"
+"binarySwitch"
+"obstructionRef"
+"obstructionClearValues"
 `````
 ### B.4 Simplified Identification and Setup of Accessories
 
