@@ -257,7 +257,6 @@ HomeSeerPlatform.prototype =
 	
 	// if the user has pecified devices in the config.json file using device categories, expand each device into a separate "accessories" array entry.
 		if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
-		// If the config.json file contains a "lightbulbs =" group of references, add them to the accessories array as "type":"Lightbulb"
 		var deviceCategories = [
 			{category: "Fans", 						typeLabel:"Fan"},
 			{category: "GaragedDoorOpeners",		typeLabel:"GarageDoorOpener"},	
@@ -278,7 +277,8 @@ HomeSeerPlatform.prototype =
 			{category: "MotionSensors",				typeLabel:"MotionSensor"},			
 			{category: "OccupancySensors",			typeLabel:"OccupancySensor"},			
 			{category: "SmokeSensors",				typeLabel:"SmokeSensor"},			
-			{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},			
+			{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},	
+			{category: "Valves",					typeLabel:"Valve"},						
 			{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
 
 			
