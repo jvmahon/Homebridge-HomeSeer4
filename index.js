@@ -30,7 +30,7 @@ var globals = new function()
 							
 				this.getDeviceName = function(reference)
 				{
-					if (reference == undefined) return null;
+					if ((reference === undefined) || (reference === null)) return null;
 					let name = globals.allHSDevices.HSdeviceStatusInfo.find( (element) => { return (element.ref == reference) }).name
 					// console.log(red("Found a device name: " + name));
 					
@@ -258,6 +258,8 @@ HomeSeerPlatform.prototype =
 	// if the user has pecified devices in the config.json file using device categories, expand each device into a separate "accessories" array entry.
 		if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
 		var deviceCategories = [
+			{category: "DimmingLights", 			typeLabel:"DimmingLight"},
+			{category: "BinaryLights", 			typeLabel:"BinaryLight"},
 			{category: "Fans", 						typeLabel:"Fan"},
 			{category: "GaragedDoorOpeners",		typeLabel:"GarageDoorOpener"},	
 			{category: "Lightbulbs",				typeLabel:"Lightbulb"},	
