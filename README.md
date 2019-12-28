@@ -2,7 +2,7 @@
 
 # homebridge-homeseer4-plugin
 
-Version 0.0.22 is a debugging build with additional debugging text displayed on startup.
+Version 0.0.23 is a debugging build with additional debugging text displayed on startup.
 
 ## For the most up-to-date information, see: https://github.com/jvmahon/homebridge-homeseer4/
 
