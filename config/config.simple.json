@@ -19,7 +19,9 @@
 		"password":"default",
 
 	
-			"Fans": 	[],
+			"BinaryLights":	[],
+	    		"DimmingLights":	[],
+	    		"Fans": 	[],
 			"GaragedDoorOpeners": 	[],
 			"Lightbulbs": 	[],
 			"lightbulbs": 	[],
