@@ -165,7 +165,8 @@ HomeSeerPlatform.prototype =
 
 						
 						// globals.log(red("Status URL is: " + statusURL.href));
-			
+		
+	
 		var getStatusInfo = promiseHTTP({ uri:statusURL.href, json:true, strictSSL:false})
 		.then( function(HSDevices)
 			{
@@ -177,8 +178,6 @@ HomeSeerPlatform.prototype =
 					globals.HSValues[currentDevice.ref] = parseFloat(currentDevice.value);
 				}
 
-				// Check entries in the config.json file to make sure there are no obvious errors.		
-				HSutilities.checkConfig(globals.platformConfig);
 
 				return (1);
 			}) // end then's function
@@ -239,93 +238,89 @@ HomeSeerPlatform.prototype =
 				throw err;
 			} )
 			
-			
+
 			
 
-		/////////////////////////////////////////////////////////////////////////////////		
-		// Make devices for each HomeSeer event in the config.json file
-
-		// Make Devices for each 'Event' entry in the config.json file.
-		if (globals.platformConfig.events) 
+			
+		Promise.all([getStatusInfo, getControlInfo]).then( function(response)
 		{
-			for (var currentEvent of globals.platformConfig.events) 
-			{
-				var createdEvent = new HomeSeerEvent(currentEvent);
-				foundAccessories.push(createdEvent);
-			}
-		}
-	
-	// if the user has pecified devices in the config.json file using device categories, expand each device into a separate "accessories" array entry.
-		if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
-		var deviceCategories = [
-			{category: "DimmingLights", 			typeLabel:"DimmingLight"},
-			{category: "BinaryLights", 			typeLabel:"BinaryLight"},
-			{category: "Fans", 						typeLabel:"Fan"},
-			{category: "GaragedDoorOpeners",		typeLabel:"GarageDoorOpener"},	
-			{category: "Lightbulbs",				typeLabel:"Lightbulb"},	
-			{category: "lightbulbs",				typeLabel:"Lightbulb"},				
-			{category: "Locks",						typeLabel:"Lock"},			
-			{category: "Thermostats",				typeLabel:"ThermostatRoot"},
-			{category: "Outlets",					typeLabel:"Outlet"},
-			{category: "Switches",					typeLabel:"Switch"},			
-			{category: "Windows",					typeLabel:"Window"},			
-			{category: "WindowCoverings",			typeLabel:"WindowCovering"},			
-			{category: "CarbonDioxideSensors",		typeLabel:"CarbonDioxideSensor"},		
-			{category: "CarbonMonoxideSensors",		typeLabel:"CarbonMonoxideSensor"},			
-			{category: "ContactSensors",			typeLabel:"ContactSensor"},			
-			{category: "HumiditySensors",			typeLabel:"HumiditySensor"},			
-			{category: "LeakSensors",				typeLabel:"LeakSensor"},			
-			{category: "LightSensors",				typeLabel:"LightSensor"},			
-			{category: "MotionSensors",				typeLabel:"MotionSensor"},			
-			{category: "OccupancySensors",			typeLabel:"OccupancySensor"},			
-			{category: "SmokeSensors",				typeLabel:"SmokeSensor"},			
-			{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},	
-			{category: "Valves",					typeLabel:"Valve"},						
-			{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
-
+			// console.log(yellow("*Debug* Number of control pairs is: " + globals.allHSDevices.controlPairs.length))
+			// console.log(yellow("*Debug* Number of status items is: " + globals.allHSDevices.HSdeviceStatusInfo.length))
+			// console.log("Creating HomeKit devices from HomeSeer data.");
 			
-			]
-		for (let thisCategory of deviceCategories)
-		{
-			if( globals.platformConfig[thisCategory.category] !== undefined)
-			{
-				globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
-
-					globals.platformConfig[thisCategory.category].map( (HSreference)=> 
-						{ 
-							// globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
-							
-							return( { "type":thisCategory.typeLabel, "ref":HSreference} );
-						})
-				);
-			}
-		}
-	// end of expanding devices into accessories arrays!	
 			
 
-			
-		Promise.all([getStatusInfo, getControlInfo]).then(()=> 
-			{
-
-				globals.log("Fetching HomeSeer devices.");
-
-				// now get the data from HomeSeer and pass it as the 'response' to the .then stage.
-				// return promiseHTTP({ uri: statusURL.href, json:true})	
 				
 				
-			}) // End of gathering HomeSeer references
-		.catch((err) => 
-			{
-				throw err;
-			})
+				/////////////////////////////////////////////////////////////////////////////////		
+				// Make devices for each HomeSeer event in the config.json file
+
+				// Make Devices for each 'Event' entry in the config.json file.
+				if (globals.platformConfig.events) 
+				{
+					for (var currentEvent of globals.platformConfig.events) 
+					{
+						var createdEvent = new HomeSeerEvent(currentEvent);
+						foundAccessories.push(createdEvent);
+					}
+				}
+			
+			// if the user has pecified devices in the config.json file using device categories, expand each device into a separate "accessories" array entry.
+				if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
+				var deviceCategories = [
+					{category: "DimmingLights", 			typeLabel:"DimmingLight"},
+					{category: "BinaryLights", 			typeLabel:"BinaryLight"},
+					{category: "Fans", 						typeLabel:"Fan"},
+					{category: "GaragedDoorOpeners",		typeLabel:"GarageDoorOpener"},	
+					{category: "Lightbulbs",				typeLabel:"Lightbulb"},	
+					{category: "lightbulbs",				typeLabel:"Lightbulb"},				
+					{category: "Locks",						typeLabel:"Lock"},			
+					{category: "Thermostats",				typeLabel:"ThermostatRoot"},
+					{category: "Outlets",					typeLabel:"Outlet"},
+					{category: "Switches",					typeLabel:"Switch"},			
+					{category: "Windows",					typeLabel:"Window"},			
+					{category: "WindowCoverings",			typeLabel:"WindowCovering"},			
+					{category: "CarbonDioxideSensors",		typeLabel:"CarbonDioxideSensor"},		
+					{category: "CarbonMonoxideSensors",		typeLabel:"CarbonMonoxideSensor"},			
+					{category: "ContactSensors",			typeLabel:"ContactSensor"},			
+					{category: "HumiditySensors",			typeLabel:"HumiditySensor"},			
+					{category: "LeakSensors",				typeLabel:"LeakSensor"},			
+					{category: "LightSensors",				typeLabel:"LightSensor"},			
+					{category: "MotionSensors",				typeLabel:"MotionSensor"},			
+					{category: "OccupancySensors",			typeLabel:"OccupancySensor"},			
+					{category: "SmokeSensors",				typeLabel:"SmokeSensor"},			
+					{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},	
+					{category: "Valves",					typeLabel:"Valve"},						
+					{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
+
+					
+					]
+				for (let thisCategory of deviceCategories)
+				{
+					if( globals.platformConfig[thisCategory.category] !== undefined)
+					{
+						globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
+
+							globals.platformConfig[thisCategory.category].map( (HSreference)=> 
+								{ 
+									// globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
+									
+									return( { "type":thisCategory.typeLabel, "ref":HSreference} );
+								})
+						);
+					}
+				}
+			// end of expanding devices into accessories arrays!	
+
+			// Check entries in the config.json file to make sure there are no obvious errors.		
+				HSutilities.checkConfig(globals.platformConfig);			
 		
-		// Next - For each device value retrieved from HomeSeer, store it in the globals.HSValues array 
+		})
+		// after getting the status and control information, then for each device value retrieved from HomeSeer, store it in the globals.HSValues array 
 		// and  create HomeKit Accessories for each accessory in the config.json 'accessories' array!		
 		.then( function(response) 
 			{  
 
-				
-				globals.log('HomeSeer status function succeeded!');
 				for (var currentAccessory of globals.platformConfig.accessories) {
 					// Find the index into the array of all of the HomeSeer devices
 					let thisDevice = globals.allHSDevices.HSdeviceStatusInfo.find( (element, index, array)=> 
@@ -335,7 +330,10 @@ HomeSeerPlatform.prototype =
 					// Set up initial array of HS Response Values during startup
 						try 
 						{
+							
 							var accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
+							
+							
 						} catch(err) 
 							{
 							globals.log(
