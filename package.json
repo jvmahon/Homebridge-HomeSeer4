@@ -23,6 +23,7 @@
     "request" : ">=2.88.0",
     "request-promise-native" : ">=1.0.8",
     "chalk": ">=3.0.0",
-    "hap-nodejs": ">=0.5.3"
+    "hap-nodejs": ">=0.5.3",
+    "update-notifier": ">=4.0.0"
   }
 }
