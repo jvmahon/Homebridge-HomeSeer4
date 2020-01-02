@@ -6,6 +6,9 @@
 
 Information on github and in the wiki section may be more up-to-date than in the README file downloaded from 'npm'. Its strongly recommended that you check the github.com information (both the README and the wiki section) for up-to-date information and assistance.
 
+## Posting Issues
+Please don't post issues on the HomeSeer forums - while I occasionally check there, you will get a quicker response raising your issue in the "Issues" section of github at www.github.com/jvmahon/homebridge-homeseer4
+
 ## Overview
 
 The homebridge-homeseer4-plugin is an open-source plugin for the homebridge environment. This plugin, when used with homebridge, acts as a bridge between Apple's HomeKit platform and HomeSeer 3  or HomeSeer 4 home automation software. The homebridge-homeseer-plugin supports common Z-Wave device including lights, switches, sensors, locks, and garage door openers. 
