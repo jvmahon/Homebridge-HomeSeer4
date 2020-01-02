@@ -15,6 +15,13 @@ The homebridge-homeseer4-plugin is an open-source plugin for the homebridge envi
 
 Version 1.x.x has the same features on both  "HomeSeer 4" and "HomeSeer 3."  As HomeSeer 4 develops, additional HomeSeer 4 features may be added.
 
+## Migrating from homebridge-homeseer-plugin-2018
+* This is a placeholder for tips on migrating from the prior version.
+* Generally, you should not have to do much to migrate.
+* There are several no-longer-used parameters that you should delete from config.json. See section B.3 below.
+* You must add login / password information. See B.1, below.
+
+
 ## A. Installation and Setup Wiki Pages 
 Please see the Wiki pages for instructions on Installing HomeBridge on Windows 10 and Linux. Really - look there first: https://github.com/jvmahon/homebridge-homeseer4/wiki.
 
