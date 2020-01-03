@@ -11,6 +11,12 @@ var assert = require('assert');
 var URL = require('url').URL;
 const updateNotifier = require('update-notifier');
 const pkg = require('./package.json');
+const HomeSeerSystem = require('./lib/HomeSeerSystemObject');
+
+const HomeSeer = new HomeSeerSystem;
+HomeSeer.initialize();
+console.log(red("*Debug* - Total Items In Home Seer System is: " + HomeSeer.totalItems() ));
+
 
 // Checks for available update and returns an instance
 const notifier = updateNotifier({pkg}) // Notify using the built-in convenience method
