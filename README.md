@@ -2,7 +2,7 @@
 
 # homebridge-homeseer4-plugin
 
-[[Version History | Version History]]
+See wiki for [Version History](https://github.com/jvmahon/Homebridge-HomeSeer4/wiki/Version-History)
 
 ## For the most up-to-date information, see: https://github.com/jvmahon/homebridge-homeseer4/
 
