@@ -2,6 +2,8 @@
 
 # homebridge-homeseer4-plugin
 
+[[Version History | Version History]]
+
 ## For the most up-to-date information, see: https://github.com/jvmahon/homebridge-homeseer4/
 
 Information on github and in the wiki section may be more up-to-date than in the README file downloaded from 'npm'. Its strongly recommended that you check the github.com information (both the README and the wiki section) for up-to-date information and assistance.
