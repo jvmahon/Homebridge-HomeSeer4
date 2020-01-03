@@ -8,7 +8,7 @@ var yellow = chalk.yellow.bold;
 var cyan = chalk.cyan.bold;
 var magenta = chalk.magenta.bold;
 var assert = require('assert');
-
+var URL = require('url').URL;
 const updateNotifier = require('update-notifier');
 const pkg = require('./package.json');
 
