@@ -15,7 +15,7 @@ Please don't post issues on the HomeSeer forums - while I occasionally check the
 
 The homebridge-homeseer4-plugin is an open-source plugin for the homebridge environment. This plugin, when used with homebridge, acts as a bridge between Apple's HomeKit platform and HomeSeer 3  or HomeSeer 4 home automation software. The homebridge-homeseer-plugin supports common Z-Wave device including lights, switches, sensors, locks, and garage door openers. 
 
-Version 1.x.x has the same features on both  "HomeSeer 4" and "HomeSeer 3."  As HomeSeer 4 develops, additional HomeSeer 4 features may be added.
+Version 1.x.x has the same features on both  "HomeSeer 4" and "HomeSeer 3."  As HomeSeer 4 develops, additional HomeSeer 4 features may be added -- but I intend to maintain backward compatibility.
 
 ## Migrating from homebridge-homeseer-plugin-2018
 * This is a placeholder for tips on migrating from the prior version.
