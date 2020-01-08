@@ -14,9 +14,6 @@ const pkg = require('./package.json');
 const HomeSeerSystem = require('./lib/HomeSeerSystemObject');
 
 const HomeSeer = new HomeSeerSystem;
-HomeSeer.initialize();
-console.log(red("*Debug* - Total Items In Home Seer System is: " + HomeSeer.totalItems() ));
-
 
 // Checks for available update and returns an instance
 const notifier = updateNotifier({pkg}) // Notify using the built-in convenience method
@@ -159,7 +156,7 @@ function HomeSeerPlatform(log, config, api) {
 
 HomeSeerPlatform.prototype = 
 {
-    accessories: function (callback) 
+    accessories: async function (callback) 
 	{
         var foundAccessories = [];
 		var that = this;
@@ -177,8 +174,15 @@ HomeSeerPlatform.prototype =
 
 						
 						// globals.log(red("Status URL is: " + statusURL.href));
-		
-	
+						
+globals.log(green("Start"));
+						
+						
+var getTestInfo =   await HomeSeer.initialize("http://192.168.1.1:80");
+	globals.log(green("End"));
+	HomeSeer.displayData(213);
+	HomeSeer.getControlPairByUseType(213, 1);
+	HomeSeer.getControlPairByUseType(213, 12);	
 		var getStatusInfo = promiseHTTP({ uri:statusURL.href, json:true, strictSSL:false})
 		.then( function(HSDevices)
 			{
@@ -537,5 +541,4 @@ globals.updateAllFromHSData = updateAllFromHSData;
 module.exports.platform = HomeSeerPlatform;
 
 ////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
-
 
