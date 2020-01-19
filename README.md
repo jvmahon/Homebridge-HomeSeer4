@@ -35,7 +35,7 @@ https://github.com/jvmahon/Homebridge-HomeSeer4/wiki/Setting-Up-Your-Config.json
 
 ### B.1 Add Login Information
 
-If you are updating from the HomeSeer 3 version of this plugin ("HomeBridge-HomeSeer-Plugin-2018"), there have been several changes that you will need to make to your config.json file. Most importantly, you will need to add your HomeSeer login and password information to the config.json file. 
+If you are updating from the HomeSeer 3 version of this plugin ("HomeBridge-HomeSeer-Plugin-2018"), there have been several changes that you will need to make to your config.json file. Most importantly, you will need to add your HomeSeer login and password information to the config.json file. See Section F.2 of: https://github.com/jvmahon/Homebridge-HomeSeer4/wiki/Setting-Up-Your-Config.json-file
 
 ### B.2 Changed Thermostat Setup
 
