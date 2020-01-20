@@ -19,12 +19,9 @@
 		"password":"default",
 
 	
-			"BinaryLights":	[],
-	    		"DimmingLights":	[],
 	    		"Fans": 	[],
 			"GaragedDoorOpeners": 	[],
 			"Lightbulbs": 	[],
-			"lightbulbs": 	[],
 			"Locks": 	[],
 			"Thermostats": 	[],
 			"Outlets": 	[],
