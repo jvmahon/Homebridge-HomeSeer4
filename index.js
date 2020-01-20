@@ -92,7 +92,7 @@ HomeSeerPlatform.prototype =
 
 			globals.log(green("Start"));
 		
-			var getTestInfo =   await HomeSeerData.initialize( globals.platformConfig["host"] );
+			var getTestInfo =   await HomeSeerData.initialize( globals.platformConfig["host"], globals.platformConfig["login"], globals.platformConfig["password"], globals.platformConfig["ASCIIport"],  );
 				globals.log(green("End"));
 
 			console.log("Creating HomeKit devices from HomeSeer data.");
