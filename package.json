@@ -1,6 +1,6 @@
 {
   "name": "homebridge-homeseer4",
-  "version": "0.0.42",
+  "version": "0.0.43",
   "description": "HomeSeer 3 and HomeSeer 4 Plugin for homebridge. This updates and replaces homebridge-homeseer-plugin-2018. See: https://github.com/jvmahon/homebridge-homeseer4",
   "license": "ISC",
   "keywords": [
@@ -26,6 +26,7 @@
     "chalk": ">=3.0.0",
     "hap-nodejs": ">=0.5.3",
     "update-notifier": ">=4.0.0",
-    "url":">=0.11.0"
+    "url":">=0.11.0",
+    "queue":">=6.0.0"
   }
 }
