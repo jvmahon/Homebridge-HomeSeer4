@@ -1,6 +1,7 @@
 'use strict';
 var net = require('net');
-var promiseHTTP = require("request-promise-native");
+// var promiseHTTP = require("request-promise-native");
+var fetch  = require("node-fetch");
 var chalk = require("chalk");
 var green = chalk.green.bold;
 var red = chalk.red.bold;
@@ -273,7 +274,14 @@ HomeSeerEvent.prototype = {
             url = this.off_url;
         }
 			
-		promiseHTTP({uri:url, strictSSL:false})
+
+/*		promiseHTTP({uri:url, strictSSL:false})
+			.then( function(htmlString) {
+					globals.log(this.name + ': launchEvent function succeeded!');
+					callback(null);
+*/					
+					
+		fetch(url)
 			.then( function(htmlString) {
 					globals.log(this.name + ': launchEvent function succeeded!');
 					callback(null);
