@@ -168,14 +168,14 @@ HomeSeerPlatform.prototype =
 						{
 							thisDevice = HomeSeerData.HomeSeerDevices[currentAccessory.ref].status;						
 							accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
-							
+							foundAccessories.push(accessory);
 							
 						} catch(err) 
 							{
-							throw (red(`${err} resulting in problem creating new HomeSeerAccessory. This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. You specified reference ${cyan(currentAccessory.ref)}, Check all reference numbers and be sure HomeSeer is running. Stopping operation.`))
+							globals.log(red(`${err} resulting in problem creating new HomeSeerAccessory. This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. You specified reference ${cyan(currentAccessory.ref)}, Check all reference numbers and be sure HomeSeer is running. Continuing to add other accessories.`))
 							
 						}			
-					foundAccessories.push(accessory);
+
 				} //endfor.
 				callback(foundAccessories);
 				Listen.setupHomeSeerTelnetPort()
