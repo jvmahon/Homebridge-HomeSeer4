@@ -8,6 +8,9 @@ See wiki for [Version History](https://github.com/jvmahon/Homebridge-HomeSeer4/w
 
 Information on github and in the wiki section may be more up-to-date than in the README file downloaded from 'npm'. Its strongly recommended that you check the github.com information (both the README and the wiki section) for up-to-date information and assistance.
 
+## Need Help?
+You should immediately check out the Wiki section after reading this page. It has a lot of helpful information, particularly for first-time users.
+
 ## Posting Issues
 Please don't post issues on the HomeSeer forums - while I occasionally check there, you will get a quicker response raising your issue in the "Issues" section of github at www.github.com/jvmahon/homebridge-homeseer4
 
