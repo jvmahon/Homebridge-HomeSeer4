@@ -162,28 +162,20 @@ HomeSeerPlatform.prototype =
 
 				for (var currentAccessory of globals.platformConfig.accessories) {
 
-						
-					let thisDevice = HomeSeerData.HomeSeerDevices[currentAccessory.ref].status;
-					
+					var thisDevice, accessory;
 					// Set up initial array of HS Response Values during startup
 						try 
 						{
-							
-							var accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
-							
+							thisDevice = HomeSeerData.HomeSeerDevices[currentAccessory.ref].status;						
+							accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
+							foundAccessories.push(accessory);
 							
 						} catch(err) 
 							{
-							globals.log(
-								magenta( "\n\n** Error ** creating new HomeSeerAccessory in file index.js.\n" 
-								+ "This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. \n" 
-								+ "Check all reference numbers and be sure HomeSeer is running. Stopping operation\n")
-							); 
+							globals.log(red(`${err} resulting in problem creating new HomeSeerAccessory. This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. You specified reference ${cyan(currentAccessory.ref)}, Check all reference numbers and be sure HomeSeer is running. Continuing to add other accessories.`))
 							
-							globals.log(red(err));	
-							throw err
 						}			
-					foundAccessories.push(accessory);
+
 				} //endfor.
 				callback(foundAccessories);
 				Listen.setupHomeSeerTelnetPort()
