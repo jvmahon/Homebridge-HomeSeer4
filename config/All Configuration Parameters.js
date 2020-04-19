@@ -138,11 +138,7 @@
 	"unlockValue": 0,
 	
 	"doorSensorRef":0,
-	"openValue": 255,
-	"closedValue": 0,
-	"openingValue": 254,
-	"closingValue": 252,
-	"stoppedValue": 253	
+	"doorSensorClosedValues":[0]
 },
 
 {
