@@ -8,6 +8,10 @@ See wiki for [Version History](https://github.com/jvmahon/Homebridge-HomeSeer4/w
 
 Information on github and in the wiki section may be more up-to-date than in the README file downloaded from 'npm'. Its strongly recommended that you check the github.com information (both the README and the wiki section) for up-to-date information and assistance.
 
+## Upgrade Problem - Upgrading to 1.0.0
+
+I have no idea why, but the "normal" npm upgrade process seems to have trouble upgrading to the 1.0.0 version. For assistance, see the Wiki entry:
+
 ## Need Help?
 You should immediately check out the Wiki section after reading this page. It has a lot of helpful information, particularly for first-time users.
 
