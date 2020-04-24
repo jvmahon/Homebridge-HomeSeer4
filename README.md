@@ -10,7 +10,7 @@ Information on github and in the wiki section may be more up-to-date than in the
 
 ## Upgrade Problem - Upgrading to 1.0.0
 
-I have no idea why, but the "normal" npm upgrade process seems to have trouble upgrading to the 1.0.0 version. For assistance, see the Wiki entry:
+I have no idea why, but the "normal" npm upgrade process seems to have trouble upgrading to the 1.0.0 version. For assistance, see the Wiki entry: https://github.com/jvmahon/Homebridge-HomeSeer4/wiki/Problems-Updating-to-Version-1.0.0
 
 ## Need Help?
 You should immediately check out the Wiki section after reading this page. It has a lot of helpful information, particularly for first-time users.
