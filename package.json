@@ -21,6 +21,7 @@
     "homebridge": ">=0.4.53"
   },
   "dependencies": {
+    "hap-nodejs": ">=0.7.3",
     "node-fetch" : ">=2.6.0",
     "chalk": ">=4.0.0",
     "hap-nodejs": ">=0.6.0",
