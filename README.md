@@ -2,6 +2,8 @@
 
 # homebridge-homeseer4-plugin
 
+What this plugin does: (1) It allows you to interface with Homeseer (www.homeseer.com) and control HomeSeer devices using an Apple iOS device / Siri / AppleTV.  This gives a alternative to controlling your devices using the Homeseer Mobile application. Since you can now control Homeseer devices through the Homekit interface, you can now use the iOS Home application, or an Apple TV, to control both Homeseer devices and Homekit devices.
+
 See wiki for [Version History](https://github.com/jvmahon/Homebridge-HomeSeer4/wiki/Version-History)
 
 ## For the most up-to-date information, see: https://github.com/jvmahon/homebridge-homeseer4/
