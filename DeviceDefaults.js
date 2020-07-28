@@ -140,6 +140,8 @@ var typeProperties =
 			"batteryThreshold": 25,
 			"temperatureUnit": "F",
 			"tamperRef":0,
+			"minCelsius":-100,
+			"maxCelsius":100,
 			"interface_name":null
 		},
 		
