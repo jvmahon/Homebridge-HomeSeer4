@@ -27,7 +27,9 @@
 	"uuid_base": 0,
 	"batteryRef": 0,
 	"batteryThreshold": 25,
-	"tamperRef":0
+	"tamperRef":0,
+	"minCelsius":-100,
+	"maxCelsius":100
 },
 
 {

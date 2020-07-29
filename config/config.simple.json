@@ -19,7 +19,7 @@
 		"password":"default",
 
 	
-	    		"Fans": 	[],
+	    	"Fans": 	[],
 			"GaragedDoorOpeners": 	[],
 			"Lightbulbs": 	[],
 			"Locks": 	[],
@@ -38,7 +38,7 @@
 			"OccupancySensors": 	[],
 			"SmokeSensors": 	[],
 			"TemperatureSensors": 	[],
-	    		"Valves": [],
+	    	"Valves": [],
 			"SecuritySystems": 	[],
 
 

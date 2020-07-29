@@ -91,7 +91,9 @@
 						"uuid_base": 0,
 						"batteryRef": 0,
 						"batteryThreshold": 25,
-						"tamperRef":0
+						"tamperRef":0,
+						"minCelsius":-100,
+						"maxCelsius":100
 					},
 
 					{
@@ -226,7 +228,8 @@
 						"batteryRef": 0,
 						"batteryThreshold": 25,
 						"onValue": 255,
-						"offValue": 0
+						"offValue": 0,
+						"colorTemperatureRef": 0
 					},
 					{
 						"type": "DimmingLight",
@@ -237,7 +240,8 @@
 						"batteryThreshold": 25,
 						"onValue": 255,
 						"levels":99,
-						"offValue": 0
+						"offValue": 0,
+						"colorTemperatureRef": 0
 					},
 					{
 						"type": "LightSwitch",
