@@ -188,6 +188,7 @@
                                 "SmokeSensor",
                                 "LightSensor",
                                 "HumiditySensor",
+								"Lock",
                                 "Fan",
                                 "Lightbulb",
                                 "DimmingLight",
@@ -872,6 +873,10 @@
 								"type": "text"
 							},
 							{
+								"key": "accessories[].batteryThreshold",
+								"type": "text"
+							},
+							{
 								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Switch' || model.accessories[arrayIndices[0]].type==='Outlet' || model.accessories[arrayIndices[0]].type==='Fan' || model.accessories[arrayIndices[0]].type==='Lightbulb' || model.accessories[arrayIndices[0]].type==='DimmingLight' || model.accessories[arrayIndices[0]].type==='LightSwitch' || model.accessories[arrayIndices[0]].type==='BinaryLight')"}, 
 								"type": "text",
 								"key": "accessories[].onValue"
@@ -972,12 +977,12 @@
 								"key": "accessories[].disarmValue"
 							},
 							{
-								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')" },
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Thermostat')" },
 								"type": "text",
 								"key": "accessories[].controlRef"
 							},
 							{
-								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')" },
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Thermostat')" },
 								"type": "text",
 								"key": "accessories[].stateRef"
 							},
@@ -1127,6 +1132,51 @@
 								{
 									"key": "accessories[].alarmValues[]",
 									"placeholder": "Single Alarm Value ...",
+									"type": "text"
+								}
+							]
+						},
+						{
+							"key": "accessories[].lockedStatusValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Lock')"},
+							"notitle": true,
+							"title": "Another <br> Locked Status Value",
+							"type": "flex",
+				            "flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].lockedStatusValues[]",
+									"placeholder": "Single Locked Status Value ...",
+									"type": "text"
+								}
+							]
+						},
+						{
+							"key": "accessories[].unlockedStatusValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Lock')"},
+							"notitle": true,
+							"title": "Another <br> Unlocked Status Value",
+							"type": "flex",
+				            "flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].unlockedStatusValues[]",
+									"placeholder": "Single Unlocked Status Value ...",
+									"type": "text"
+								}
+							]
+						},
+						{
+							"key": "accessories[].doorSensorClosedValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Lock')"},
+							"notitle": true,
+							"title": "Another <br> Door Sensor Closed Value",
+							"type": "flex",
+				            "flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].doorSensorClosedValues[]",
+									"placeholder": "Single Door Sensor Closed Value ...",
 									"type": "text"
 								}
 							]
