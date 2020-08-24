@@ -1,0 +1,1139 @@
+{
+	"pluginAlias": "HomeSeer",
+	"pluginType": "platform",
+	"singular": true,
+	"headerDisplay": "Use the settings below to configure the Homebridge-HomeSeer4 Plugin. Changes are not applied until you click save at the bottom and restart Homebridge by clicking the power button in the main menu bar. Recommend clicking the \"Config\" button in the main menu bar to verify all values were entered properly.",
+	"footerDisplay": "For help please see the plugin [readme](https://github.com/jvmahon/homebridge-homeseer4/).",
+    "schema": {
+        "required": [
+            "name",
+            "host",
+            "login",
+            "password"
+        ],
+        "type": "object",
+        "properties": {
+            "name": {
+                "default": "HomeSeer",
+                "description": "Leave this as HomeSeer",
+                "title": "Name",
+                "type": "string"
+            },
+            "host": {
+                "default": "http://homeseer.local",
+                "description": "Hostname or IP address of the HomeSeer system. Must start with http://",
+                "title": "Host",
+				"format": "url",
+                "type": "string"
+            },
+            "ASCIIport": {
+                "default": 11000,
+                "description": "Defaults to 11000. This is the TCP/IP Port for ASCII control interface and is used for Instant Status. Must match setting on Tools -> Setup -> Network tab of HomeSeer.",
+                "title": "ASCII Port",
+                "type": "integer"
+            },
+            "login": {
+                "default": "default",
+                "description": "Your HomeSeer login specified on HomeSeer's Tools -> Setup -> Network page.",
+                "title": "Login",
+                "type": "string"
+            },
+            "password": {
+                "default": "default",
+                "description": "Your HomeSeer password specified on HomeSeer's Tools -> Setup -> Network page.",
+                "title": "Password",
+                "type": "string"
+            },
+            "events": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "eventGroup": {
+                            "type": "string"
+                        },
+                        "eventName": {
+                            "type": "string"
+                        },
+                        "offEventGroup": {
+                            "type": "string"
+                        },
+                        "offEventName": {
+                            "type": "string"
+                        },
+                        "uuid_base": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "Fans": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "GaragedDoorOpeners": {
+                "type": "array",
+				"title": "Garaged Door Openers",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "Lightbulbs": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "Locks": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "Thermostats": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "Outlets": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "Switches": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "Windows": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "WindowCoverings": {
+                "type": "array",
+				"title": "Window Coverings",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "CarbonDioxideSensors": {
+                "type": "array",
+				"title": "Carbon Dioxide Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "CarbonMonoxideSensors": {
+                "type": "array",
+				"title": "Carbon Monoxide Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "ContactSensors": {
+                "type": "array",
+				"title": "Contact Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "HumiditySensors": {
+                "type": "array",
+				"title": "Humidity Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "LeakSensors": {
+                "type": "array",
+				"title": "Leak Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "LightSensors": {
+                "type": "array",
+				"title": "Light Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "MotionSensors": {
+                "type": "array",
+				"title": "Motion Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "OccupancySensors": {
+                "type": "array",
+				"title": "Occupancy Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "SmokeSensors": {
+                "type": "array",
+				"title": "Smoke Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "TemperatureSensors": {
+                "type": "array",
+				"title": "Temperature Sensors",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "SecuritySystems": {
+                "type": "array",
+				"title": "Security Systems",
+                "items": { "$ref": "#/definitions/hsDeviceID" }
+            },
+            "accessories": {
+                "type": "array",
+				"title": "Device",
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "type",
+                        "ref"
+                    ],
+                    "properties": {
+						"type": {
+							"type": "string",
+                            "enum": [
+                                "Switch",
+                                "Outlet",
+                                "TemperatureSensor",
+                                "CarbonMonoxideSensor",
+                                "CarbonDioxideSensor",
+                                "ContactSensor",
+                                "MotionSensor",
+                                "LeakSensor",
+                                "OccupancySensor",
+                                "SmokeSensor",
+                                "LightSensor",
+                                "HumiditySensor",
+                                "Fan",
+                                "Lightbulb",
+                                "DimmingLight",
+                                "LightSwitch",
+                                "BinaryLight",
+                                "GarageDoorOpener",
+                                "Window",
+                                "WindowCovering",
+                                "Thermostat",
+                                "SecuritySystem",
+                                "Valve"
+							]
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "ref": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "uuid_base": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "batteryRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "batteryThreshold": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "onValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "offValue": {
+				            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "offValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "tamperRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "minCelsius": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "maxCelsius": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "lockValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "unlockValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "lockedStatusValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "unlockedStatusValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "doorSensorRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "doorSensorClosedValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "levels": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "colorTemperatureRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "obstructionRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "obstructionClearValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "openValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "closedValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "openingValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "closingValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "stoppedValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "controlRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "stateRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "heatingSetpointRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "coolingSetpointRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "humidityRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "humidityTargetRef": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "armStayValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "armAwayValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "armNightValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "disarmValue": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "armedStayValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "armedAwayValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "armedNightValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "disarmedValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "alarmValues": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                        },
+                        "valveType": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "openValve": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "closeValve": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        },
+                        "useTimer": {
+                            "type": "boolean"
+                        },
+                        "minTime": {
+                            "$ref": "#/definitions/hsDeviceID"
+                        }
+                    }
+                }
+            }
+        },
+		"definitions": {
+		        "hsDeviceID": {
+					"type": "integer"
+		        }
+		    }
+        },
+	"form": [
+		{
+			"type": "fieldset",
+			"title": "HomeSeer Connection",
+			"expandable": true,
+			"expanded": false,
+			"items": [
+			    {
+	                "type": "help",
+	                "helpvalue": "<em class='primary-text'>Use this section to enter the host, ASCII Port and login info for HomeSeer.</em>"
+	            },
+				"host",
+				{
+					"key": "ASCIIport",
+					"type": "text"
+				},
+				"login",
+				"password"
+				]
+			},
+		{
+			"type": "fieldset",
+			"title": "Simple Device",
+			"expandable": true,
+			"expanded": false,
+			"items": [
+			    {
+	                "type": "help",
+	                "helpvalue": "<em class='primary-text'>Expand the device types below and enter the HomeSeer Device ID's. If you would like to customize the device name or select specific parameters, use the \"Advanced Device\" section below. Do not duplicate devices.</em>"
+	            },
+				{
+				"type": "section",
+				"title": "Fans",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "Fans",
+					"notitle": true,
+					"title": "Another Fan",
+					"type": "flex",
+	                "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "Fans[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Garaged Door Openers",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "GaragedDoorOpeners",
+					"notitle": true,
+					"title": "Another Garage Door Opener",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "GaragedDoorOpeners[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}	
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Lightbulbs",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "Lightbulbs",
+					"notitle": true,
+					"title": "Another Lightbulb",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "Lightbulbs[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Locks",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "Locks",
+					"notitle": true,
+					"title": "Another Lock",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "Locks[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Thermostats",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "Thermostats",
+					"notitle": true,
+					"title": "Another Thermostat",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "Thermostats[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}	
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Outlets",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "Outlets",
+					"notitle": true,
+					"title": "Another Outlet",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "Outlets[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Switches",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "Switches",
+					"notitle": true,
+					"title": "Another Switch",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "Switches[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Windows",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "Windows",
+					"notitle": true,
+					"title": "Another Window",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "Windows[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Window Coverings",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "WindowCoverings",
+					"notitle": true,
+					"title": "Another Window Covering",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "WindowCoverings[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Carbon Dioxide Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "CarbonDioxideSensors",
+					"notitle": true,
+					"title": "Another Carbon Dioxide Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "CarbonDioxideSensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Carbon Monoxide Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "CarbonMonoxideSensors",
+					"notitle": true,
+					"title": "Another Carbon Monoxide Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "CarbonMonoxideSensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Contact Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "ContactSensors",
+					"notitle": true,
+					"title": "Another Contact Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "ContactSensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Humidity Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "HumiditySensors",
+					"notitle": true,
+					"title": "Another Humidity Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "HumiditySensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Leak Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "LeakSensors",
+					"notitle": true,
+					"title": "Another Leak Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "LeakSensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Light Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "LightSensors",
+					"notitle": true,
+					"title": "Another Light Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "LightSensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+						]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Motion Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "MotionSensors",
+					"notitle": true,
+					"title": "Another Motion Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "MotionSensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Occupancy Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "OccupancySensors",
+					"notitle": true,
+					"title": "Another Occupancy Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "OccupancySensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Smoke Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "SmokeSensors",
+					"notitle": true,
+					"title": "Another Smoke Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "SmokeSensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Temperature Sensors",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "TemperatureSensors",
+					"notitle": true,
+					"title": "Another Temperature Sensor",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "TemperatureSensors[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				},
+				{
+				"type": "section",
+				"title": "Security Systems",
+				"expandable": true,
+				"expanded": false,
+				"items": [
+					{
+					"key": "SecuritySystems",
+					"notitle": true,
+					"title": "Another Security System",
+					"type": "flex",
+		            "flex-flow": "row wrap",
+					"items":[
+						{
+							"key": "SecuritySystems[]",
+							"placeholder": "Enter a Single Device ID ...",
+							"type": "text"
+						}
+					]
+					}
+				]
+				}
+			]
+		},
+		{
+			"type": "fieldset",
+			"title": "Advanced Device",
+			"expandable": true,
+			"expanded": false,
+			"items": [
+				{
+					"type": "help",
+	            	"helpvalue": "<em class='primary-text'>Use this section to configure individual devices with specific parameters. Click \"Add Device\" then select the \"Type\" to see parameters specific to that device type. Each device will have its own tab below. For more information on each parameter see this <a href=\"https://github.com/jvmahon/Homebridge-HomeSeer4/wiki/Setting-Up-Your-Config.json-file\" target=\"_blank\">page</a>.  Do not duplicate devices.</em>"},
+				{
+				"type": "tabarray",
+				"items": [
+					{
+					"title": "{{ value.name || 'Device ' + $index }}",
+					"notitle": true,
+					"items": [
+						{
+						"type": "flex",
+		                "flex-flow": "row wrap",
+						"notitle": true,
+						"title": "Device",
+						"items": [
+							{
+								"key": "accessories[].type"
+							},
+							{
+								"key": "accessories[].name"
+							},
+							{
+								"key": "accessories[].ref"
+							},
+							{
+								"key": "accessories[].uuid_base",
+								"type": "text"
+							},
+							{
+								"key": "accessories[].batteryRef",
+								"type": "text"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Switch' || model.accessories[arrayIndices[0]].type==='Outlet' || model.accessories[arrayIndices[0]].type==='Fan' || model.accessories[arrayIndices[0]].type==='Lightbulb' || model.accessories[arrayIndices[0]].type==='DimmingLight' || model.accessories[arrayIndices[0]].type==='LightSwitch' || model.accessories[arrayIndices[0]].type==='BinaryLight')"}, 
+								"type": "text",
+								"key": "accessories[].onValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Switch' || model.accessories[arrayIndices[0]].type==='Outlet' || model.accessories[arrayIndices[0]].type==='Fan' || model.accessories[arrayIndices[0]].type==='Lightbulb' || model.accessories[arrayIndices[0]].type==='DimmingLight' || model.accessories[arrayIndices[0]].type==='LightSwitch' || model.accessories[arrayIndices[0]].type==='BinaryLight')"},
+								"type": "text",
+								"key": "accessories[].offValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='DimmingLight')"},
+								"type": "text",
+								"key": "accessories[].levels"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Lightbulb' || model.accessories[arrayIndices[0]].type==='DimmingLight')"},
+								"type": "text",
+								"key": "accessories[].colorTemperatureRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='TemperatureSensor' || model.accessories[arrayIndices[0]].type==='CarbonMonoxideSensor' || model.accessories[arrayIndices[0]].type==='CarbonDioxideSensor' || model.accessories[arrayIndices[0]].type==='ContactSensor' || model.accessories[arrayIndices[0]].type==='MotionSensor' || model.accessories[arrayIndices[0]].type==='LeakSensor' || model.accessories[arrayIndices[0]].type==='OccupancySensor' || model.accessories[arrayIndices[0]].type==='SmokeSensor' || model.accessories[arrayIndices[0]].type==='LightSensor' || model.accessories[arrayIndices[0]].type==='HumiditySensor')"},
+								"type": "text",
+								"key": "accessories[].tamperRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='TemperatureSensor')"},
+								"type": "text",
+								"key": "accessories[].minCelsius"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='TemperatureSensor')"},
+								"type": "text",
+								"key": "accessories[].maxCelsius"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Lock')"},
+								"type": "text",
+								"key": "accessories[].lockValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Lock')"},
+								"type": "text",
+								"key": "accessories[].unlockValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Lock')" },
+								"type": "text",
+								"key": "accessories[].doorSensorRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='GarageDoorOpener' || model.accessories[arrayIndices[0]].type==='Window' || model.accessories[arrayIndices[0]].type==='WindowCovering')" },
+								"type": "text",
+								"key": "accessories[].openValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='GarageDoorOpener' || model.accessories[arrayIndices[0]].type==='Window' || model.accessories[arrayIndices[0]].type==='WindowCovering')" },
+								"type": "text",
+								"key": "accessories[].closedValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='GarageDoorOpener')" },
+								"type": "text",
+								"key": "accessories[].openingValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='GarageDoorOpener')" },
+								"type": "text",
+								"key": "accessories[].closingValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='GarageDoorOpener')" },
+								"type": "text",
+								"key": "accessories[].stoppedValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='GarageDoorOpener')" },
+								"type": "text",
+								"key": "accessories[].obstructionRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')" },
+								"type": "text",
+								"key": "accessories[].armStayValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')" },
+								"type": "text",
+								"key": "accessories[].armAwayValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')"},
+								"type": "text",
+								"key": "accessories[].armNightValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')"},
+								"type": "text",
+								"key": "accessories[].disarmValue"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')" },
+								"type": "text",
+								"key": "accessories[].controlRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')" },
+								"type": "text",
+								"key": "accessories[].stateRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Thermostat')"},
+								"type": "text",
+								"key": "accessories[].heatingSetpointRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Thermostat')"},
+								"type": "text",
+								"key": "accessories[].coolingSetpointRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Thermostat')"},
+								"type": "text",
+								"key": "accessories[].humidityRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Thermostat')"},
+								"type": "text",
+								"key": "accessories[].humidityTargetRef"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Valve')" },
+								"type": "text",
+								"key": "accessories[].valveType"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Valve')"},
+								"type": "text",
+								"key": "accessories[].openValve"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Valve')"},
+								"type": "text",
+								"key": "accessories[].closeValve"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Valve')"},
+								"key": "accessories[].useTimer"
+							},
+							{
+								"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='Valve')"},
+								"type": "text",
+								"key": "accessories[].minTime"
+							}
+						]},
+						{
+							"key": "accessories[].offValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='CarbonMonoxideSensor' || model.accessories[arrayIndices[0]].type==='CarbonDioxideSensor' || model.accessories[arrayIndices[0]].type==='ContactSensor' || model.accessories[arrayIndices[0]].type==='MotionSensor' || model.accessories[arrayIndices[0]].type==='LeakSensor' || model.accessories[arrayIndices[0]].type==='OccupancySensor' || model.accessories[arrayIndices[0]].type==='SmokeSensor')"},
+							"notitle": true,
+							"title": "Another Off Value",
+							"type": "flex",
+				            "flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].offValues[]",
+									"placeholder": "Single Off Value ...",
+									"type": "text"
+								}
+							]
+						},
+						{
+							"key": "accessories[].obstructionClearValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='GarageDoorOpener')"},
+							"notitle": true,
+							"title": "Another <br> Obsruction Clear Value",
+							"type": "flex",
+			            	"flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].obstructionClearValues[]",
+									"placeholder": "Single Obstruction Clear Value ...",
+									"type": "text"
+								}
+							]
+						},
+						{
+							"key": "accessories[].armedStayValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')"},
+							"notitle": true,
+							"title": "Another <br> Armed Stay Value",
+							"type": "flex",
+				            "flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].armedStayValues[]",
+									"placeholder": "Single Armed Stay Value ...",
+									"type": "text"
+								}
+							]
+						},
+						{
+							"key": "accessories[].armedAwayValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')"},
+							"notitle": true,
+							"title": "Another <br> Armed Away Value",
+							"type": "flex",
+				            "flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].armedAwayValues[]",
+									"placeholder": "Single Armed Away Value ...",
+									"type": "text"
+								}
+							]
+						},
+						{
+							"key": "accessories[].armedNightValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')"},
+							"notitle": true,
+							"title": "Another <br> Armed Night Value",
+							"type": "flex",
+				            "flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].armedNightValues[]",
+									"placeholder": "Single Armed Night Value ...",
+									"type": "text"
+								}
+							]
+						},
+						{
+							"key": "accessories[].disarmedValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')"},
+							"notitle": true,
+							"title": "Another <br> Disarmed Value",
+							"type": "flex",
+				            "flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].disarmedValues[]",
+									"placeholder": "Single Disarmed Value ...",
+									"type": "text"
+								}
+							]
+						},
+						{
+							"key": "accessories[].alarmValues",
+							"condition": { "functionBody": "return (model.accessories[arrayIndices[0]].type==='SecuritySystem')"},
+							"notitle": true,
+							"title": "Another <br> Alarm Value",
+							"type": "flex",
+				            "flex-flow": "row wrap",
+							"items":[
+								{
+									"key": "accessories[].alarmValues[]",
+									"placeholder": "Single Alarm Value ...",
+									"type": "text"
+								}
+							]
+						}
+					]
+				}]
+			}]
+		}			
+	]
+}
