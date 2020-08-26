@@ -6,6 +6,10 @@ This plugin allows you to interface with Homeseer (www.homeseer.com) and control
 
 See wiki for [Version History](https://github.com/jvmahon/Homebridge-HomeSeer4/wiki/Version-History)
 
+## Config-UI-X
+August 2020 - Now supports homebridge-config-ui-x
+This documentation needs further updates on this!
+
 ## For the most up-to-date information, see: https://github.com/jvmahon/homebridge-homeseer4/
 
 Information on github and in the wiki section may be more up-to-date than in the README file downloaded from 'npm'. Its strongly recommended that you check the github.com information (both the README and the wiki section) for up-to-date information and assistance.
