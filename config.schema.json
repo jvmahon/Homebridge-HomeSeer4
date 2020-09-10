@@ -209,56 +209,56 @@
                             "$ref": "#/definitions/hsDeviceID"
                         },
                         "uuid_base": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueTxt"
                         },
                         "batteryRef": {
                             "$ref": "#/definitions/hsDeviceID"
                         },
                         "batteryThreshold": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "onValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "offValue": {
-				            "$ref": "#/definitions/hsDeviceID"
+				            "$ref": "#/definitions/valueInt"
                         },
                         "offValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueNum" }
                         },
                         "tamperRef": {
                             "$ref": "#/definitions/hsDeviceID"
                         },
                         "minCelsius": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "maxCelsius": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "lockValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "unlockValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "lockedStatusValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueInt" }
                         },
                         "unlockedStatusValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueInt" }
                         },
                         "doorSensorRef": {
                             "$ref": "#/definitions/hsDeviceID"
                         },
                         "doorSensorClosedValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueInt" }
                         },
                         "levels": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "colorTemperatureRef": {
                             "$ref": "#/definitions/hsDeviceID"
@@ -268,22 +268,22 @@
                         },
                         "obstructionClearValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueInt" }
                         },
                         "openValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "closedValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "openingValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "closingValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "stoppedValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "controlRef": {
                             "$ref": "#/definitions/hsDeviceID"
@@ -304,62 +304,71 @@
                             "$ref": "#/definitions/hsDeviceID"
                         },
                         "armStayValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "armAwayValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "armNightValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "disarmValue": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "armedStayValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueInt" }
                         },
                         "armedAwayValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueInt" }
                         },
                         "armedNightValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueInt" }
                         },
                         "disarmedValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueInt" }
                         },
                         "alarmValues": {
                             "type": "array",
-                            "items": { "$ref": "#/definitions/hsDeviceID" }
+                            "items": { "$ref": "#/definitions/valueInt" }
                         },
                         "valveType": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "openValve": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "closeValve": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         },
                         "useTimer": {
                             "type": "boolean"
                         },
                         "minTime": {
-                            "$ref": "#/definitions/hsDeviceID"
+                            "$ref": "#/definitions/valueInt"
                         }
                     }
                 }
             }
         },
 		"definitions": {
-		        "hsDeviceID": {
-					"type": "integer"
-		        }
-		    }
-        },
+			"hsDeviceID": {
+				"type": "integer"
+			},
+	        "valueInt": {
+				"type": "integer"
+			},
+	        "valueNum": {
+				"type": "number"
+			},
+	        "valueTxt": {
+				"type": "text"
+			}
+		}
+	},
 	"form": [
 		{
 			"type": "fieldset",
