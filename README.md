@@ -6,6 +6,9 @@ This plugin allows you to interface with Homeseer (www.homeseer.com) and control
 
 See wiki for [Version History](https://github.com/jvmahon/Homebridge-HomeSeer4/wiki/Version-History)
 
+## Status of Plugin
+Dec. 2020:  I'm now using Hubitat for my home system rather than HomeSeer. I'll still make bug fixes to this code, but as I am no longer using HomeSeer, don't plan to add any new features unless someone can contribute them as pull requests.
+
 ## Config-UI-X. Thanks @mwolter805!
 August 2020 - Now supports homebridge-config-ui-x. Thanks to @mwolter805 for providing this contribution!
 This documentation needs further updates on this!
