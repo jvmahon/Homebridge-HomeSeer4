@@ -1,6 +1,6 @@
 {
   "name": "homebridge-homeseer4",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "HomeSeer 3 and HomeSeer 4 Plugin for homebridge. This updates and replaces homebridge-homeseer-plugin-2018. See: https://github.com/jvmahon/homebridge-homeseer4",
   "license": "ISC",
   "keywords": [
