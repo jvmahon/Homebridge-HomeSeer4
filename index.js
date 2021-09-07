@@ -1,7 +1,7 @@
 'use strict';
 var net = require('net');
 // var promiseHTTP = require("request-promise-native");
-var fetch  = require("node-fetch");
+import fetch  from "node-fetch";
 var chalk = require("chalk");
 var green = chalk.green.bold;
 var red = chalk.red.bold;
