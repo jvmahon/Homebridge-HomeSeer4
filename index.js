@@ -28,21 +28,13 @@ var globals = [];
 																																		
 module.exports.globals = globals;
 
-
-
 var HSutilities = require("./lib/HomeSeerUtilities");
 var HKSetup = require("./lib/HomeKitDeviceSetup");
 var Listen = require("./lib/Setup Listener");
-
-
 var Accessory, Service, Characteristic, UUIDGen;
 	
-
-
 // Currently the HomeSeer variable is used as a global to allow access to the log variable (function) 
 // var HomeSeer = [];
-
-
 
 module.exports = function (homebridge) {
     console.log("homebridge API version: " + homebridge.version);
@@ -62,8 +54,6 @@ module.exports = function (homebridge) {
     homebridge.registerPlatform("homebridge-HomeSeerPlatform", "HomeSeer", HomeSeerPlatform, true);
 }
 
-
-
 function HomeSeerPlatform(log, config, api) {
 
 	if(!config) return([]);
@@ -77,7 +67,6 @@ function HomeSeerPlatform(log, config, api) {
 		// var MyPrototypes = require('./lib/AddPrototype.js').addPrototypes(api);
 }
 
-
 HomeSeerPlatform.prototype = 
 {
     accessories: async function (callback) 
@@ -90,14 +79,12 @@ HomeSeerPlatform.prototype =
 				globals.log(red("*Warning* - You failed to define a login and password in your config.json file. Will attempt login using default HomeSeer login and password of default:default"));
 			}
 			
-
 			globals.log(green("Start"));
 		
 			var getTestInfo =   await HomeSeerData.initialize( globals.platformConfig["host"], globals.platformConfig["login"], globals.platformConfig["password"], globals.platformConfig["ASCIIport"],  );
 				globals.log(green("End"));
 
 			console.log("Creating HomeKit devices from HomeSeer data.");
-			
 
 			// Make Devices for each 'Event' entry in the config.json file.
 			if (globals.platformConfig.events) 
@@ -136,9 +123,8 @@ HomeSeerPlatform.prototype =
 					{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},	
 					{category: "Valves",					typeLabel:"Valve"},						
 					{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
-
-					
 					]
+				
 				for (let thisCategory of deviceCategories)
 				{
 					if( globals.platformConfig[thisCategory.category] !== undefined)
@@ -159,7 +145,6 @@ HomeSeerPlatform.prototype =
 			// Check entries in the config.json file to make sure there are no obvious errors.		
 				HSutilities.checkConfig(globals.platformConfig);			
 		
-
 				for (var currentAccessory of globals.platformConfig.accessories) {
 
 					var thisDevice, accessory;
@@ -184,9 +169,6 @@ HomeSeerPlatform.prototype =
 	}
 }
 
-
-
-
 function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
     this.config = accessoryConfig;
     this.ref = status.ref;
@@ -199,7 +181,6 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
 			this.can_dim = this.config.can_dim;
 
     var that = this; // May be unused?
-
 }
 
 HomeSeerAccessory.prototype = {
@@ -220,8 +201,6 @@ HomeSeerAccessory.prototype = {
         return services;
     }
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //    The following code creates devices which can trigger HomeSeer Events   ///
@@ -250,8 +229,7 @@ function HomeSeerEvent(eventConfig) {
         this.off_url = offURL.href;
     }
 
-
-        this.uuid_base = eventConfig.uuid_base || (this.name) ;
+     this.uuid_base = eventConfig.uuid_base || (this.name) ;
 }
 
 HomeSeerEvent.prototype = {
@@ -267,16 +245,8 @@ HomeSeerEvent.prototype = {
         if (value == 0 && this.off_url) {
             url = this.off_url;
         }
-			
-
-/*		promiseHTTP({uri:url, strictSSL:false})
-			.then( function(htmlString) {
-					globals.log(this.name + ': launchEvent function succeeded!');
-					callback(null);
-*/					
-					
-		fetch(url)
-			.then( function(htmlString) {
+						
+		fetch(url).then( function(htmlString) {
 					globals.log(this.name + ': launchEvent function succeeded!');
 					callback(null);
 					
@@ -306,7 +276,6 @@ HomeSeerEvent.prototype = {
             .setCharacteristic(Characteristic.SerialNumber, "HS Event " + this.config.eventGroup + " " + this.config.eventName);
         services.push(informationService);
 
-        
         this.switchService = new Service.Switch();
         this.switchService
             .getCharacteristic(Characteristic.On)
@@ -319,10 +288,6 @@ HomeSeerEvent.prototype = {
     }
 }
 
-		
-
 module.exports.platform = HomeSeerPlatform;
 
 ////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
-
-
