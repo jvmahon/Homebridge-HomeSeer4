@@ -1,7 +1,5 @@
 'use strict';
 var net = require('net');
-// var promiseHTTP = require("request-promise-native");
-var fetch  = require("node-fetch");
 var chalk = require("chalk");
 var green = chalk.green.bold;
 var red = chalk.red.bold;
@@ -9,9 +7,6 @@ var yellow = chalk.yellow.bold;
 var cyan = chalk.cyan.bold;
 var magenta = chalk.magenta.bold;
 var assert = require('assert');
-var URL = require('url').URL;
-const updateNotifier = require('update-notifier');
-const pkg = require('./package.json');
 
 const HomeSeerSystem = require('./lib/HomeSeerSystemObject');
 
