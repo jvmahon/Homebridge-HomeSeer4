@@ -1,5 +1,5 @@
 'use strict';
-var fetch  = require("node-fetch");
+// var fetch  = require("node-fetch");
 var chalk = require("chalk");
 var green = chalk.green.bold;
 var red = chalk.red.bold;
@@ -75,7 +75,7 @@ HomeSeerPlatform.prototype =
 			})
 			
 		// if the user has pecified devices in the config.json file using device categories, expand each device into a separate "accessories" array entry.
-			if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
+			globals.platformConfig.accessories ??= [];
 			var deviceCategories = [
 				{category: "DimmingLights", 			typeLabel:"DimmingLight"},
 				{category: "BinaryLights", 			typeLabel:"BinaryLight"},
@@ -102,16 +102,17 @@ HomeSeerPlatform.prototype =
 				{category: "Valves",					typeLabel:"Valve"},						
 				{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
 				]
-			for (let thisCategory of deviceCategories) {
-				if( globals.platformConfig[thisCategory.category] !== undefined) {
+
+			deviceCategories
+				.filter((it) => globals.platformConfig[it.category] !== undefined)
+				.forEach((thisCategory)=> {
 					globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
 
 					globals.platformConfig[thisCategory.category].map( (HSreference)=>  { 
 							return( { "type":thisCategory.typeLabel, "ref":HSreference} );
 						})
 					);
-				}
-			}
+			})
 		// end of expanding devices into accessories arrays!	
 
 		// Check entries in the config.json file to make sure there are no obvious errors.		
@@ -193,7 +194,6 @@ function HomeSeerEvent(eventConfig) {
 		
         this.off_url = offURL.href;
     }
-
 	this.uuid_base = eventConfig.uuid_base || (this.name) ;
 }
 
@@ -215,13 +215,12 @@ HomeSeerEvent.prototype = {
 			.then( function(htmlString) {
 					globals.log(this.name + ': launchEvent function succeeded!');
 					callback(null);
-					
-			if(this.off_url==null && value != 0) {
-                setTimeout(function() {
-                    this.switchService.getCharacteristic(Characteristic.On).setValue(0);
-                }.bind(this),2000);
-            }
-					
+						
+				if(this.off_url == null && value != 0) {
+					setTimeout(function() {
+						this.switchService.getCharacteristic(Characteristic.On).setValue(0);
+					}.bind(this), 2000);
+				}	
 			}.bind(this))
 			.catch(function(err) { 	globals.log(this.name + ': launchEvent function failed: %s', err);
 					callback(err);
@@ -242,10 +241,10 @@ HomeSeerEvent.prototype = {
         this.switchService = new Service.Switch();
         this.switchService
             .getCharacteristic(Characteristic.On)
-            .on('set', this.launchEvent.bind(this));
+            .on('set', this.launchEvent.bind(this))
+			.name = this.config.name;
+			
         services.push(this.switchService);
-		
-		this.switchService.name = this.config.name;
 
         return services;
     }
