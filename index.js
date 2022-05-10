@@ -1,38 +1,25 @@
 'use strict';
-var net = require('net');
-// var promiseHTTP = require("request-promise-native");
 var fetch  = require("node-fetch");
 var chalk = require("chalk");
 var green = chalk.green.bold;
 var red = chalk.red.bold;
-var yellow = chalk.yellow.bold;
 var cyan = chalk.cyan.bold;
-var magenta = chalk.magenta.bold;
-var assert = require('assert');
-var URL = require('url').URL;
-const updateNotifier = require('update-notifier');
-const pkg = require('./package.json');
 
 const HomeSeerSystem = require('./lib/HomeSeerSystemObject');
-
 const HomeSeerData = new HomeSeerSystem();
-
-// Checks for available update and returns an instance
-const notifier = updateNotifier({pkg}) // Notify using the built-in convenience method
-notifier.notify();			
-
+		
 var exports = module.exports;
 module.exports.HomeSeer = HomeSeerData;
 
-var globals = [];
-																																		
+var globals = []																										
 module.exports.globals = globals;
 
 var HSutilities = require("./lib/HomeSeerUtilities");
 var HKSetup = require("./lib/HomeKitDeviceSetup");
 var Listen = require("./lib/Setup Listener");
+
 var Accessory, Service, Characteristic, UUIDGen;
-	
+
 // Currently the HomeSeer variable is used as a global to allow access to the log variable (function) 
 // var HomeSeer = [];
 
@@ -47,125 +34,106 @@ module.exports = function (homebridge) {
     Characteristic = homebridge.hap.Characteristic;
     UUIDGen = homebridge.hap.uuid;
 
-
-
     // For platform plugin to be considered as dynamic platform plugin,
     // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
     homebridge.registerPlatform("homebridge-HomeSeerPlatform", "HomeSeer", HomeSeerPlatform, true);
 }
 
 function HomeSeerPlatform(log, config, api) {
-
 	if(!config) return([]);
 
 	this.log = log;
     this.config = config;
 
-		globals.log = log; 
-		globals.platformConfig = config; // Platform variables from config.json:  platform, name, host, temperatureScale, lightbulbs, thermostats, events, accessories
-		globals.api = api; // _accessories, _platforms, _configurableAccessories, _dynamicPlatforms, version, serverVersion, user, hap, hapLegacyTypes,platformAccessory,_events, _eventsCount
-		// var MyPrototypes = require('./lib/AddPrototype.js').addPrototypes(api);
+	globals.log = log; 
+	globals.platformConfig = config; // Platform variables from config.json:  platform, name, host, temperatureScale, lightbulbs, thermostats, events, accessories
+	globals.api = api; // _accessories, _platforms, _configurableAccessories, _dynamicPlatforms, version, serverVersion, user, hap, hapLegacyTypes,platformAccessory,_events, _eventsCount
+	// var MyPrototypes = require('./lib/AddPrototype.js').addPrototypes(api);
 }
 
 HomeSeerPlatform.prototype = 
 {
-    accessories: async function (callback) 
-	{
+    accessories: async function (callback) {
         var foundAccessories = [];
 		var that = this;
 		
-		if((globals.platformConfig["login"] == null) || (globals.platformConfig["password"] == null ))
-			{
+		if((globals.platformConfig["login"] == null) || (globals.platformConfig["password"] == null )) {
 				globals.log(red("*Warning* - You failed to define a login and password in your config.json file. Will attempt login using default HomeSeer login and password of default:default"));
-			}
-			
-			globals.log(green("Start"));
+		}
+
+		globals.log(green("Start"));
+	
+		var getTestInfo =   await HomeSeerData.initialize( globals.platformConfig["host"], globals.platformConfig["login"], globals.platformConfig["password"], globals.platformConfig["ASCIIport"],  );
+			globals.log(green("End"));
+
+		console.log("Creating HomeKit devices from HomeSeer data.");
 		
-			var getTestInfo =   await HomeSeerData.initialize( globals.platformConfig["host"], globals.platformConfig["login"], globals.platformConfig["password"], globals.platformConfig["ASCIIport"],  );
-				globals.log(green("End"));
-
-			console.log("Creating HomeKit devices from HomeSeer data.");
-
-			// Make Devices for each 'Event' entry in the config.json file.
-			if (globals.platformConfig.events) 
-			{
-				for (var currentEvent of globals.platformConfig.events) 
-				{
-					var createdEvent = new HomeSeerEvent(currentEvent);
-					foundAccessories.push(createdEvent);
-				}
-			}
+		// Make Devices for each 'Event' entry in the config.json file.
+			globals.platformConfig?.events?.forEach((currentEvent)=>  {
+				var createdEvent = new HomeSeerEvent(currentEvent);
+				foundAccessories.push(createdEvent);
+			})
 			
-			// if the user has pecified devices in the config.json file using device categories, expand each device into a separate "accessories" array entry.
-				if (globals.platformConfig.accessories === undefined) globals.platformConfig.accessories = [];
-				var deviceCategories = [
-					{category: "DimmingLights", 			typeLabel:"DimmingLight"},
-					{category: "BinaryLights", 			typeLabel:"BinaryLight"},
-					{category: "Fans", 						typeLabel:"Fan"},
-					{category: "GaragedDoorOpeners",		typeLabel:"GarageDoorOpener"},	
-					{category: "Lightbulbs",				typeLabel:"Lightbulb"},	
-					{category: "lightbulbs",				typeLabel:"Lightbulb"},				
-					{category: "Locks",						typeLabel:"Lock"},			
-					{category: "Thermostats",				typeLabel:"ThermostatRoot"},
-					{category: "Outlets",					typeLabel:"Outlet"},
-					{category: "Switches",					typeLabel:"Switch"},			
-					{category: "Windows",					typeLabel:"Window"},			
-					{category: "WindowCoverings",			typeLabel:"WindowCovering"},			
-					{category: "CarbonDioxideSensors",		typeLabel:"CarbonDioxideSensor"},		
-					{category: "CarbonMonoxideSensors",		typeLabel:"CarbonMonoxideSensor"},			
-					{category: "ContactSensors",			typeLabel:"ContactSensor"},			
-					{category: "HumiditySensors",			typeLabel:"HumiditySensor"},			
-					{category: "LeakSensors",				typeLabel:"LeakSensor"},			
-					{category: "LightSensors",				typeLabel:"LightSensor"},			
-					{category: "MotionSensors",				typeLabel:"MotionSensor"},			
-					{category: "OccupancySensors",			typeLabel:"OccupancySensor"},			
-					{category: "SmokeSensors",				typeLabel:"SmokeSensor"},			
-					{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},	
-					{category: "Valves",					typeLabel:"Valve"},						
-					{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
-					]
-				
-				for (let thisCategory of deviceCategories)
-				{
-					if( globals.platformConfig[thisCategory.category] !== undefined)
-					{
-						globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
+		// if the user has pecified devices in the config.json file using device categories, expand each device into a separate "accessories" array entry.
+			globals.platformConfig.accessories ??= [];
+			var deviceCategories = [
+				{category: "DimmingLights", 			typeLabel:"DimmingLight"},
+				{category: "BinaryLights", 			typeLabel:"BinaryLight"},
+				{category: "Fans", 						typeLabel:"Fan"},
+				{category: "GaragedDoorOpeners",		typeLabel:"GarageDoorOpener"},	
+				{category: "Lightbulbs",				typeLabel:"Lightbulb"},	
+				{category: "lightbulbs",				typeLabel:"Lightbulb"},				
+				{category: "Locks",						typeLabel:"Lock"},			
+				{category: "Thermostats",				typeLabel:"ThermostatRoot"},
+				{category: "Outlets",					typeLabel:"Outlet"},
+				{category: "Switches",					typeLabel:"Switch"},			
+				{category: "Windows",					typeLabel:"Window"},			
+				{category: "WindowCoverings",			typeLabel:"WindowCovering"},			
+				{category: "CarbonDioxideSensors",		typeLabel:"CarbonDioxideSensor"},		
+				{category: "CarbonMonoxideSensors",		typeLabel:"CarbonMonoxideSensor"},			
+				{category: "ContactSensors",			typeLabel:"ContactSensor"},			
+				{category: "HumiditySensors",			typeLabel:"HumiditySensor"},			
+				{category: "LeakSensors",				typeLabel:"LeakSensor"},			
+				{category: "LightSensors",				typeLabel:"LightSensor"},			
+				{category: "MotionSensors",				typeLabel:"MotionSensor"},			
+				{category: "OccupancySensors",			typeLabel:"OccupancySensor"},			
+				{category: "SmokeSensors",				typeLabel:"SmokeSensor"},			
+				{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},	
+				{category: "Valves",					typeLabel:"Valve"},						
+				{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
+				]
 
-							globals.platformConfig[thisCategory.category].map( (HSreference)=> 
-								{ 
-									// globals.log(green("'type': " + thisCategory.typeLabel + ", 'ref':" + HSreference));
-									
-									return( { "type":thisCategory.typeLabel, "ref":HSreference} );
-								})
-						);
-					}
-				}
-			// end of expanding devices into accessories arrays!	
+			deviceCategories
+				.filter((it) => globals.platformConfig[it.category] !== undefined)
+				.forEach((thisCategory)=> {
+					globals.platformConfig.accessories = globals.platformConfig.accessories.concat(
 
-			// Check entries in the config.json file to make sure there are no obvious errors.		
-				HSutilities.checkConfig(globals.platformConfig);			
-		
-				for (var currentAccessory of globals.platformConfig.accessories) {
+					globals.platformConfig[thisCategory.category].map( (HSreference)=>  { 
+							return( { "type":thisCategory.typeLabel, "ref":HSreference} );
+						})
+					);
+			})
+		// end of expanding devices into accessories arrays!	
 
-					var thisDevice, accessory;
-					// Set up initial array of HS Response Values during startup
-						try 
-						{
-							thisDevice = HomeSeerData.HomeSeerDevices[currentAccessory.ref].status;						
-							accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
-							foundAccessories.push(accessory);
-							
-						} catch(err) 
-							{
-							globals.log(red(`${err} resulting in problem creating new HomeSeerAccessory. This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. You specified reference ${cyan(currentAccessory.ref)}, Check all reference numbers and be sure HomeSeer is running. Stopping homebridge.`))
-							
-							throw err;
-							
-						}			
+		// Check entries in the config.json file to make sure there are no obvious errors.		
+		HSutilities.checkConfig(globals.platformConfig);			
 
-				} //endfor.
-				callback(foundAccessories);
-				Listen.setupHomeSeerTelnetPort()
+		globals.platformConfig.accessories.forEach((currentAccessory)=> {
+			var thisDevice, accessory;
+			// Set up initial array of HS Response Values during startup
+				try {
+					thisDevice = HomeSeerData.HomeSeerDevices[currentAccessory.ref].status;						
+					accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
+					foundAccessories.push(accessory);
+					
+				} catch(err) {
+					globals.log(red(`${err} resulting in problem creating new HomeSeerAccessory. This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. You specified reference ${cyan(currentAccessory.ref)}, Check all reference numbers and be sure HomeSeer is running. Stopping homebridge.`))
+					
+					throw err;
+				}			
+		});
+		callback(foundAccessories);
+		Listen.setupHomeSeerTelnetPort()
 	}
 }
 
@@ -179,7 +147,6 @@ function HomeSeerAccessory(log, platformConfig, accessoryConfig, status) {
 	
 	if(this.config.can_dim)
 			this.can_dim = this.config.can_dim;
-
     var that = this; // May be unused?
 }
 
@@ -189,8 +156,7 @@ HomeSeerAccessory.prototype = {
         callback();
     },
 
-    getServices: function () {
-				
+    getServices: function () { 
         var services = [];
 
 		// The following function gets all the services for a device and returns them in the array 'services' 
@@ -228,8 +194,7 @@ function HomeSeerEvent(eventConfig) {
 		
         this.off_url = offURL.href;
     }
-
-     this.uuid_base = eventConfig.uuid_base || (this.name) ;
+	this.uuid_base = eventConfig.uuid_base || (this.name) ;
 }
 
 HomeSeerEvent.prototype = {
@@ -245,22 +210,19 @@ HomeSeerEvent.prototype = {
         if (value == 0 && this.off_url) {
             url = this.off_url;
         }
-						
-		fetch(url).then( function(htmlString) {
+					
+		fetch(url)
+			.then( function(htmlString) {
 					globals.log(this.name + ': launchEvent function succeeded!');
 					callback(null);
-					
-			if(this.off_url==null && value != 0)
-            {
-                setTimeout(function() {
-                    // globals.log(this.name + ': Momentary switch reseting to 0');
-                    this.switchService.getCharacteristic(Characteristic.On).setValue(0);
-                }.bind(this),2000);
-            }
-					
+						
+				if(this.off_url == null && value != 0) {
+					setTimeout(function() {
+						this.switchService.getCharacteristic(Characteristic.On).setValue(0);
+					}.bind(this), 2000);
+				}	
 			}.bind(this))
-			.catch(function(err)
-				{ 	globals.log(this.name + ': launchEvent function failed: %s', err);
+			.catch(function(err) { 	globals.log(this.name + ': launchEvent function failed: %s', err);
 					callback(err);
 				}.bind(this)
 			);
@@ -279,10 +241,10 @@ HomeSeerEvent.prototype = {
         this.switchService = new Service.Switch();
         this.switchService
             .getCharacteristic(Characteristic.On)
-            .on('set', this.launchEvent.bind(this));
+            .on('set', this.launchEvent.bind(this))
+			.name = this.config.name;
+			
         services.push(this.switchService);
-		
-		this.switchService.name = this.config.name;
 
         return services;
     }
@@ -291,3 +253,5 @@ HomeSeerEvent.prototype = {
 module.exports.platform = HomeSeerPlatform;
 
 ////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
+
+
