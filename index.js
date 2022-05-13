@@ -1,9 +1,5 @@
 'use strict';
 var fetch  = require("node-fetch");
-var chalk = require("chalk");
-var green = chalk.green.bold;
-var red = chalk.red.bold;
-var cyan = chalk.cyan.bold;
 
 const HomeSeerSystem = require('./lib/HomeSeerSystemObject');
 const HomeSeerData = new HomeSeerSystem();
@@ -58,13 +54,13 @@ HomeSeerPlatform.prototype =
 		var that = this;
 		
 		if((globals.platformConfig["login"] == null) || (globals.platformConfig["password"] == null )) {
-				globals.log(red("*Warning* - You failed to define a login and password in your config.json file. Will attempt login using default HomeSeer login and password of default:default"));
+				globals.log("*Warning* - You failed to define a login and password in your config.json file. Will attempt login using default HomeSeer login and password of default:default");
 		}
 
-		globals.log(green("Start"));
+		globals.log("Start");
 	
 		var getTestInfo =   await HomeSeerData.initialize( globals.platformConfig["host"], globals.platformConfig["login"], globals.platformConfig["password"], globals.platformConfig["ASCIIport"],  );
-			globals.log(green("End"));
+			globals.log("End");
 
 		console.log("Creating HomeKit devices from HomeSeer data.");
 		
@@ -127,7 +123,7 @@ HomeSeerPlatform.prototype =
 					foundAccessories.push(accessory);
 					
 				} catch(err) {
-					globals.log(red(`${err} resulting in problem creating new HomeSeerAccessory. This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. You specified reference ${cyan(currentAccessory.ref)}, Check all reference numbers and be sure HomeSeer is running. Stopping homebridge.`))
+					globals.log(`${err} resulting in problem creating new HomeSeerAccessory. This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. You specified reference ${currentAccessory.ref}, Check all reference numbers and be sure HomeSeer is running. Stopping homebridge.`)
 					
 					throw err;
 				}			
