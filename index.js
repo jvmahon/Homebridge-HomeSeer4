@@ -95,7 +95,9 @@ HomeSeerPlatform.prototype =
 				{category: "OccupancySensors",			typeLabel:"OccupancySensor"},			
 				{category: "SmokeSensors",				typeLabel:"SmokeSensor"},			
 				{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},	
-				{category: "Valves",					typeLabel:"Valve"},						
+				{category: "Valves",					typeLabel:"Valve"},
+				{category: "Sprinklers",					typeLabel:"Sprinkler"},
+				{category: "Showers",					typeLabel:"Shower"},
 				{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
 				]
 
