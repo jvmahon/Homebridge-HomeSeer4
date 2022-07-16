@@ -73,30 +73,32 @@ HomeSeerPlatform.prototype =
 		// if the user has pecified devices in the config.json file using device categories, expand each device into a separate "accessories" array entry.
 			globals.platformConfig.accessories ??= [];
 			var deviceCategories = [
-				{category: "DimmingLights", 			typeLabel:"DimmingLight"},
-				{category: "BinaryLights", 			typeLabel:"BinaryLight"},
-				{category: "Fans", 						typeLabel:"Fan"},
-				{category: "GaragedDoorOpeners",		typeLabel:"GarageDoorOpener"},	
+				{category: "DimmingLights", 				typeLabel:"DimmingLight"},
+				{category: "BinaryLights", 				typeLabel:"BinaryLight"},
+				{category: "Fans", 					typeLabel:"Fan"},
+				{category: "GaragedDoorOpeners",			typeLabel:"GarageDoorOpener"},	
 				{category: "Lightbulbs",				typeLabel:"Lightbulb"},	
 				{category: "lightbulbs",				typeLabel:"Lightbulb"},				
-				{category: "Locks",						typeLabel:"Lock"},			
+				{category: "Locks",					typeLabel:"Lock"},			
 				{category: "Thermostats",				typeLabel:"ThermostatRoot"},
 				{category: "Outlets",					typeLabel:"Outlet"},
 				{category: "Switches",					typeLabel:"Switch"},			
 				{category: "Windows",					typeLabel:"Window"},			
-				{category: "WindowCoverings",			typeLabel:"WindowCovering"},			
-				{category: "CarbonDioxideSensors",		typeLabel:"CarbonDioxideSensor"},		
-				{category: "CarbonMonoxideSensors",		typeLabel:"CarbonMonoxideSensor"},			
-				{category: "ContactSensors",			typeLabel:"ContactSensor"},			
-				{category: "HumiditySensors",			typeLabel:"HumiditySensor"},			
+				{category: "WindowCoverings",				typeLabel:"WindowCovering"},			
+				{category: "CarbonDioxideSensors",			typeLabel:"CarbonDioxideSensor"},		
+				{category: "CarbonMonoxideSensors",			typeLabel:"CarbonMonoxideSensor"},			
+				{category: "ContactSensors",				typeLabel:"ContactSensor"},			
+				{category: "HumiditySensors",				typeLabel:"HumiditySensor"},			
 				{category: "LeakSensors",				typeLabel:"LeakSensor"},			
 				{category: "LightSensors",				typeLabel:"LightSensor"},			
 				{category: "MotionSensors",				typeLabel:"MotionSensor"},			
-				{category: "OccupancySensors",			typeLabel:"OccupancySensor"},			
+				{category: "OccupancySensors",				typeLabel:"OccupancySensor"},			
 				{category: "SmokeSensors",				typeLabel:"SmokeSensor"},			
-				{category: "TemperatureSensors",		typeLabel:"TemperatureSensor"},	
-				{category: "Valves",					typeLabel:"Valve"},						
-				{category: "SecuritySystems",			typeLabel:"SecuritySystem"}	
+				{category: "TemperatureSensors",			typeLabel:"TemperatureSensor"},	
+				{category: "Valves",					typeLabel:"Valve"},
+				{category: "Sprinklers",				typeLabel:"Sprinkler"},
+				{category: "Showers",					typeLabel:"Shower"},
+				{category: "SecuritySystems",				typeLabel:"SecuritySystem"}	
 				]
 
 			deviceCategories
