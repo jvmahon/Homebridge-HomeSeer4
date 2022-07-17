@@ -365,7 +365,7 @@
 				"type": "number"
 			},
 	        "valueTxt": {
-				"type": "text"
+				"type": "string"
 			}
 		}
 	},
