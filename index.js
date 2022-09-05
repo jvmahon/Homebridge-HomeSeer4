@@ -120,9 +120,11 @@ HomeSeerPlatform.prototype =
 			var thisDevice, accessory;
 			// Set up initial array of HS Response Values during startup
 				try {
-					thisDevice = HomeSeerData.HomeSeerDevices[currentAccessory.ref].status;						
-					accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
-					foundAccessories.push(accessory);
+					thisDevice = HomeSeerData.HomeSeerDevices[currentAccessory.ref]?.status;						
+					if (thisDevice) {
+						accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory, thisDevice);
+						foundAccessories.push(accessory);
+					}
 					
 				} catch(err) {
 					globals.log(`${err} resulting in problem creating new HomeSeerAccessory. This may be the result of specifying an incorrect HomeSeer reference number in your config.json file. You specified reference ${currentAccessory.ref}, Check all reference numbers and be sure HomeSeer is running. Stopping homebridge.`)
